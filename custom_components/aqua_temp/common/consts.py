@@ -23,6 +23,7 @@ HTTP_HEADER_X_TOKEN = "x-token"
 
 CONF_TITLE = "title"
 CONF_API_TYPE = "api_type"
+CONF_LOG_SESSION_TOKEN = "log_session_token"
 
 PRODUCT_IDS = [
     "1245226668902080512",  # Hitemp

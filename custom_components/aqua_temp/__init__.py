@@ -39,6 +39,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
             hass.data.setdefault(DOMAIN, {})[entry.entry_id] = coordinator
 
+            entry.async_on_unload(entry.add_update_listener(async_update_listener))
+
             if hass.is_running:
                 await coordinator.initialize()
 
@@ -69,6 +71,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         )
 
     return initialized
+
+
+async def async_update_listener(hass: HomeAssistant, entry: ConfigEntry) -> None:
+    """Reload the entry so edited credentials and options take effect."""
+    _LOGGER.info(f"Reloading {DOMAIN} integration, Entry ID: {entry.entry_id}")
+
+    await hass.config_entries.async_reload(entry.entry_id)
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:

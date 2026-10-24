@@ -13,11 +13,13 @@ _First release of the [MatiasFernandez/aquatemp](https://github.com/MatiasFernan
 
 - Allow parameter JSON files to override `entity_category` and `state_class` per sensor
 - Document login failures caused by passwords longer than 16 characters
+- Opt-in option to log the session token at WARNING level, for making manual API requests without logging the integration out
 
 ### Changed
 
 - Promote inlet, outlet and ambient water temperatures to primary sensors with long-term statistics
 - Point manifest documentation, issue tracker and code owner at this fork
+- Saving options reloads the integration, so changes take effect without a manual reload
 
 ### Fixed
 

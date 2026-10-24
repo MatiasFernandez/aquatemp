@@ -19,6 +19,7 @@ Compared with [tkejzlar/aquatemp](https://github.com/tkejzlar/aquatemp) 3.0.43:
 | Keep target temperature visible and editable when mode is OFF | Upstream blanks the setpoint while the heat pump is off, so it can't be checked or changed until it is turned on | PR open: [tkejzlar/aquatemp#2](https://github.com/tkejzlar/aquatemp/pull/2) |
 | Document 16-char password truncation causing login failures | The app silently truncates passwords to 16 characters; longer passwords fail here with "Invalid credentials" | PR open: [tkejzlar/aquatemp#3](https://github.com/tkejzlar/aquatemp/pull/3) |
 | Promote inlet/outlet/ambient water temperatures to primary sensors with statistics | Upstream hides them under Diagnostic and records no long-term statistics, though they are the main readings for a pool heat pump | PR open: [tkejzlar/aquatemp#4](https://github.com/tkejzlar/aquatemp/pull/4) |
+| Opt-in session-token logging (options flow, off by default); saving options now reloads the entry | The API allows one login at a time, so reusing Home Assistant's session token is the only way to make manual API requests without logging it out | Not proposed |
 
 ## How to
 

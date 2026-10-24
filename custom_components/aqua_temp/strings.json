@@ -26,7 +26,11 @@
           "title": "Title",
           "username": "Username",
           "password": "Password",
-          "api_type": "API type"
+          "api_type": "API type",
+          "log_session_token": "Log session token (for debugging)"
+        },
+        "data_description": {
+          "log_session_token": "Writes the API session token to the Home Assistant log once per login, at WARNING. It is a credential: anyone holding it can control your heat pump until the next login. Turn off before sharing logs."
         }
       }
     },

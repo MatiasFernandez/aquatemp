@@ -26,6 +26,7 @@ from ..common.api_types import APIParam
 from ..common.consts import (
     CONFIG_FAN_MODES,
     CONFIG_HVAC_MODES,
+    CONF_LOG_SESSION_TOKEN,
     CONFIG_HVAC_SET,
     CONFIGURATION_FILE,
     DEFAULT_ENTRY_ID,
@@ -116,6 +117,15 @@ class AquaTempConfigManager:
         config_data = self._config_data
 
         return config_data
+
+    @property
+    def log_session_token(self) -> bool:
+        if self._entry is None:
+            return False
+
+        log_session_token = self._entry.options.get(CONF_LOG_SESSION_TOKEN, False)
+
+        return log_session_token
 
     async def initialize(self, entry_config: dict):
         await self._load()
