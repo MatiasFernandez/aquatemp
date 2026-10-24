@@ -1,6 +1,7 @@
 # Home Assistant Aqua Temp & Hi Temp Heat Pumps
 
 [![Validate](https://github.com/MatiasFernandez/aquatemp/actions/workflows/validate.yml/badge.svg?branch=main)](https://github.com/MatiasFernandez/aquatemp/actions/workflows/validate.yml)
+[![Coverage](https://codecov.io/gh/MatiasFernandez/aquatemp/branch/main/graph/badge.svg)](https://codecov.io/gh/MatiasFernandez/aquatemp)
 [![Release](https://img.shields.io/github/v/release/MatiasFernandez/aquatemp)](https://github.com/MatiasFernandez/aquatemp/releases)
 [![HACS Custom](https://img.shields.io/badge/HACS-Custom-41BDF5.svg)](https://hacs.xyz/docs/faq/custom_repositories/)
 

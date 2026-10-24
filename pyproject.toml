@@ -19,6 +19,7 @@ dev = [
     "pre-commit>=4",
     "pytest>=9.1.1",
     "pytest-asyncio>=1.4.0",
+    "pytest-cov>=7.1.0",
 ]
 
 [tool.uv]
@@ -57,3 +58,11 @@ max-complexity = 25
 [tool.pytest.ini_options]
 asyncio_mode = "auto"
 testpaths = ["tests"]
+
+[tool.coverage.run]
+source = ["custom_components/aqua_temp"]
+branch = true
+
+[tool.coverage.report]
+show_missing = true
+skip_covered = true
