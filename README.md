@@ -20,6 +20,7 @@ Compared with [tkejzlar/aquatemp](https://github.com/tkejzlar/aquatemp) 3.0.43:
 | Document 16-char password truncation causing login failures | The app silently truncates passwords to 16 characters; longer passwords fail here with "Invalid credentials" | PR open: [tkejzlar/aquatemp#3](https://github.com/tkejzlar/aquatemp/pull/3) |
 | Promote inlet/outlet/ambient water temperatures to primary sensors with statistics | Upstream hides them under Diagnostic and records no long-term statistics, though they are the main readings for a pool heat pump | PR open: [tkejzlar/aquatemp#4](https://github.com/tkejzlar/aquatemp/pull/4) |
 | Opt-in session-token logging (options flow, off by default); saving options now reloads the entry | The API allows one login at a time, so reusing Home Assistant's session token is the only way to make manual API requests without logging it out | Not proposed |
+| Minimum Home Assistant version raised to 2025.11 (from 2024.1) | Covers ~91% of active installs per HA analytics and allows targeting Python 3.13 | Not proposed |
 
 ## How to
 

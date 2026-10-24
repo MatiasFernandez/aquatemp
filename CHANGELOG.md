@@ -7,6 +7,10 @@ predate this fork and keep their original format.
 
 ## [Unreleased]
 
+### Changed
+
+- Require Home Assistant 2025.11 or newer (was 2024.1)
+
 ### Security
 
 - Stop logging config and options flow input, which included the plaintext password; only the API type and session-token toggle are logged on submit
