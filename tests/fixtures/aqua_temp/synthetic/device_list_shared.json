@@ -1,0 +1,17 @@
+{
+  "sessionid": null,
+  "error_code": "0",
+  "error_msg": "Success",
+  "error_msg_code": "",
+  "totalSize": null,
+  "totalPage": null,
+  "nextPage": null,
+  "objectResult": [
+    {
+      "deviceCode": "000000000002",
+      "productId": "1245226668902080512",
+      "deviceNickName": "Shared heat pump"
+    }
+  ],
+  "isReusltSuc": true
+}
