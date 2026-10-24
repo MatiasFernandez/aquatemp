@@ -1,5 +1,9 @@
 # Home Assistant Aqua Temp & Hi Temp Heat Pumps
 
+[![Validate](https://github.com/MatiasFernandez/aquatemp/actions/workflows/validate.yml/badge.svg?branch=main)](https://github.com/MatiasFernandez/aquatemp/actions/workflows/validate.yml)
+[![Release](https://img.shields.io/github/v/release/MatiasFernandez/aquatemp)](https://github.com/MatiasFernandez/aquatemp/releases)
+[![HACS Custom](https://img.shields.io/badge/HACS-Custom-41BDF5.svg)](https://hacs.xyz/docs/faq/custom_repositories/)
+
 > **This is a fork** of [tkejzlar/aquatemp](https://github.com/tkejzlar/aquatemp), itself a fork of [radical-squared/aquatemp](https://github.com/radical-squared/aquatemp). It evolves independently and has its own releases; upstream changes are merged in occasionally. What this fork changes is listed in the [changelog](CHANGELOG.md), starting with 3.1.0, its first release.
 
 This is Home Assistant's an integration for PHINX Aqua Temp / HiTemp compatible heat pumps.
