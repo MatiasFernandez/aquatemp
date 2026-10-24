@@ -21,7 +21,9 @@ OTHER_DEVICE_ID = "device-id-2"
 def hass():
     """Hass with one coordinator holding two devices, and no entity states."""
     coordinator = MagicMock()
-    coordinator.config_manager.get_api_param.return_value = "device_id"
+    coordinator.get_device_meta.side_effect = lambda code: SimpleNamespace(
+        device_id={"000000000001": DEVICE_ID, "000000000002": OTHER_DEVICE_ID}[code]
+    )
     coordinator.get_debug_data.return_value = {
         DATA_ITEM_DEVICES: {
             "000000000001": {"device_id": DEVICE_ID, "device_code": "000000000001"},

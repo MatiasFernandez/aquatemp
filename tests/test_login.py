@@ -1,12 +1,10 @@
 """Login: request shape, the token on later requests, rejection and re-login."""
 
-from unittest.mock import AsyncMock, MagicMock
-
 import pytest
 from yarl import URL
 
+from custom_components.aqua_temp.cloud.client import Credentials
 from custom_components.aqua_temp.cloud.exceptions import LoginError
-from custom_components.aqua_temp.managers.aqua_temp_api import AquaTempAPI
 
 from .conftest import DEVICE_CODE, cloud_with
 
@@ -32,6 +30,12 @@ async def test_login_sends_username_and_password_hash(client, wire):
         {"userName": "test@example.com", "password": PASSWORD_HASH},
     )
     assert client.login_details == {"x-token": "test-token"}
+
+
+def test_credentials_repr_hides_the_password():
+    credentials = Credentials(username="test@example.com", password="test-password")
+
+    assert "test-password" not in repr(credentials)
 
 
 async def test_token_sent_on_every_request_after_login(api, cloud):
@@ -88,10 +92,3 @@ async def test_unauthorized_read_logs_in_again_and_retries(api, wire):
     ]
     assert api.get_device_data(DEVICE_CODE)["T02"] == "13.0"
 
-
-async def test_terminate_leaves_a_session_passed_in_open(config_manager):
-    session = MagicMock(close=AsyncMock())
-
-    await AquaTempAPI(None, config_manager, session).terminate()
-
-    session.close.assert_not_called()

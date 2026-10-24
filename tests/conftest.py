@@ -1,4 +1,4 @@
-"""Offline harness: the real config manager and API client against a mocked cloud.
+"""Offline harness: the real cloud library and API client against a mocked cloud.
 
 Fixtures under fixtures/<api type>/ are catalogued, with their source, in
 fixtures/README.md.
@@ -9,17 +9,15 @@ import json
 from pathlib import Path
 from unittest.mock import AsyncMock, patch
 
+from aiohttp import ClientSession
 from aioresponses import aioresponses
 import pytest
 
+from custom_components.aqua_temp.cloud.api_profile import ApiProfile
 from custom_components.aqua_temp.cloud.api_types import APIParam, APIType
+from custom_components.aqua_temp.cloud.client import AquaTempAPI, Credentials
+from custom_components.aqua_temp.cloud.device_profiles import DeviceProfiles
 from custom_components.aqua_temp.cloud.endpoints import Endpoints
-from custom_components.aqua_temp.common.consts import CONF_API_TYPE
-from custom_components.aqua_temp.managers.aqua_temp_api import AquaTempAPI
-from custom_components.aqua_temp.managers.aqua_temp_config_manager import (
-    AquaTempConfigManager,
-)
-from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 
 FIXTURES = Path(__file__).parent / "fixtures"
 
@@ -65,10 +63,10 @@ def cloud_with(responses: dict):
     return pytest.mark.parametrize("cloud_responses", [responses])
 
 
-def endpoint_url(config_manager: AquaTempConfigManager, endpoint: str) -> str:
-    """URL the client posts to for endpoint, built from the config under test."""
-    param_url = config_manager.get_api_param(APIParam.URL)
-    param_suffix = config_manager.get_api_param(APIParam.Suffix)
+def endpoint_url(api_profile: ApiProfile, endpoint: str) -> str:
+    """URL the client posts to for endpoint, built from the profile under test."""
+    param_url = api_profile.get(APIParam.URL)
+    param_suffix = api_profile.get(APIParam.Suffix)
 
     return f"{param_url}/{endpoint}{param_suffix}"
 
@@ -80,45 +78,42 @@ def api_type(request) -> str:
 
 
 @pytest.fixture
-async def config_manager(api_type) -> AquaTempConfigManager:
-    """Real config manager without hass or a config entry, with fake credentials."""
-    config_manager = AquaTempConfigManager(None, None)
-
-    await config_manager.initialize(
-        {
-            CONF_USERNAME: "test@example.com",
-            CONF_PASSWORD: "test-password",
-            CONF_API_TYPE: api_type,
-        }
-    )
-
-    return config_manager
+async def api_profile(api_type) -> ApiProfile:
+    return await ApiProfile.load(api_type)
 
 
 @pytest.fixture
-async def client(config_manager, cloud):
-    """API client against the mocked cloud, not yet initialized."""
-    # No HA instance to dispatch new-device signals to, and no point waiting
-    # between retries
-    with (
-        patch(
-            "custom_components.aqua_temp.managers.aqua_temp_api.async_dispatcher_send"
-        ),
-        patch(
-            "custom_components.aqua_temp.managers.aqua_temp_api.sleep",
-            new=AsyncMock(),
-        ),
-    ):
-        client = AquaTempAPI(None, config_manager)
+async def device_profiles() -> DeviceProfiles:
+    return await DeviceProfiles.load()
 
-        # The token lives in a module-level headers dict shared by every
-        # client, so clear it both ways: a failed test must not leak it
-        client.set_token()
 
-        yield client
+@pytest.fixture
+def announced() -> list[str]:
+    """Codes of the devices the client announced as new, in order."""
+    return []
 
-        client.set_token()
-        await client.terminate()
+
+@pytest.fixture
+async def client(api_profile, device_profiles, announced, cloud):
+    """API client against the mocked cloud, with fake credentials, not yet initialized."""
+    # No point waiting between retries
+    with patch("custom_components.aqua_temp.cloud.client.sleep", new=AsyncMock()):
+        async with ClientSession() as session:
+            client = AquaTempAPI(
+                session,
+                Credentials(username="test@example.com", password="test-password"),
+                api_profile,
+                device_profiles,
+                on_new_device=announced.append,
+            )
+
+            # The token lives in a module-level headers dict shared by every
+            # client, so clear it both ways: a failed test must not leak it
+            client.set_token()
+
+            yield client
+
+            client.set_token()
 
 
 @pytest.fixture
@@ -147,7 +142,7 @@ def wire() -> list[tuple[str, dict | None]]:
 
 
 @pytest.fixture
-def cloud(api_type, config_manager, cloud_responses, wire):
+def cloud(api_type, api_profile, cloud_responses, wire):
     """Mocked cloud serving BASE_RESPONSES merged with cloud_responses.
 
     Unmatched requests raise, so nothing reaches the real cloud.
@@ -160,7 +155,7 @@ def cloud(api_type, config_manager, cloud_responses, wire):
         return callback
 
     def mock(endpoint: str, response, repeat: bool):
-        url = endpoint_url(config_manager, endpoint)
+        url = endpoint_url(api_profile, endpoint)
         callback = record(endpoint)
 
         if isinstance(response, int):

@@ -14,7 +14,6 @@ from .conftest import cloud_with
 LOGIN = "app/user/login"
 
 FLOW_MANAGER = "custom_components.aqua_temp.managers.flow_manager"
-API = "custom_components.aqua_temp.managers.aqua_temp_api"
 CONFIG_MANAGER = "custom_components.aqua_temp.managers.aqua_temp_config_manager"
 
 
@@ -30,7 +29,7 @@ async def shared_connector():
 
 @pytest.fixture
 def flow_session(shared_connector):
-    """Patch HA's session factory where the flow and the API use it.
+    """Patch HA's session factory where the flow uses it.
 
     Also stubs the storage and translations a hass would provide. Yields
     (factory, session).
@@ -42,7 +41,6 @@ def flow_session(shared_connector):
 
     with (
         patch(f"{FLOW_MANAGER}.async_create_clientsession", factory, create=True),
-        patch(f"{API}.async_create_clientsession", factory),
         patch(f"{FLOW_MANAGER}.PasswordManager.encrypt", new=AsyncMock()),
         patch(f"{CONFIG_MANAGER}.Store", return_value=empty_store),
         patch(

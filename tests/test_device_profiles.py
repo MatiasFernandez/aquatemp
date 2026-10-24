@@ -36,11 +36,6 @@ UNKNOWN = "1000000000000000000"
 
 
 @pytest.fixture
-async def device_profiles() -> DeviceProfiles:
-    return await DeviceProfiles.load()
-
-
-@pytest.fixture
 def resolve(device_profiles):
     """Everything the profile resolved for a product's device decides, by product id."""
     return partial(resolve_with_profiles, device_profiles)

@@ -13,6 +13,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowHandler
 from homeassistant.helpers.aiohttp_client import async_create_clientsession
 
+from ..cloud.client import AquaTempAPI
 from ..cloud.exceptions import LoginError
 from ..common.consts import (
     CONF_API_TYPE,
@@ -22,7 +23,6 @@ from ..common.consts import (
     INVALID_TOKEN_SECTION,
 )
 from ..models.config_data import DATA_KEYS, ConfigData
-from .aqua_temp_api import AquaTempAPI
 from .aqua_temp_config_manager import AquaTempConfigManager
 from .password_manager import PasswordManager
 
@@ -88,7 +88,12 @@ class IntegrationFlowManager:
                 session = async_create_clientsession(self._hass, auto_cleanup=False)
 
                 try:
-                    api = AquaTempAPI(self._hass, self._config_manager, session)
+                    api = AquaTempAPI(
+                        session,
+                        self._config_manager.credentials,
+                        self._config_manager.api_profile,
+                        self._config_manager.device_profiles,
+                    )
 
                     await api.initialize(True)
 

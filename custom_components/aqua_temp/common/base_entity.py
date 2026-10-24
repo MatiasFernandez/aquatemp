@@ -31,8 +31,9 @@ async def async_setup_base_entry(
             coordinator = hass.data[DOMAIN][entry.entry_id]
 
             config_manager = coordinator.config_manager
+            device_profile = coordinator.get_device_profile(device_code)
 
-            entity_descriptions = config_manager.get_entity_descriptions(device_code)
+            entity_descriptions = config_manager.get_entity_descriptions(device_profile)
 
             entities = [
                 entity_type(entity_description, coordinator, device_code)
