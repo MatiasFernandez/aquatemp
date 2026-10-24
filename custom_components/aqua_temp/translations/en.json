@@ -71,6 +71,9 @@
       }
     },
     "sensor": {
+      "water_delta_t": {
+        "name": "Water ΔT"
+      },
       "default_power": {
         "name": "Power"
       },

@@ -4,6 +4,8 @@
   "temperature": "Set_Temp",
   "fan": "Manual-mute",
   "current_temperature": "T02",
+  "inlet_water_temperature": "T02",
+  "outlet_water_temperature": "T03",
   "hvac_modes": {
     "off": {
       "set": null,

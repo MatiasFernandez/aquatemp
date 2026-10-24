@@ -41,6 +41,7 @@ from ..common.entity_descriptions import (
     AquaTempBinarySensorEntityDescription,
     AquaTempEntityDescription,
     AquaTempSensorEntityDescription,
+    get_derived_entity_descriptions,
 )
 from ..models.config_data import ConfigData
 
@@ -306,12 +307,13 @@ class AquaTempConfigManager:
 
         await self._save()
 
-        await self._load_entity_descriptions("default")
+        # Mappings first: entity descriptions read them for derived entities
         await self._load_pc_mapping("default")
+        await self._load_entity_descriptions("default")
 
         for product_id in PRODUCT_IDS:
-            await self._load_entity_descriptions(product_id)
             await self._load_pc_mapping(product_id)
+            await self._load_entity_descriptions(product_id)
 
         log_messages = [
             f"Entity Descriptions: {len(self._entity_descriptions)}",
@@ -437,6 +439,14 @@ class AquaTempConfigManager:
                 entity = AquaTempEntityDescription(key=key, name=data_item.get("name"))
 
                 entities.append(entity)
+
+        # Same fallback as set_device: a product without its own mapping uses
+        # the default one
+        pc_mapping = self._protocol_codes_configuration.get(
+            product_id, self._protocol_codes_configuration.get(PRODUCT_ID_DEFAULT)
+        )
+
+        entities.extend(get_derived_entity_descriptions(pc_mapping))
 
         self._update_platforms(entities)
         self._update_protocol_codes(product_id, entities)

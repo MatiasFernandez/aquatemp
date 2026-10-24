@@ -7,6 +7,10 @@ predate this fork and keep their original format.
 
 ## [Unreleased]
 
+### Added
+
+- "Water ΔT" sensor (outlet minus inlet water temperature) on devices whose profile maps the inlet and outlet water temperatures (the default profile does)
+
 ### Changed
 
 - Require Home Assistant 2025.11 or newer (was 2024.1)

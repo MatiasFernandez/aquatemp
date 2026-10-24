@@ -66,6 +66,8 @@ CONFIG_SET_POWER = "power"
 CONFIG_SET_TEMPERATURE = "temperature"
 CONFIG_SET_FAN = "fan"
 CONFIG_SET_CURRENT_TEMPERATURE = "current_temperature"
+CONFIG_INLET_WATER_TEMPERATURE = "inlet_water_temperature"
+CONFIG_OUTLET_WATER_TEMPERATURE = "outlet_water_temperature"
 
 API_STATUS = "api_status"
 
