@@ -37,7 +37,7 @@ class Test:
         data = {
             CONF_USERNAME: USERNAME,
             CONF_PASSWORD: PASSWORD,
-            CONF_API_TYPE: str(APIType.AquaTemp)
+            CONF_API_TYPE: str(APIType.AquaTemp),
         }
 
         config_manager.update_credentials(data)

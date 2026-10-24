@@ -6,6 +6,7 @@ from pathlib import Path
 
 import aiofiles
 
+from homeassistant.components.sensor import SensorStateClass
 from homeassistant.config_entries import STORAGE_VERSION, ConfigEntry
 from homeassistant.const import (
     CONF_PASSWORD,
@@ -15,7 +16,6 @@ from homeassistant.const import (
     Platform,
     UnitOfTemperature,
 )
-from homeassistant.components.sensor import SensorStateClass
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import translation
 from homeassistant.helpers.entity import DeviceInfo
@@ -24,9 +24,9 @@ from homeassistant.helpers.storage import Store
 
 from ..common.api_types import APIParam
 from ..common.consts import (
+    CONF_LOG_SESSION_TOKEN,
     CONFIG_FAN_MODES,
     CONFIG_HVAC_MODES,
-    CONF_LOG_SESSION_TOKEN,
     CONFIG_HVAC_SET,
     CONFIGURATION_FILE,
     DEFAULT_ENTRY_ID,
