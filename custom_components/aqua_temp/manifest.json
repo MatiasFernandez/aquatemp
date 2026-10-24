@@ -1,12 +1,12 @@
 {
   "domain": "aqua_temp",
   "name": "Aqua Temp",
-  "codeowners": ["@radical-squared", "@elad-bar"],
+  "codeowners": ["@MatiasFernandez"],
   "config_flow": true,
   "dependencies": [],
-  "documentation": "https://github.com/radical-squared/aquatemp",
+  "documentation": "https://github.com/MatiasFernandez/aquatemp",
   "iot_class": "cloud_polling",
-  "issue_tracker": "https://github.com/radical-squared/aquatemp/issues",
+  "issue_tracker": "https://github.com/MatiasFernandez/aquatemp/issues",
   "requirements": [],
-  "version": "3.0.43"
+  "version": "3.1.0"
 }

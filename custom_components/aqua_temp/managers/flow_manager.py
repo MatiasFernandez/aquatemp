@@ -11,7 +11,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowHandler
 
-from ..common.consts import CONF_TITLE, DEFAULT_NAME
+from ..common.consts import CONF_LOG_SESSION_TOKEN, CONF_TITLE, DEFAULT_NAME
 from ..models.config_data import DATA_KEYS, ConfigData
 from ..models.exceptions import LoginError
 from .aqua_temp_api import AquaTempAPI
@@ -55,6 +55,9 @@ class IntegrationFlowManager:
             else:
                 user_input = {key: self._entry.data[key] for key in self._entry.data}
                 user_input[CONF_TITLE] = self._entry.title
+                user_input[CONF_LOG_SESSION_TOKEN] = self._entry.options.get(
+                    CONF_LOG_SESSION_TOKEN, False
+                )
 
                 await PasswordManager.decrypt(
                     self._hass, user_input, self._entry.entry_id
@@ -96,7 +99,7 @@ class IntegrationFlowManager:
 
                 _LOGGER.warning(f"Failed to create integration, Error Key: {error_key}")
 
-        schema = ConfigData.default_schema(user_input)
+        schema = ConfigData.default_schema(user_input, self._entry is not None)
 
         return self._flow_handler.async_show_form(
             step_id=self._flow_id, data_schema=schema, errors=form_errors
@@ -123,8 +126,11 @@ class IntegrationFlowManager:
 
         await PasswordManager.encrypt(self._hass, config_data)
 
+        # Options are written here too, in the same update as data and title, so
+        # the update listener reloads the entry once. The options flow's own write
+        # of the same options afterwards is then a no-op.
         self._hass.config_entries.async_update_entry(
-            entry, data=config_data, title=title
+            entry, data=config_data, title=title, options=config_options
         )
 
         return config_options

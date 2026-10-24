@@ -5,7 +5,12 @@ from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.helpers import selector
 
 from ..common.api_types import API_TYPE_LEGACY, API_TYPES, APIType
-from ..common.consts import CONF_API_TYPE, CONF_TITLE, DEFAULT_NAME
+from ..common.consts import (
+    CONF_API_TYPE,
+    CONF_LOG_SESSION_TOKEN,
+    CONF_TITLE,
+    DEFAULT_NAME,
+)
 
 DATA_KEYS = [CONF_USERNAME, CONF_PASSWORD, CONF_API_TYPE]
 
@@ -62,7 +67,7 @@ class ConfigData:
         return to_string
 
     @staticmethod
-    def default_schema(user_input: dict | None) -> Schema:
+    def default_schema(user_input: dict | None, with_options: bool = False) -> Schema:
         if user_input is None:
             user_input = {}
 
@@ -81,6 +86,14 @@ class ConfigData:
                 )
             ),
         }
+
+        if with_options:
+            new_user_input[
+                vol.Optional(
+                    CONF_LOG_SESSION_TOKEN,
+                    default=user_input.get(CONF_LOG_SESSION_TOKEN, False),
+                )
+            ] = bool
 
         schema = vol.Schema(new_user_input)
 

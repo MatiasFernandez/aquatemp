@@ -532,6 +532,17 @@ class AquaTempAPI:
             raise LoginError()
 
         self.set_token(token)
+
+        if self._config_manager.log_session_token:
+            # Opt-in, for running curl / utils scripts on HA's session instead of
+            # logging in again (the API allows one login at a time).
+            _LOGGER.warning(
+                "[session-token] %s: CREDENTIAL, do not share. "
+                "Valid until the next login. export AQUATEMP_X_TOKEN='%s'",
+                self._config_manager.entry_title,
+                token,
+            )
+
         await self._load_user_info()
 
     async def _load_user_info(self):
