@@ -10,7 +10,9 @@ from pathlib import Path
 
 import pytest
 
-PROFILES = Path(__file__).parents[1] / "custom_components/aqua_temp/parameters"
+from custom_components.aqua_temp.cloud.device_profiles import DeviceProfiles
+
+PROFILES = Path(__file__).parents[1] / "custom_components/aqua_temp/cloud/profiles"
 
 ROLES = [
     "mode",
@@ -31,44 +33,38 @@ UNKNOWN = "1000000000000000000"
 
 
 @pytest.fixture
-def resolve(config_manager):
+async def device_profiles() -> DeviceProfiles:
+    return await DeviceProfiles.load()
+
+
+@pytest.fixture
+def resolve(device_profiles, config_manager):
     """Everything the profile resolved for a product's device decides, by product id."""
-    return partial(resolve_with_config_manager, config_manager)
+    return partial(resolve_with_profiles, device_profiles, config_manager)
 
 
-def resolve_with_config_manager(config_manager, product_id: str) -> dict:
+def resolve_with_profiles(
+    device_profiles: DeviceProfiles, config_manager, product_id: str
+) -> dict:
+    profile = device_profiles.for_product(product_id)
+
+    # Platforms are Home Assistant's, still decided by the config manager
     device_code = f"device-{product_id}"
-
     config_manager.set_device(device_code, product_id)
 
-    binding = config_manager._devices[device_code]
-    hvac_modes = config_manager.get_hvac_modes(device_code)
-    fan_modes = config_manager.get_fan_modes(device_code)
-
     return {
-        "mapping_id": binding["mapping"],
-        "catalog_id": binding["entity_description"],
-        "pc_keys": {
-            role: config_manager.get_pc_key(device_code, role) for role in ROLES
-        },
-        "hvac_modes": hvac_modes,
-        "hvac_modes_reverse": {
-            value: config_manager.get_hvac_reverse_mapping(device_code, value)
-            for value in hvac_modes.values()
-        },
-        "fan_modes": fan_modes,
-        "fan_modes_reverse": {
-            value: config_manager.get_fan_reverse_mapping(device_code, value)
-            for value in fan_modes.values()
-        },
+        "mapping_id": profile.mapping_id,
+        "catalog_id": profile.catalog_id,
+        "pc_keys": {role: profile.get_pc_key(role) for role in ROLES},
+        "hvac_modes": profile.hvac_modes,
+        "hvac_modes_reverse": profile.hvac_modes_reverse,
+        "fan_modes": profile.fan_modes,
+        "fan_modes_reverse": profile.fan_modes_reverse,
         "mode_codes": {
-            mode: [
-                config_manager.get_hvac_mode_pc_key(device_code, mode, key)
-                for key in MODE_CODES
-            ]
-            for mode in hvac_modes
+            mode: [profile.get_hvac_mode_pc_key(mode, key) for key in MODE_CODES]
+            for mode in profile.hvac_modes
         },
-        "poll_codes": config_manager.get_supported_protocol_codes(device_code),
+        "poll_codes": profile.poll_codes,
         "platforms": {
             str(description.platform)
             for description in config_manager.get_entity_descriptions(device_code)

@@ -96,7 +96,7 @@ PYTHONPATH=. uv run python utils/parse-resources.py
 Limitations of the script as it stands:
 
 - File paths use Windows separators (`\\`), so it only finds the XML files on Windows.
-- Writing `custom_components/aqua_temp/parameters/entity_description.<device>.json` is commented out. Uncomment it to regenerate the files, or copy the logged output.
+- Writing `custom_components/aqua_temp/cloud/profiles/entity_description.<device>.json` is commented out. Uncomment it to regenerate the files, or copy the logged output.
 
 ## Changelog and releases
 
