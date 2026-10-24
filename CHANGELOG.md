@@ -7,6 +7,8 @@ predate this fork and keep their original format.
 
 ## [Unreleased]
 
+## [3.2.0] - 2026-10-24
+
 ### Added
 
 - "Water ΔT" sensor (outlet minus inlet water temperature) on devices whose profile maps the inlet and outlet water temperatures (the default profile does)
@@ -301,7 +303,8 @@ As result of that process, you need to re-setup the integration.
 - Simplified `climate` component to include just its functionality without additional attributes (moved to dedicated components)
 - Add mapping of more Protocol Codes (Parameters) for later support of more sensors/binary_sensors
 
-[Unreleased]: https://github.com/MatiasFernandez/aquatemp/compare/v3.1.0...HEAD
+[Unreleased]: https://github.com/MatiasFernandez/aquatemp/compare/v3.2.0...HEAD
+[3.2.0]: https://github.com/MatiasFernandez/aquatemp/compare/v3.1.0...v3.2.0
 [3.1.0]: https://github.com/MatiasFernandez/aquatemp/compare/b163b69...v3.1.0
 [3.0.43]: https://github.com/tkejzlar/aquatemp/compare/07b9856...b163b69
 [3.0.42]: https://github.com/tkejzlar/aquatemp/compare/7d6e14b...07b9856
