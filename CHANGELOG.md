@@ -7,6 +7,14 @@ predate this fork and keep their original format.
 
 ## [Unreleased]
 
+### Changed
+
+- The cloud API client is now a subpackage (`cloud/`) with no Home Assistant imports
+
+### Fixed
+
+- With two config entries, each logged the other out, because they shared one session token
+
 ## [3.2.0] - 2026-10-24
 
 ### Added
