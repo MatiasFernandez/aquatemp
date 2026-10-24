@@ -9,9 +9,6 @@ import pytest
 from yarl import URL
 
 from custom_components.aqua_temp.cloud.endpoints import Endpoints
-from custom_components.aqua_temp.common.entity_descriptions import (
-    DEFAULT_ENTITY_DESCRIPTIONS,
-)
 
 from .conftest import DEVICE_CODE, endpoint_url, load_fixture
 
@@ -20,20 +17,15 @@ DATA_URL = "https://cloud.linked-go.com:449/crmservice/api/app/device/getDataByC
 
 DEFAULT_PROFILE = (
     Path(__file__).parents[1]
-    / "custom_components/aqua_temp/parameters/entity_description.default.json"
+    / "custom_components/aqua_temp/cloud/profiles/entity_description.default.json"
 )
 
 
 def default_profile_codes() -> list[str]:
-    """Codes requested for the default profile: built-in entities, then the JSON's."""
-    built_in = [
-        description.key
-        for description in DEFAULT_ENTITY_DESCRIPTIONS
-        if description.is_protocol_code
-    ]
+    """Codes requested for the default profile: Mode, then the JSON's."""
     profile = [item["key"] for item in json.loads(DEFAULT_PROFILE.read_text())]
 
-    return built_in + profile
+    return ["Mode", *profile]
 
 
 def register_data(cloud, api_type, config_manager, *fixtures):
@@ -66,8 +58,8 @@ async def test_requests_device_protocol_codes(api, cloud, api_type, config_manag
 
     assert set(body) == {"deviceCode", "protocalCodes"}
     assert body["deviceCode"] == DEVICE_CODE
-    # Suspect (AT-041): "Mode" is both a built-in entity and in the profile,
-    # so it is requested twice
+    # Suspect (AT-041): "Mode" leads the polled codes and is in the profile
+    # too, so it is requested twice
     assert body["protocalCodes"] == default_profile_codes()
     assert body["protocalCodes"].count("Mode") == 2
 
