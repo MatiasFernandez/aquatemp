@@ -45,7 +45,7 @@ uv run pytest tests/test_fetch_data.py -k shape  # one file, tests matching a na
 uv run pytest --cov                              # with a coverage report (add --cov-report=html for htmlcov/)
 ```
 
-CI runs the suite with coverage and uploads it to [Codecov](https://codecov.io/gh/MatiasFernandez/aquatemp), which comments on pull requests with the coverage of the changed lines.
+CI runs the suite with coverage and uploads it to [Codecov](https://codecov.io/gh/MatiasFernandez/aquatemp), which comments on pull requests with the coverage of the changed lines and any failing tests.
 
 Fixtures live in [tests/fixtures/](tests/fixtures/), one folder per API type, and are catalogued in its [README](tests/fixtures/README.md). List new fixtures there; a test fails otherwise.
 
