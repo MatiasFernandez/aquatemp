@@ -17,6 +17,7 @@ from ..common.consts import (
     CONF_LOG_SESSION_TOKEN,
     CONF_TITLE,
     DEFAULT_NAME,
+    INVALID_TOKEN_SECTION,
 )
 from ..models.config_data import DATA_KEYS, ConfigData
 from ..models.exceptions import LoginError
@@ -114,7 +115,10 @@ class IntegrationFlowManager:
         schema = ConfigData.default_schema(user_input, self._entry is not None)
 
         return self._flow_handler.async_show_form(
-            step_id=self._flow_id, data_schema=schema, errors=form_errors
+            step_id=self._flow_id,
+            data_schema=schema,
+            errors=form_errors,
+            description_placeholders={"invalid_token_url": INVALID_TOKEN_SECTION},
         )
 
     async def remap_entry_data(self, options: dict[str, Any]) -> dict[str, Any]:

@@ -14,7 +14,7 @@
     },
     "error": {
       "invalid_credentials": "Invalid credentials",
-      "corrupted_encryption_key": "Corrupted encryption key, please follow steps in https://github.com/radical-squared/aquatemp#invalid-token"
+      "corrupted_encryption_key": "Corrupted encryption key, please follow steps in {invalid_token_url}"
     }
   },
   "options": {
@@ -36,7 +36,7 @@
     },
     "error": {
       "invalid_credentials": "Invalid credentials",
-      "corrupted_encryption_key": "Corrupted encryption key, please follow steps in https://github.com/radical-squared/aquatemp#invalid-token"
+      "corrupted_encryption_key": "Corrupted encryption key, please follow steps in {invalid_token_url}"
     }
   },
   "selector": {

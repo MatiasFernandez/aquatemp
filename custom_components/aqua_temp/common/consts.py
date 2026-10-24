@@ -15,7 +15,7 @@ ADD_COMPONENT_SIGNALS = [SIGNAL_AQUA_TEMP_DEVICE_NEW]
 
 STORAGE_DATA_KEY = "key"
 
-INVALID_TOKEN_SECTION = "https://github.com/radical-squared/aquatemp#invalid-token"
+INVALID_TOKEN_SECTION = "https://github.com/MatiasFernandez/aquatemp#invalid-token"
 
 DEFAULT_ENTRY_ID = "config"
 
