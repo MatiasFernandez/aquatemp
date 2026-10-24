@@ -23,6 +23,7 @@ There is no unit test suite and no build step. Checks run as pre-commit hooks:
 
 - [ruff](https://docs.astral.sh/ruff/) lint and format for Python, configured in [pyproject.toml](pyproject.toml)
 - codespell, yamllint, prettier (Markdown, JSON, YAML) and basic file checks
+- [actionlint](https://github.com/rhysd/actionlint) (workflow correctness) and [zizmor](https://docs.zizmor.sh/) (workflow security) for GitHub Actions. Pin third-party actions to a commit SHA with a `# vX.Y.Z` comment; Dependabot keeps both updated.
 
 ```bash
 pre-commit run --all-files                   # everything
