@@ -7,6 +7,10 @@ predate this fork and keep their original format.
 
 ## [Unreleased]
 
+### Security
+
+- Stop logging config and options flow input, which included the plaintext password; only the API type and session-token toggle are logged on submit
+
 ## [3.1.0] - 2026-10-24
 
 _First release of the [MatiasFernandez/aquatemp](https://github.com/MatiasFernandez/aquatemp) fork, based on upstream 3.0.43_

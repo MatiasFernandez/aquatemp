@@ -11,7 +11,12 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowHandler
 
-from ..common.consts import CONF_LOG_SESSION_TOKEN, CONF_TITLE, DEFAULT_NAME
+from ..common.consts import (
+    CONF_API_TYPE,
+    CONF_LOG_SESSION_TOKEN,
+    CONF_TITLE,
+    DEFAULT_NAME,
+)
 from ..models.config_data import DATA_KEYS, ConfigData
 from ..models.exceptions import LoginError
 from .aqua_temp_api import AquaTempAPI
@@ -44,7 +49,7 @@ class IntegrationFlowManager:
 
     async def async_step(self, user_input: dict | None = None):
         """Manage the domain options."""
-        _LOGGER.info(f"Config flow started, Step: {self._flow_id}, Input: {user_input}")
+        _LOGGER.info(f"Config flow started, Step: {self._flow_id}")
 
         form_errors = None
 
@@ -64,6 +69,12 @@ class IntegrationFlowManager:
                 )
 
         else:
+            _LOGGER.info(
+                "Config flow submitted, "
+                f"API Type: {user_input.get(CONF_API_TYPE)}, "
+                f"Log Session Token: {user_input.get(CONF_LOG_SESSION_TOKEN, False)}"
+            )
+
             try:
                 await self._config_manager.initialize(user_input)
 
