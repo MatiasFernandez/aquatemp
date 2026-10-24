@@ -1,5 +1,81 @@
 # Changelog
 
+All notable changes to this project are documented in this file.
+
+The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Entries up to 3.0.37
+predate this fork and keep their original format.
+
+## [Unreleased]
+
+_First release of the [MatiasFernandez/aquatemp](https://github.com/MatiasFernandez/aquatemp) fork, based on upstream 3.0.43_
+
+### Added
+
+- Allow parameter JSON files to override `entity_category` and `state_class` per sensor
+- Document login failures caused by passwords longer than 16 characters
+
+### Changed
+
+- Promote inlet, outlet and ambient water temperatures to primary sensors with long-term statistics
+- Point manifest documentation, issue tracker and code owner at this fork
+
+### Fixed
+
+- Keep target temperature visible and editable when HVAC mode is OFF
+
+## [3.0.43] - 2026-05-12
+
+_Released in [tkejzlar/aquatemp](https://github.com/tkejzlar/aquatemp)_
+
+### Added
+
+- DEBUG-level login-failure diagnostics that log the shape of the credentials (length, encoding, whitespace), never their content
+
+## [3.0.42] - 2026-05-12
+
+_Released in [tkejzlar/aquatemp](https://github.com/tkejzlar/aquatemp)_
+
+### Added
+
+- Support for product ID 1845987289788989441 [PR #1](https://github.com/tkejzlar/aquatemp/pull/1) by [@cmoine](https://github.com/cmoine)
+- Log the cloud's `error_code` / `error_msg` at WARNING level when login fails
+
+## [3.0.41] - 2026-04-29
+
+_Released in [tkejzlar/aquatemp](https://github.com/tkejzlar/aquatemp)_
+
+### Changed
+
+- Fall back to all devices on the account when none matches the `PRODUCT_IDS` allow-list
+
+## [3.0.40] - 2026-04-26
+
+_Released in [tkejzlar/aquatemp](https://github.com/tkejzlar/aquatemp)_
+
+### Fixed
+
+- "Config entry was never loaded" errors when unloading after a partial setup failure
+
+## [3.0.39] - 2026-04-26
+
+_Released in [tkejzlar/aquatemp](https://github.com/tkejzlar/aquatemp)_
+
+### Fixed
+
+- Integration staying unloaded when DNS is not ready during Home Assistant boot
+
+## [3.0.38] - 2026-04-26
+
+_Released in [tkejzlar/aquatemp](https://github.com/tkejzlar/aquatemp)_
+
+### Fixed
+
+- Login failing with valid credentials because the options flow dropped the API type, falling back to the legacy endpoint
+- Network and parsing errors reported as "Invalid credentials"
+- Retries sleeping 1000 seconds instead of 1 second, which hung setup and service calls
+- "Already been setup" errors after a failed setup attempt
+- No recovery from partial failures: now re-logs in, and marks entities unavailable when the cloud is unreachable
+
 ## 3.0.37
 
 - Initialize data using `async_request_refresh` instead of `async_config_entry_first_refresh` to remove warning message
@@ -208,3 +284,11 @@ As result of that process, you need to re-setup the integration.
 - Add `sensor` components for each of the temperature reading (T01-T03)
 - Simplified `climate` component to include just its functionality without additional attributes (moved to dedicated components)
 - Add mapping of more Protocol Codes (Parameters) for later support of more sensors/binary_sensors
+
+[Unreleased]: https://github.com/MatiasFernandez/aquatemp/compare/b163b69...HEAD
+[3.0.43]: https://github.com/tkejzlar/aquatemp/compare/07b9856...b163b69
+[3.0.42]: https://github.com/tkejzlar/aquatemp/compare/7d6e14b...07b9856
+[3.0.41]: https://github.com/tkejzlar/aquatemp/compare/2bfffe4...7d6e14b
+[3.0.40]: https://github.com/tkejzlar/aquatemp/compare/a01fa08...2bfffe4
+[3.0.39]: https://github.com/tkejzlar/aquatemp/compare/10d398a...a01fa08
+[3.0.38]: https://github.com/tkejzlar/aquatemp/compare/27e4fe9...10d398a
