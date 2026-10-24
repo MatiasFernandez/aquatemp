@@ -55,6 +55,7 @@ class AquaTempConfigManager:
     _entry_id: str
     _entry_title: str
     _config_data: ConfigData
+    _store: Store | None
 
     def __init__(self, hass: HomeAssistant | None, entry: ConfigEntry | None):
         self._hass = hass
@@ -83,6 +84,8 @@ class AquaTempConfigManager:
         self._config_data = ConfigData()
 
         self._is_initialized = False
+
+        self._store = None
 
         if hass is not None:
             self._store = Store(
@@ -135,9 +138,12 @@ class AquaTempConfigManager:
 
         await self._load_api_config()
 
-        self._translations = await translation.async_get_translations(
-            self._hass, self._hass.config.language, "entity", {DOMAIN}
-        )
+        if self._hass is None:
+            self._translations = {}
+        else:
+            self._translations = await translation.async_get_translations(
+                self._hass, self._hass.config.language, "entity", {DOMAIN}
+            )
 
         self._is_initialized = True
 
