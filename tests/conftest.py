@@ -107,13 +107,7 @@ async def client(api_profile, device_profiles, announced, cloud):
                 on_new_device=announced.append,
             )
 
-            # The token lives in a module-level headers dict shared by every
-            # client, so clear it both ways: a failed test must not leak it
-            client.set_token()
-
             yield client
-
-            client.set_token()
 
 
 @pytest.fixture

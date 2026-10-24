@@ -100,7 +100,7 @@ class AquaTempAPI:
         self._session = session
         self._token = None
 
-        self._headers = HEADERS
+        self._headers = dict(HEADERS)
         self._credentials = credentials
         self._api_profile = api_profile
         self._device_profiles = device_profiles
