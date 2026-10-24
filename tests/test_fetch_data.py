@@ -1,18 +1,39 @@
 """getDataByCode: request shape and response parsing, through the full update cycle."""
 
+import json
 import logging
+from pathlib import Path
 
 from aiohttp import ClientResponseError
 import pytest
 from yarl import URL
 
-from custom_components.aqua_temp.common.consts import PRODUCT_ID_DEFAULT
 from custom_components.aqua_temp.common.endpoints import Endpoints
+from custom_components.aqua_temp.common.entity_descriptions import (
+    DEFAULT_ENTITY_DESCRIPTIONS,
+)
 
 from .conftest import DEVICE_CODE, endpoint_url, load_fixture
 
 # Literal on purpose: the expected values must not come from the config under test
 DATA_URL = "https://cloud.linked-go.com:449/crmservice/api/app/device/getDataByCode"
+
+DEFAULT_PROFILE = (
+    Path(__file__).parents[1]
+    / "custom_components/aqua_temp/parameters/entity_description.default.json"
+)
+
+
+def default_profile_codes() -> list[str]:
+    """Codes requested for the default profile: built-in entities, then the JSON's."""
+    built_in = [
+        description.key
+        for description in DEFAULT_ENTITY_DESCRIPTIONS
+        if description.is_protocol_code
+    ]
+    profile = [item["key"] for item in json.loads(DEFAULT_PROFILE.read_text())]
+
+    return built_in + profile
 
 
 def register_data(cloud, api_type, config_manager, *fixtures):
@@ -45,7 +66,10 @@ async def test_requests_device_protocol_codes(api, cloud, api_type, config_manag
 
     assert set(body) == {"deviceCode", "protocalCodes"}
     assert body["deviceCode"] == DEVICE_CODE
-    assert body["protocalCodes"] == config_manager._protocol_codes[PRODUCT_ID_DEFAULT]
+    # Suspect (AT-041): "Mode" is both a built-in entity and in the profile,
+    # so it is requested twice
+    assert body["protocalCodes"] == default_profile_codes()
+    assert body["protocalCodes"].count("Mode") == 2
 
 
 async def test_reported_values_become_device_data(api, cloud, api_type, config_manager):
