@@ -62,7 +62,7 @@ class Test:
 
             json_file_path = os.path.join(  # noqa: F841 - used by the commented-out write below
                 os.path.dirname(__file__),
-                f"..\\custom_components\\aqua_temp\\parameters\\{json_file_key}.json",
+                f"..\\custom_components\\aqua_temp\\cloud\\profiles\\{json_file_key}.json",
             )
 
             with open(xml_file_path, encoding="utf-8") as xml_file:

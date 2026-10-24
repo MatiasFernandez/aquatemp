@@ -65,21 +65,6 @@ class Test:
 
         await self.terminate()
 
-    @staticmethod
-    async def entities_mapping():
-        print("| Entity Name | Parameter | Platform | Protocol Code? |")
-        print("| ----------- | --------- | -------- | -------------- |")
-
-        for entity_description in []:
-            if entity_description.platform is not None:
-                print(
-                    f"| {{HA Device Name}} "
-                    f"{entity_description.name} | "
-                    f"{entity_description.key} | "
-                    f"{entity_description.platform} | "
-                    f"{entity_description.is_protocol_code} |"
-                )
-
     async def api_test(self):
         await self._create_api()
 

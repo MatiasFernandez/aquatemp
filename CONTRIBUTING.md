@@ -37,7 +37,7 @@ If a commit only reformats code, add its full SHA to [.git-blame-ignore-revs](.g
 
 ## Tests
 
-[pytest](https://docs.pytest.org/) runs offline against a mocked cloud ([aioresponses](https://github.com/pnuckowski/aioresponses)), driving the real config manager and API client through a full update cycle. Any request without a registered response fails the test, so nothing reaches the real cloud.
+[pytest](https://docs.pytest.org/) runs offline against a mocked cloud ([aioresponses](https://github.com/pnuckowski/aioresponses)), driving the cloud library's real API client and profiles through a full update cycle. Any request without a registered response fails the test, so nothing reaches the real cloud.
 
 ```bash
 uv run pytest                                    # everything
