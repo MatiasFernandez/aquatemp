@@ -9,7 +9,8 @@ Development setup, quality checks, developer scripts and release conventions are
 There is no build step.
 
 ```bash
-pre-commit run --all-files                   # full lint/format pass
-pre-commit run ruff-check --files <path>     # single hook on specific files
-pytest                                       # offline test suite
+uv sync                                            # set up or refresh .venv from uv.lock
+uv run pre-commit run --all-files                  # full lint/format pass
+uv run pre-commit run ruff-check --files <path>    # single hook on specific files
+uv run pytest                                      # offline test suite
 ```

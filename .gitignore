@@ -62,6 +62,7 @@ target/
 /.idea
 .vscode/
 
+.venv/
 venv/
 
 __test__.py

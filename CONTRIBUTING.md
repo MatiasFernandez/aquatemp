@@ -2,20 +2,19 @@
 
 ## Development setup
 
-Requires Python 3.13 or newer, the minimum of the oldest supported Home Assistant release (see `homeassistant` in [hacs.json](hacs.json)).
+Requires [uv](https://docs.astral.sh/uv/). It installs the Python in [.python-version](.python-version), the minimum of the oldest supported Home Assistant release (see `homeassistant` in [hacs.json](hacs.json)), and the exact dependency versions in [uv.lock](uv.lock).
 
 ```bash
-python3 -m venv .venv
-source .venv/bin/activate
-pip install -r requirements-test.txt                     # requirements.txt plus the test tools
-
-pre-commit install                                        # run the hooks on every commit
+uv sync                                                   # create .venv with the integration's and dev dependencies
+uv run pre-commit install                                 # run the hooks on every commit
 git config blame.ignoreRevsFile .git-blame-ignore-revs   # skip formatting-only commits in git blame
 ```
 
-`requirements.txt` does not pin `homeassistant`, so pip installs the latest release, which may need a newer Python than the minimum above.
+Prefix commands with `uv run` (as below), or activate `.venv` to run them directly.
 
-Install pre-commit itself once per machine, for example with `uv tool install pre-commit`, `pipx install pre-commit` or `brew install pre-commit`.
+Dependencies are declared in [pyproject.toml](pyproject.toml): `dependencies` for what the integration and developer scripts import, the `dev` group for test and lint tools. Change them with `uv add` / `uv remove` (`--dev` for the group), which also updates `uv.lock`; commit both. Dependabot opens weekly PRs bumping the lock.
+
+`uv.lock` resolves `homeassistant` per Python version, so the 3.13 environment gets the newest Home Assistant release that still supports 3.13, not the latest one.
 
 ## Quality checks
 
@@ -26,13 +25,13 @@ There is no build step. Checks run as pre-commit hooks:
 - [actionlint](https://github.com/rhysd/actionlint) (workflow correctness) and [zizmor](https://docs.zizmor.sh/) (workflow security) for GitHub Actions. Pin third-party actions to a commit SHA with a `# vX.Y.Z` comment; Dependabot keeps both updated.
 
 ```bash
-pre-commit run --all-files                   # everything
-pre-commit run ruff-check --files <path>     # one hook on specific files
+uv run pre-commit run --all-files                   # everything
+uv run pre-commit run ruff-check --files <path>     # one hook on specific files
 ```
 
 CI additionally runs the [tests](#tests), `hassfest` and the HACS validation action.
 
-When raising the minimum Home Assistant version in `hacs.json`, update `target-version` in `pyproject.toml` to the Python version that release requires.
+When raising the minimum Home Assistant version in `hacs.json`, update to match in [pyproject.toml](pyproject.toml): the `homeassistant` lower bound, `requires-python` and ruff's `target-version`, plus [.python-version](.python-version). Then run `uv lock`.
 
 If a commit only reformats code, add its full SHA to [.git-blame-ignore-revs](.git-blame-ignore-revs).
 
@@ -41,8 +40,8 @@ If a commit only reformats code, add its full SHA to [.git-blame-ignore-revs](.g
 [pytest](https://docs.pytest.org/) runs offline against a mocked cloud ([aioresponses](https://github.com/pnuckowski/aioresponses)), driving the real config manager and API client through a full update cycle. Any request without a registered response fails the test, so nothing reaches the real cloud.
 
 ```bash
-pytest                                    # everything
-pytest tests/test_fetch_data.py -k shape  # one file, tests matching a name
+uv run pytest                                    # everything
+uv run pytest tests/test_fetch_data.py -k shape  # one file, tests matching a name
 ```
 
 Fixtures live in [tests/fixtures/](tests/fixtures/), one folder per API type, and are catalogued in its [README](tests/fixtures/README.md). List new fixtures there; a test fails otherwise.
@@ -59,7 +58,7 @@ Both scripts import `custom_components` and `utils` as top-level packages, so ru
 [utils/api-testing.py](utils/api-testing.py) logs in with the AquaTemp API type, fetches every device on the account and logs its data. It keeps running until stopped with Ctrl+C.
 
 ```bash
-USERNAME=you@example.com PASSWORD=secret DEBUG=true PYTHONPATH=. python utils/api-testing.py
+USERNAME=you@example.com PASSWORD=secret DEBUG=true PYTHONPATH=. uv run python utils/api-testing.py
 ```
 
 | Environment variable | Default | Description                       |
@@ -75,7 +74,7 @@ The API allows one login per account at a time, so running the script logs out t
 [utils/parse-resources.py](utils/parse-resources.py) reads the parameter names from each device's `utils/devices/<device>/resources.xml`, which is extracted from the mobile app. It maps them with that device's `consts.py`, and logs the resulting entity descriptions and translation keys.
 
 ```bash
-PYTHONPATH=. python utils/parse-resources.py
+PYTHONPATH=. uv run python utils/parse-resources.py
 ```
 
 Limitations of the script as it stands:

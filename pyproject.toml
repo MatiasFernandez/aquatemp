@@ -1,3 +1,29 @@
+[project]
+# Not a Python package: Home Assistant loads the integration from custom_components/,
+# and manifest.json holds its version. This section only describes the dev environment.
+name = "aqua-temp"
+version = "0"
+requires-python = ">=3.13.2"
+dependencies = [
+    "aiofiles",
+    "aiohttp",
+    "cryptography",
+    "homeassistant>=2025.11.0",  # hacs.json minimum
+    "voluptuous",
+    "xmltodict",
+]
+
+[dependency-groups]
+dev = [
+    "aioresponses>=0.7.9",
+    "pre-commit>=4",
+    "pytest>=9.1.1",
+    "pytest-asyncio>=1.4.0",
+]
+
+[tool.uv]
+package = false
+
 [tool.ruff]
 # Minimum Python of the oldest supported Home Assistant (hacs.json)
 target-version = "py313"
