@@ -7,11 +7,16 @@ predate this fork and keep their original format.
 
 ## [Unreleased]
 
+### Changed
+
+- The cloud API client is now a subpackage (`cloud/`) with no Home Assistant imports
+
 ### Fixed
 
 - Downloading diagnostics for a single device failed with an error; it now returns that device's data and entities, as in the config entry diagnostics
 - Report a rejected login as invalid credentials when the response carries no login result, instead of failing setup with a generic "Failed to initialize session" error
 - Release the HTTP session the config and options flows use to check credentials once the check finishes; each form submission used to keep one session and one shutdown listener until Home Assistant stopped
+- With two config entries, each logged the other out, because they shared one session token
 
 ## [3.2.0] - 2026-10-24
 
