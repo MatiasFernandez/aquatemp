@@ -45,6 +45,7 @@ htmlcov/
 nosetests.xml
 coverage.xml
 junit.xml
+mutants/
 *,cover
 
 # Translations

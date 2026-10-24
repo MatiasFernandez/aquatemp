@@ -52,6 +52,19 @@ Fixtures live in [tests/fixtures/](tests/fixtures/), one folder per API type, an
 - Top-level files are real responses recorded from a device, merged and sanitised (device code replaced, metadata dropped). The maintainer regenerates them from private probe recordings; don't edit them by hand.
 - Files under `synthetic/` are written by hand for endpoints that were never recorded.
 
+### Mutation testing
+
+[mutmut](https://mutmut.readthedocs.io/) checks that the tests catch changes to the code: it applies small edits (mutants) to the modules in `source_paths` under `[tool.mutmut]` in [pyproject.toml](pyproject.toml), and runs the tests covering each one. Run it on demand, not in CI, when adding or reviewing tests.
+
+```bash
+uv run mutmut run                  # every mutant, results kept in mutants/ for the next commands
+uv run mutmut results              # mutants that no test caught
+uv run mutmut show <mutant>        # the diff of one
+uv run mutmut browse               # the same, interactively
+```
+
+A surviving mutant is a change the tests don't notice. Some are harmless: log messages, or edits that don't change behaviour. The rest point at a missing assertion or test. Delete `mutants/` to start over after changing the configuration.
+
 ## Developer scripts
 
 Both scripts import `custom_components` and `utils` as top-level packages, so run them from the repository root with `PYTHONPATH=.`.
