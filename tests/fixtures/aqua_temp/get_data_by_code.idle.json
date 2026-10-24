@@ -1,0 +1,1524 @@
+{
+  "sessionid": null,
+  "error_code": "0",
+  "error_msg": "Success",
+  "error_msg_code": "",
+  "totalSize": null,
+  "totalPage": null,
+  "nextPage": null,
+  "objectResult": [
+    {
+      "code": "1158",
+      "value": "0",
+      "dataType": "DIGI1",
+      "rangeStart": "0",
+      "rangeEnd": "1",
+      "tmJson": null,
+      "dataTypeAi": "num"
+    },
+    {
+      "code": "1159",
+      "value": "0",
+      "dataType": "DIGI1",
+      "rangeStart": "0",
+      "rangeEnd": "1",
+      "tmJson": null,
+      "dataTypeAi": "num"
+    },
+    {
+      "code": "2064",
+      "value": "0",
+      "dataType": "DIGI1",
+      "rangeStart": "",
+      "rangeEnd": "",
+      "tmJson": null,
+      "dataTypeAi": "num"
+    },
+    {
+      "code": "2074",
+      "value": "0000000000000000",
+      "dataType": "BINARY",
+      "rangeStart": "",
+      "rangeEnd": "",
+      "tmJson": null,
+      "dataTypeAi": "binary"
+    },
+    {
+      "code": "2075",
+      "value": "0000000000000000",
+      "dataType": "BINARY",
+      "rangeStart": "",
+      "rangeEnd": "",
+      "tmJson": null,
+      "dataTypeAi": "binary"
+    },
+    {
+      "code": "2076",
+      "value": "0000000000000000",
+      "dataType": "BINARY",
+      "rangeStart": "",
+      "rangeEnd": "",
+      "tmJson": null,
+      "dataTypeAi": "binary"
+    },
+    {
+      "code": "2077",
+      "value": "0000000000000000",
+      "dataType": "BINARY",
+      "rangeStart": "",
+      "rangeEnd": "",
+      "tmJson": null,
+      "dataTypeAi": "binary"
+    },
+    {
+      "code": "D01",
+      "value": "-5.0",
+      "dataType": "TEMP",
+      "rangeStart": "-30",
+      "rangeEnd": "5.0",
+      "tmJson": null,
+      "dataTypeAi": "num"
+    },
+    {
+      "code": "D01-bar",
+      "value": "5.5",
+      "dataType": "DIGI5",
+      "rangeStart": "0",
+      "rangeEnd": "10",
+      "tmJson": null,
+      "dataTypeAi": "num"
+    },
+    {
+      "code": "D02",
+      "value": "13.0",
+      "dataType": "TEMP",
+      "rangeStart": "0.0",
+      "rangeEnd": "30.0",
+      "tmJson": null,
+      "dataTypeAi": "num"
+    },
+    {
+      "code": "D03",
+      "value": "45",
+      "dataType": "DIGI1",
+      "rangeStart": "30",
+      "rangeEnd": "90",
+      "tmJson": null,
+      "dataTypeAi": "num"
+    },
+    {
+      "code": "D04",
+      "value": "8",
+      "dataType": "DIGI1",
+      "rangeStart": "1",
+      "rangeEnd": "20",
+      "tmJson": null,
+      "dataTypeAi": "num"
+    },
+    {
+      "code": "D06",
+      "value": "0",
+      "dataType": "ENUM",
+      "rangeStart": "0",
+      "rangeEnd": "1",
+      "tmJson": null,
+      "dataTypeAi": "num"
+    },
+    {
+      "code": "D07",
+      "value": "2.0",
+      "dataType": "TEMP",
+      "rangeStart": "-20",
+      "rangeEnd": "10",
+      "tmJson": null,
+      "dataTypeAi": "num"
+    },
+    {
+      "code": "D08",
+      "value": "15.0",
+      "dataType": "TEMP",
+      "rangeStart": "0",
+      "rangeEnd": "50",
+      "tmJson": null,
+      "dataTypeAi": "num"
+    },
+    {
+      "code": "D08-bar",
+      "value": "2.0",
+      "dataType": "DIGI5",
+      "rangeStart": "0",
+      "rangeEnd": "10",
+      "tmJson": null,
+      "dataTypeAi": "num"
+    },
+    {
+      "code": "D09",
+      "value": "17.0",
+      "dataType": "TEMP",
+      "rangeStart": "0",
+      "rangeEnd": "50",
+      "tmJson": null,
+      "dataTypeAi": "num"
+    },
+    {
+      "code": "D10",
+      "value": "-15.0",
+      "dataType": "TEMP",
+      "rangeStart": "-30",
+      "rangeEnd": "5",
+      "tmJson": null,
+      "dataTypeAi": "num"
+    },
+    {
+      "code": "D10-bar",
+      "value": "3.2",
+      "dataType": "TEMP",
+      "rangeStart": "0",
+      "rangeEnd": "10",
+      "tmJson": null,
+      "dataTypeAi": "num"
+    },
+    {
+      "code": "E01",
+      "value": "1",
+      "dataType": "ENUM",
+      "rangeStart": "0",
+      "rangeEnd": "2",
+      "tmJson": null,
+      "dataTypeAi": "num"
+    },
+    {
+      "code": "E02",
+      "value": "2.0",
+      "dataType": "TEMP",
+      "rangeStart": "-20",
+      "rangeEnd": "20",
+      "tmJson": null,
+      "dataTypeAi": "num"
+    },
+    {
+      "code": "E03",
+      "value": "200",
+      "dataType": "DIGI1",
+      "rangeStart": "0",
+      "rangeEnd": "500",
+      "tmJson": null,
+      "dataTypeAi": "num"
+    },
+    {
+      "code": "E04",
+      "value": "70",
+      "dataType": "DIGI1",
+      "rangeStart": "10",
+      "rangeEnd": "500",
+      "tmJson": null,
+      "dataTypeAi": "num"
+    },
+    {
+      "code": "E05",
+      "value": "480",
+      "dataType": "DIGI1",
+      "rangeStart": "10",
+      "rangeEnd": "500",
+      "tmJson": null,
+      "dataTypeAi": "num"
+    },
+    {
+      "code": "E06",
+      "value": "480",
+      "dataType": "DIGI1",
+      "rangeStart": "10",
+      "rangeEnd": "500",
+      "tmJson": null,
+      "dataTypeAi": "num"
+    },
+    {
+      "code": "E07",
+      "value": "60.0",
+      "dataType": "TEMP",
+      "rangeStart": "40",
+      "rangeEnd": "120",
+      "tmJson": null,
+      "dataTypeAi": "num"
+    },
+    {
+      "code": "E09",
+      "value": "2",
+      "dataType": "DIGI1",
+      "rangeStart": "0",
+      "rangeEnd": "255",
+      "tmJson": null,
+      "dataTypeAi": "num"
+    },
+    {
+      "code": "E10",
+      "value": "10",
+      "dataType": "DIGI1",
+      "rangeStart": "0",
+      "rangeEnd": "255",
+      "tmJson": null,
+      "dataTypeAi": "num"
+    },
+    {
+      "code": "E11",
+      "value": "0",
+      "dataType": "DIGI1",
+      "rangeStart": "0",
+      "rangeEnd": "255",
+      "tmJson": null,
+      "dataTypeAi": "num"
+    },
+    {
+      "code": "E12",
+      "value": "0.0",
+      "dataType": "TEMP",
+      "rangeStart": "-20",
+      "rangeEnd": "20",
+      "tmJson": null,
+      "dataTypeAi": "num"
+    },
+    {
+      "code": "F01",
+      "value": "3",
+      "dataType": "ENUM",
+      "rangeStart": "0",
+      "rangeEnd": "7",
+      "tmJson": null,
+      "dataTypeAi": "num"
+    },
+    {
+      "code": "F02",
+      "value": "40.0",
+      "dataType": "TEMP",
+      "rangeStart": "-15.0",
+      "rangeEnd": "60.0",
+      "tmJson": null,
+      "dataTypeAi": "num"
+    },
+    {
+      "code": "F02-bar",
+      "value": "15.0",
+      "dataType": "DIGI5",
+      "rangeStart": "0.1",
+      "rangeEnd": "10",
+      "tmJson": null,
+      "dataTypeAi": "num"
+    },
+    {
+      "code": "F03",
+      "value": "15.0",
+      "dataType": "TEMP",
+      "rangeStart": "-15",
+      "rangeEnd": "60",
+      "tmJson": null,
+      "dataTypeAi": "num"
+    },
+    {
+      "code": "F03-bar",
+      "value": "7.0",
+      "dataType": "DIGI5",
+      "rangeStart": "0",
+      "rangeEnd": "10",
+      "tmJson": null,
+      "dataTypeAi": "num"
+    },
+    {
+      "code": "F04",
+      "value": "10.0",
+      "dataType": "TEMP",
+      "rangeStart": "-15.0",
+      "rangeEnd": "60.0",
+      "tmJson": null,
+      "dataTypeAi": "num"
+    },
+    {
+      "code": "F04-bar",
+      "value": "2.0",
+      "dataType": "DIGI5",
+      "rangeStart": "0",
+      "rangeEnd": "10",
+      "tmJson": null,
+      "dataTypeAi": "num"
+    },
+    {
+      "code": "F05",
+      "value": "2.5",
+      "dataType": "TEMP",
+      "rangeStart": "-15.0",
+      "rangeEnd": "60.0",
+      "tmJson": null,
+      "dataTypeAi": "num"
+    },
+    {
+      "code": "F05-bar",
+      "value": "3.0",
+      "dataType": "DIGI5",
+      "rangeStart": "0",
+      "rangeEnd": "10",
+      "tmJson": null,
+      "dataTypeAi": "num"
+    },
+    {
+      "code": "F06",
+      "value": "9.5",
+      "dataType": "TEMP",
+      "rangeStart": "-15.0",
+      "rangeEnd": "60.0",
+      "tmJson": null,
+      "dataTypeAi": "num"
+    },
+    {
+      "code": "F06-bar",
+      "value": "9.0",
+      "dataType": "DIGI5",
+      "rangeStart": "0",
+      "rangeEnd": "20",
+      "tmJson": null,
+      "dataTypeAi": "num"
+    },
+    {
+      "code": "F07",
+      "value": "30.0",
+      "dataType": "TEMP",
+      "rangeStart": "-15.0",
+      "rangeEnd": "60.0",
+      "tmJson": null,
+      "dataTypeAi": "num"
+    },
+    {
+      "code": "F07-bar",
+      "value": "11.0",
+      "dataType": "DIGI5",
+      "rangeStart": "0",
+      "rangeEnd": "20",
+      "tmJson": null,
+      "dataTypeAi": "num"
+    },
+    {
+      "code": "F10",
+      "value": "",
+      "dataType": "",
+      "rangeStart": "",
+      "rangeEnd": "",
+      "tmJson": "",
+      "dataTypeAi": null
+    },
+    {
+      "code": "F11",
+      "value": "100",
+      "dataType": "DIGI1",
+      "rangeStart": "0",
+      "rangeEnd": "100",
+      "tmJson": null,
+      "dataTypeAi": "num"
+    },
+    {
+      "code": "F11-r",
+      "value": "800",
+      "dataType": "DIGI1",
+      "rangeStart": "0",
+      "rangeEnd": "1300",
+      "tmJson": null,
+      "dataTypeAi": "num"
+    },
+    {
+      "code": "F12",
+      "value": "50",
+      "dataType": "DIGI1",
+      "rangeStart": "0",
+      "rangeEnd": "100",
+      "tmJson": null,
+      "dataTypeAi": "num"
+    },
+    {
+      "code": "F12-r",
+      "value": "800",
+      "dataType": "DIGI1",
+      "rangeStart": "0",
+      "rangeEnd": "1300",
+      "tmJson": null,
+      "dataTypeAi": "num"
+    },
+    {
+      "code": "F13",
+      "value": "50",
+      "dataType": "DIGI1",
+      "rangeStart": "0",
+      "rangeEnd": "100",
+      "tmJson": null,
+      "dataTypeAi": "num"
+    },
+    {
+      "code": "F13-r",
+      "value": "550",
+      "dataType": "DIGI1",
+      "rangeStart": "0",
+      "rangeEnd": "1300",
+      "tmJson": null,
+      "dataTypeAi": "num"
+    },
+    {
+      "code": "F14",
+      "value": "0",
+      "dataType": "DIGI1",
+      "rangeStart": "0",
+      "rangeEnd": "24",
+      "tmJson": null,
+      "dataTypeAi": "num"
+    },
+    {
+      "code": "F15",
+      "value": "6",
+      "dataType": "DIGI1",
+      "rangeStart": "0",
+      "rangeEnd": "24",
+      "tmJson": null,
+      "dataTypeAi": "num"
+    },
+    {
+      "code": "F16",
+      "value": "50",
+      "dataType": "DIGI1",
+      "rangeStart": "0",
+      "rangeEnd": "100",
+      "tmJson": null,
+      "dataTypeAi": "num"
+    },
+    {
+      "code": "F16-r",
+      "value": "500",
+      "dataType": "DIGI1",
+      "rangeStart": "0",
+      "rangeEnd": "1300",
+      "tmJson": null,
+      "dataTypeAi": "num"
+    },
+    {
+      "code": "F17",
+      "value": "0",
+      "dataType": "ENUM",
+      "rangeStart": "0",
+      "rangeEnd": "1",
+      "tmJson": null,
+      "dataTypeAi": "num"
+    },
+    {
+      "code": "F18",
+      "value": "0",
+      "dataType": "ENUM",
+      "rangeStart": "0",
+      "rangeEnd": "1",
+      "tmJson": null,
+      "dataTypeAi": "num"
+    },
+    {
+      "code": "F19",
+      "value": "50",
+      "dataType": "DIGI1",
+      "rangeStart": "0",
+      "rangeEnd": "100",
+      "tmJson": null,
+      "dataTypeAi": "num"
+    },
+    {
+      "code": "F19-r",
+      "value": "600",
+      "dataType": "DIGI1",
+      "rangeStart": "0",
+      "rangeEnd": "1300",
+      "tmJson": null,
+      "dataTypeAi": "num"
+    },
+    {
+      "code": "F20",
+      "value": "1",
+      "dataType": "ENUM",
+      "rangeStart": "0",
+      "rangeEnd": "60",
+      "tmJson": null,
+      "dataTypeAi": "num"
+    },
+    {
+      "code": "H01",
+      "value": "1",
+      "dataType": "ENUM",
+      "rangeStart": "0",
+      "rangeEnd": "1",
+      "tmJson": null,
+      "dataTypeAi": "num"
+    },
+    {
+      "code": "H02",
+      "value": "1",
+      "dataType": "ENUM",
+      "rangeStart": "1",
+      "rangeEnd": "2",
+      "tmJson": null,
+      "dataTypeAi": "num"
+    },
+    {
+      "code": "H03",
+      "value": "0",
+      "dataType": "ENUM",
+      "rangeStart": "",
+      "rangeEnd": "",
+      "tmJson": null,
+      "dataTypeAi": "num"
+    },
+    {
+      "code": "H06",
+      "value": "20",
+      "dataType": "DIGI1",
+      "rangeStart": "1",
+      "rangeEnd": "120",
+      "tmJson": null,
+      "dataTypeAi": "num"
+    },
+    {
+      "code": "H07",
+      "value": "20",
+      "dataType": "DIGI1",
+      "rangeStart": "1",
+      "rangeEnd": "120",
+      "tmJson": null,
+      "dataTypeAi": "num"
+    },
+    {
+      "code": "H08",
+      "value": "80",
+      "dataType": "DIGI1",
+      "rangeStart": "1",
+      "rangeEnd": "120",
+      "tmJson": null,
+      "dataTypeAi": "num"
+    },
+    {
+      "code": "H09",
+      "value": "65",
+      "dataType": "DIGI1",
+      "rangeStart": "1",
+      "rangeEnd": "120",
+      "tmJson": null,
+      "dataTypeAi": "num"
+    },
+    {
+      "code": "H10",
+      "value": "20",
+      "dataType": "DIGI1",
+      "rangeStart": "1",
+      "rangeEnd": "120",
+      "tmJson": null,
+      "dataTypeAi": "num"
+    },
+    {
+      "code": "H11",
+      "value": "192",
+      "dataType": "DIGI1",
+      "rangeStart": "0",
+      "rangeEnd": "255",
+      "tmJson": null,
+      "dataTypeAi": "num"
+    },
+    {
+      "code": "H12",
+      "value": "45",
+      "dataType": "DIGI1",
+      "rangeStart": "0",
+      "rangeEnd": "100",
+      "tmJson": null,
+      "dataTypeAi": "num"
+    },
+    {
+      "code": "H13",
+      "value": "70",
+      "dataType": "DIGI1",
+      "rangeStart": "1",
+      "rangeEnd": "120",
+      "tmJson": null,
+      "dataTypeAi": "num"
+    },
+    {
+      "code": "H14",
+      "value": "110",
+      "dataType": "DIGI1",
+      "rangeStart": "1",
+      "rangeEnd": "255",
+      "tmJson": null,
+      "dataTypeAi": "num"
+    },
+    {
+      "code": "H15",
+      "value": "20.0",
+      "dataType": "DIGI5",
+      "rangeStart": "1",
+      "rangeEnd": "24.5",
+      "tmJson": null,
+      "dataTypeAi": "num"
+    },
+    {
+      "code": "H16",
+      "value": "2",
+      "dataType": "ENUM",
+      "rangeStart": "0",
+      "rangeEnd": "3",
+      "tmJson": null,
+      "dataTypeAi": "num"
+    },
+    {
+      "code": "H17",
+      "value": "15.0",
+      "dataType": "TEMP",
+      "rangeStart": "5.00",
+      "rangeEnd": "35",
+      "tmJson": null,
+      "dataTypeAi": "num"
+    },
+    {
+      "code": "H18",
+      "value": "5.0",
+      "dataType": "TEMP",
+      "rangeStart": "5",
+      "rangeEnd": "15.00",
+      "tmJson": null,
+      "dataTypeAi": "num"
+    },
+    {
+      "code": "H19",
+      "value": "65",
+      "dataType": "DIGI1",
+      "rangeStart": "20",
+      "rangeEnd": "100",
+      "tmJson": null,
+      "dataTypeAi": "num"
+    },
+    {
+      "code": "H20",
+      "value": "35.0",
+      "dataType": "TEMP",
+      "rangeStart": "15.00",
+      "rangeEnd": "43.00",
+      "tmJson": null,
+      "dataTypeAi": "num"
+    },
+    {
+      "code": "H21",
+      "value": "43.0",
+      "dataType": "TEMP",
+      "rangeStart": "35.00",
+      "rangeEnd": "55",
+      "tmJson": null,
+      "dataTypeAi": "num"
+    },
+    {
+      "code": "H22",
+      "value": "55",
+      "dataType": "DIGI1",
+      "rangeStart": "20",
+      "rangeEnd": "60",
+      "tmJson": null,
+      "dataTypeAi": "num"
+    },
+    {
+      "code": "H23",
+      "value": "15.0",
+      "dataType": "TEMP",
+      "rangeStart": "-10.00",
+      "rangeEnd": "45",
+      "tmJson": null,
+      "dataTypeAi": "num"
+    },
+    {
+      "code": "H24",
+      "value": "-10.0",
+      "dataType": "TEMP",
+      "rangeStart": "-15",
+      "rangeEnd": "15.00",
+      "tmJson": null,
+      "dataTypeAi": "num"
+    },
+    {
+      "code": "H25",
+      "value": "80",
+      "dataType": "DIGI1",
+      "rangeStart": "20",
+      "rangeEnd": "100",
+      "tmJson": null,
+      "dataTypeAi": "num"
+    },
+    {
+      "code": "H26",
+      "value": "30.0",
+      "dataType": "TEMP",
+      "rangeStart": "15.00",
+      "rangeEnd": "43.00",
+      "tmJson": null,
+      "dataTypeAi": "num"
+    },
+    {
+      "code": "H27",
+      "value": "43.0",
+      "dataType": "TEMP",
+      "rangeStart": "30.00",
+      "rangeEnd": "55",
+      "tmJson": null,
+      "dataTypeAi": "num"
+    },
+    {
+      "code": "H28",
+      "value": "65",
+      "dataType": "DIGI1",
+      "rangeStart": "20",
+      "rangeEnd": "100",
+      "tmJson": null,
+      "dataTypeAi": "num"
+    },
+    {
+      "code": "H29",
+      "value": "20.0",
+      "dataType": "DIGI5",
+      "rangeStart": "0.00",
+      "rangeEnd": "100",
+      "tmJson": null,
+      "dataTypeAi": "num"
+    },
+    {
+      "code": "H30",
+      "value": "0.0",
+      "dataType": "DIGI5",
+      "rangeStart": "0.1",
+      "rangeEnd": "20.00",
+      "tmJson": null,
+      "dataTypeAi": "num"
+    },
+    {
+      "code": "H31",
+      "value": "2.0",
+      "dataType": "TEMP",
+      "rangeStart": "-15",
+      "rangeEnd": "15",
+      "tmJson": null,
+      "dataTypeAi": "num"
+    },
+    {
+      "code": "H32",
+      "value": "-12.0",
+      "dataType": "TEMP",
+      "rangeStart": "-15",
+      "rangeEnd": "15",
+      "tmJson": null,
+      "dataTypeAi": "num"
+    },
+    {
+      "code": "H33",
+      "value": "52",
+      "dataType": "DIGI1",
+      "rangeStart": "0",
+      "rangeEnd": "120",
+      "tmJson": null,
+      "dataTypeAi": "num"
+    },
+    {
+      "code": "H34",
+      "value": "-5.0",
+      "dataType": "TEMP",
+      "rangeStart": "-30",
+      "rangeEnd": "15",
+      "tmJson": null,
+      "dataTypeAi": "num"
+    },
+    {
+      "code": "H35",
+      "value": "5.0",
+      "dataType": "TEMP",
+      "rangeStart": "1.00",
+      "rangeEnd": "10",
+      "tmJson": null,
+      "dataTypeAi": "num"
+    },
+    {
+      "code": "H36",
+      "value": "60",
+      "dataType": "DIGI1",
+      "rangeStart": "20",
+      "rangeEnd": "80",
+      "tmJson": null,
+      "dataTypeAi": "num"
+    },
+    {
+      "code": "H37",
+      "value": "1",
+      "dataType": "DIGI1",
+      "rangeStart": "1",
+      "rangeEnd": "97",
+      "tmJson": null,
+      "dataTypeAi": "num"
+    },
+    {
+      "code": "H38",
+      "value": "0",
+      "dataType": "ENUM",
+      "rangeStart": "",
+      "rangeEnd": "",
+      "tmJson": null,
+      "dataTypeAi": "num"
+    },
+    {
+      "code": "H39",
+      "value": "70",
+      "dataType": "DIGI1",
+      "rangeStart": "0",
+      "rangeEnd": "120",
+      "tmJson": null,
+      "dataTypeAi": "num"
+    },
+    {
+      "code": "H40",
+      "value": "0",
+      "dataType": "DIGI1",
+      "rangeStart": "0",
+      "rangeEnd": "120",
+      "tmJson": null,
+      "dataTypeAi": "num"
+    },
+    {
+      "code": "H41",
+      "value": "0",
+      "dataType": "DIGI1",
+      "rangeStart": "0",
+      "rangeEnd": "120",
+      "tmJson": null,
+      "dataTypeAi": "num"
+    },
+    {
+      "code": "H42",
+      "value": "0",
+      "dataType": "ENUM",
+      "rangeStart": "",
+      "rangeEnd": "",
+      "tmJson": null,
+      "dataTypeAi": "num"
+    },
+    {
+      "code": "H43",
+      "value": "0",
+      "dataType": "ENUM",
+      "rangeStart": "",
+      "rangeEnd": "",
+      "tmJson": null,
+      "dataTypeAi": "num"
+    },
+    {
+      "code": "Manual-mute",
+      "value": "0",
+      "dataType": "ENUM",
+      "rangeStart": "0",
+      "rangeEnd": "1",
+      "tmJson": null,
+      "dataTypeAi": "num"
+    },
+    {
+      "code": "Mode",
+      "value": "1",
+      "dataType": "ENUM",
+      "rangeStart": "0",
+      "rangeEnd": "2",
+      "tmJson": null,
+      "dataTypeAi": "num"
+    },
+    {
+      "code": "O01",
+      "value": "",
+      "dataType": "",
+      "rangeStart": "",
+      "rangeEnd": "",
+      "tmJson": "",
+      "dataTypeAi": null
+    },
+    {
+      "code": "O02",
+      "value": "",
+      "dataType": "",
+      "rangeStart": "",
+      "rangeEnd": "",
+      "tmJson": "",
+      "dataTypeAi": null
+    },
+    {
+      "code": "O03",
+      "value": "",
+      "dataType": "",
+      "rangeStart": "",
+      "rangeEnd": "",
+      "tmJson": "",
+      "dataTypeAi": null
+    },
+    {
+      "code": "O04",
+      "value": "",
+      "dataType": "",
+      "rangeStart": "",
+      "rangeEnd": "",
+      "tmJson": "",
+      "dataTypeAi": null
+    },
+    {
+      "code": "O05",
+      "value": "",
+      "dataType": "",
+      "rangeStart": "",
+      "rangeEnd": "",
+      "tmJson": "",
+      "dataTypeAi": null
+    },
+    {
+      "code": "O06",
+      "value": "200",
+      "dataType": "DIGI1",
+      "rangeStart": "0",
+      "rangeEnd": "500",
+      "tmJson": null,
+      "dataTypeAi": "num"
+    },
+    {
+      "code": "O07",
+      "value": "0",
+      "dataType": "DIGI1",
+      "rangeStart": "0",
+      "rangeEnd": "120",
+      "tmJson": null,
+      "dataTypeAi": "num"
+    },
+    {
+      "code": "O08",
+      "value": "0.0",
+      "dataType": "DIGI5",
+      "rangeStart": "0",
+      "rangeEnd": "50",
+      "tmJson": null,
+      "dataTypeAi": "num"
+    },
+    {
+      "code": "O09",
+      "value": "16.0",
+      "dataType": "TEMP",
+      "rangeStart": "-55",
+      "rangeEnd": "200",
+      "tmJson": null,
+      "dataTypeAi": "num"
+    },
+    {
+      "code": "P01",
+      "value": "2",
+      "dataType": "ENUM",
+      "rangeStart": "0",
+      "rangeEnd": "2",
+      "tmJson": null,
+      "dataTypeAi": "num"
+    },
+    {
+      "code": "P02",
+      "value": "30",
+      "dataType": "DIGI1",
+      "rangeStart": "0",
+      "rangeEnd": "60",
+      "tmJson": null,
+      "dataTypeAi": "num"
+    },
+    {
+      "code": "P03",
+      "value": "3",
+      "dataType": "DIGI1",
+      "rangeStart": "0",
+      "rangeEnd": "30",
+      "tmJson": null,
+      "dataTypeAi": "num"
+    },
+    {
+      "code": "P04",
+      "value": "1",
+      "dataType": "DIGI1",
+      "rangeStart": "0",
+      "rangeEnd": "10",
+      "tmJson": null,
+      "dataTypeAi": "num"
+    },
+    {
+      "code": "P05",
+      "value": "0",
+      "dataType": "ENUM",
+      "rangeStart": "0",
+      "rangeEnd": "1",
+      "tmJson": null,
+      "dataTypeAi": "num"
+    },
+    {
+      "code": "P06",
+      "value": "10",
+      "dataType": "DIGI1",
+      "rangeStart": "0",
+      "rangeEnd": "23",
+      "tmJson": null,
+      "dataTypeAi": "num"
+    },
+    {
+      "code": "P07",
+      "value": "12",
+      "dataType": "DIGI1",
+      "rangeStart": "0",
+      "rangeEnd": "23",
+      "tmJson": null,
+      "dataTypeAi": "num"
+    },
+    {
+      "code": "P08",
+      "value": "15",
+      "dataType": "DIGI1",
+      "rangeStart": "0",
+      "rangeEnd": "23",
+      "tmJson": null,
+      "dataTypeAi": "num"
+    },
+    {
+      "code": "P09",
+      "value": "17",
+      "dataType": "DIGI1",
+      "rangeStart": "0",
+      "rangeEnd": "23",
+      "tmJson": null,
+      "dataTypeAi": "num"
+    },
+    {
+      "code": "Power",
+      "value": "0",
+      "dataType": "ENUM",
+      "rangeStart": "0",
+      "rangeEnd": "1",
+      "tmJson": null,
+      "dataTypeAi": "num"
+    },
+    {
+      "code": "R01",
+      "value": "27.0",
+      "dataType": "TEMP",
+      "rangeStart": "8.00",
+      "rangeEnd": "35.00",
+      "tmJson": null,
+      "dataTypeAi": "num"
+    },
+    {
+      "code": "R02",
+      "value": "28.0",
+      "dataType": "TEMP",
+      "rangeStart": "15.00",
+      "rangeEnd": "35.00",
+      "tmJson": null,
+      "dataTypeAi": "num"
+    },
+    {
+      "code": "R03",
+      "value": "27.0",
+      "dataType": "TEMP",
+      "rangeStart": "8.00",
+      "rangeEnd": "35.00",
+      "tmJson": null,
+      "dataTypeAi": "num"
+    },
+    {
+      "code": "R04",
+      "value": "1.0",
+      "dataType": "TEMP",
+      "rangeStart": "0.0",
+      "rangeEnd": "10.0",
+      "tmJson": null,
+      "dataTypeAi": "num"
+    },
+    {
+      "code": "R05",
+      "value": "1.0",
+      "dataType": "TEMP",
+      "rangeStart": "0",
+      "rangeEnd": "10",
+      "tmJson": null,
+      "dataTypeAi": "num"
+    },
+    {
+      "code": "R08",
+      "value": "8.0",
+      "dataType": "TEMP",
+      "rangeStart": "-9",
+      "rangeEnd": "35.00",
+      "tmJson": null,
+      "dataTypeAi": "num"
+    },
+    {
+      "code": "R09",
+      "value": "35.0",
+      "dataType": "TEMP",
+      "rangeStart": "8.00",
+      "rangeEnd": "80",
+      "tmJson": null,
+      "dataTypeAi": "num"
+    },
+    {
+      "code": "R10",
+      "value": "15.0",
+      "dataType": "TEMP",
+      "rangeStart": "-30",
+      "rangeEnd": "35.00",
+      "tmJson": null,
+      "dataTypeAi": "num"
+    },
+    {
+      "code": "R11",
+      "value": "35.0",
+      "dataType": "TEMP",
+      "rangeStart": "15.00",
+      "rangeEnd": "90",
+      "tmJson": null,
+      "dataTypeAi": "num"
+    },
+    {
+      "code": "R12",
+      "value": "1.0",
+      "dataType": "TEMP",
+      "rangeStart": "0",
+      "rangeEnd": "10",
+      "tmJson": null,
+      "dataTypeAi": "num"
+    },
+    {
+      "code": "S01",
+      "value": "",
+      "dataType": "",
+      "rangeStart": "",
+      "rangeEnd": "",
+      "tmJson": "",
+      "dataTypeAi": null
+    },
+    {
+      "code": "S02",
+      "value": "",
+      "dataType": "",
+      "rangeStart": "",
+      "rangeEnd": "",
+      "tmJson": "",
+      "dataTypeAi": null
+    },
+    {
+      "code": "S03",
+      "value": "",
+      "dataType": "",
+      "rangeStart": "",
+      "rangeEnd": "",
+      "tmJson": "",
+      "dataTypeAi": null
+    },
+    {
+      "code": "S04",
+      "value": "",
+      "dataType": "",
+      "rangeStart": "",
+      "rangeEnd": "",
+      "tmJson": "",
+      "dataTypeAi": null
+    },
+    {
+      "code": "S05",
+      "value": "",
+      "dataType": "",
+      "rangeStart": "",
+      "rangeEnd": "",
+      "tmJson": "",
+      "dataTypeAi": null
+    },
+    {
+      "code": "S06",
+      "value": "",
+      "dataType": "",
+      "rangeStart": "",
+      "rangeEnd": "",
+      "tmJson": "",
+      "dataTypeAi": null
+    },
+    {
+      "code": "Set_Temp",
+      "value": "28.0",
+      "dataType": "TEMP",
+      "rangeStart": "0",
+      "rangeEnd": "99",
+      "tmJson": null,
+      "dataTypeAi": "num"
+    },
+    {
+      "code": "software_code",
+      "value": "156",
+      "dataType": "DIGI1",
+      "rangeStart": "0",
+      "rangeEnd": "65535",
+      "tmJson": null,
+      "dataTypeAi": "num"
+    },
+    {
+      "code": "T01",
+      "value": "13.5",
+      "dataType": "TEMP",
+      "rangeStart": "",
+      "rangeEnd": "",
+      "tmJson": null,
+      "dataTypeAi": "num"
+    },
+    {
+      "code": "T02",
+      "value": "13.0",
+      "dataType": "TEMP",
+      "rangeStart": "",
+      "rangeEnd": "",
+      "tmJson": null,
+      "dataTypeAi": "num"
+    },
+    {
+      "code": "T03",
+      "value": "14.5",
+      "dataType": "TEMP",
+      "rangeStart": "",
+      "rangeEnd": "",
+      "tmJson": null,
+      "dataTypeAi": "num"
+    },
+    {
+      "code": "T04",
+      "value": "12.5",
+      "dataType": "TEMP",
+      "rangeStart": "-30",
+      "rangeEnd": "100",
+      "tmJson": null,
+      "dataTypeAi": "num"
+    },
+    {
+      "code": "T05",
+      "value": "12.5",
+      "dataType": "TEMP",
+      "rangeStart": "-30",
+      "rangeEnd": "100",
+      "tmJson": null,
+      "dataTypeAi": "num"
+    },
+    {
+      "code": "T06",
+      "value": "14.0",
+      "dataType": "TEMP",
+      "rangeStart": "-30",
+      "rangeEnd": "100",
+      "tmJson": null,
+      "dataTypeAi": "num"
+    },
+    {
+      "code": "T07",
+      "value": "1",
+      "dataType": "DIGI1",
+      "rangeStart": "",
+      "rangeEnd": "",
+      "tmJson": null,
+      "dataTypeAi": "num"
+    },
+    {
+      "code": "T08",
+      "value": "0",
+      "dataType": "DIGI1",
+      "rangeStart": "",
+      "rangeEnd": "",
+      "tmJson": null,
+      "dataTypeAi": "num"
+    },
+    {
+      "code": "T09",
+      "value": "0.0",
+      "dataType": "TEMP",
+      "rangeStart": "",
+      "rangeEnd": "",
+      "tmJson": null,
+      "dataTypeAi": "num"
+    },
+    {
+      "code": "T10",
+      "value": "0.0",
+      "dataType": "DIGI5",
+      "rangeStart": "",
+      "rangeEnd": "",
+      "tmJson": null,
+      "dataTypeAi": "num"
+    },
+    {
+      "code": "T11",
+      "value": "7.0",
+      "dataType": "TEMP",
+      "rangeStart": "",
+      "rangeEnd": "",
+      "tmJson": null,
+      "dataTypeAi": "num"
+    },
+    {
+      "code": "T12",
+      "value": "0",
+      "dataType": "DIGI1",
+      "rangeStart": "",
+      "rangeEnd": "",
+      "tmJson": null,
+      "dataTypeAi": "num"
+    },
+    {
+      "code": "T13",
+      "value": "2.0",
+      "dataType": "TEMP",
+      "rangeStart": "",
+      "rangeEnd": "",
+      "tmJson": null,
+      "dataTypeAi": "num"
+    },
+    {
+      "code": "T14",
+      "value": "224",
+      "dataType": "DIGI1",
+      "rangeStart": "",
+      "rangeEnd": "",
+      "tmJson": null,
+      "dataTypeAi": "num"
+    },
+    {
+      "code": "T15",
+      "value": "0.0",
+      "dataType": "TEMP",
+      "rangeStart": "",
+      "rangeEnd": "",
+      "tmJson": null,
+      "dataTypeAi": "num"
+    },
+    {
+      "code": "T16",
+      "value": "0",
+      "dataType": "DIGI1",
+      "rangeStart": "",
+      "rangeEnd": "",
+      "tmJson": null,
+      "dataTypeAi": "num"
+    },
+    {
+      "code": "T17",
+      "value": "0",
+      "dataType": "DIGI1",
+      "rangeStart": "",
+      "rangeEnd": "",
+      "tmJson": null,
+      "dataTypeAi": "num"
+    },
+    {
+      "code": "T18",
+      "value": "0",
+      "dataType": "DIGI1",
+      "rangeStart": "",
+      "rangeEnd": "",
+      "tmJson": null,
+      "dataTypeAi": "num"
+    },
+    {
+      "code": "T19",
+      "value": "309",
+      "dataType": "DIGI1",
+      "rangeStart": "",
+      "rangeEnd": "",
+      "tmJson": null,
+      "dataTypeAi": "num"
+    },
+    {
+      "code": "T20",
+      "value": "0",
+      "dataType": "DIGI1",
+      "rangeStart": "",
+      "rangeEnd": "",
+      "tmJson": null,
+      "dataTypeAi": "num"
+    },
+    {
+      "code": "T21",
+      "value": "0",
+      "dataType": "DIGI1",
+      "rangeStart": "",
+      "rangeEnd": "",
+      "tmJson": null,
+      "dataTypeAi": "num"
+    },
+    {
+      "code": "T22",
+      "value": "0.0",
+      "dataType": "TEMP",
+      "rangeStart": "",
+      "rangeEnd": "",
+      "tmJson": null,
+      "dataTypeAi": "num"
+    },
+    {
+      "code": "T23",
+      "value": "0",
+      "dataType": "DIGI1",
+      "rangeStart": "",
+      "rangeEnd": "",
+      "tmJson": null,
+      "dataTypeAi": "num"
+    },
+    {
+      "code": "T24",
+      "value": "0",
+      "dataType": "DIGI1",
+      "rangeStart": "",
+      "rangeEnd": "",
+      "tmJson": null,
+      "dataTypeAi": "num"
+    },
+    {
+      "code": "T25",
+      "value": "0",
+      "dataType": "DIGI1",
+      "rangeStart": "",
+      "rangeEnd": "",
+      "tmJson": null,
+      "dataTypeAi": "num"
+    },
+    {
+      "code": "T26",
+      "value": "0",
+      "dataType": "DIGI1",
+      "rangeStart": "",
+      "rangeEnd": "",
+      "tmJson": null,
+      "dataTypeAi": "num"
+    },
+    {
+      "code": "T27",
+      "value": "0",
+      "dataType": "DIGI1",
+      "rangeStart": "",
+      "rangeEnd": "",
+      "tmJson": null,
+      "dataTypeAi": "num"
+    },
+    {
+      "code": "T28",
+      "value": "0",
+      "dataType": "DIGI1",
+      "rangeStart": "",
+      "rangeEnd": "",
+      "tmJson": null,
+      "dataTypeAi": "num"
+    },
+    {
+      "code": "ver",
+      "value": "1.1",
+      "dataType": "DIGI5",
+      "rangeStart": "0",
+      "rangeEnd": "999",
+      "tmJson": null,
+      "dataTypeAi": "num"
+    }
+  ],
+  "isReusltSuc": true
+}
