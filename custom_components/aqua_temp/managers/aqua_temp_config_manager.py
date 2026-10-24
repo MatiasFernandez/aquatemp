@@ -15,7 +15,7 @@ from homeassistant.helpers.json import JSONEncoder
 from homeassistant.helpers.storage import Store
 
 from ..cloud.api_profile import ApiProfile
-from ..cloud.api_types import APIParam
+from ..cloud.client import Credentials
 from ..cloud.consts import PRODUCT_ID_DEFAULT, PRODUCT_IDS
 from ..cloud.device_profiles import DeviceProfile, DeviceProfiles
 from ..common.consts import (
@@ -37,7 +37,6 @@ _LOGGER = logging.getLogger(__name__)
 class AquaTempConfigManager:
     _api_profile: ApiProfile | None
     _device_profiles: DeviceProfiles | None
-    _devices: dict[str, DeviceProfile]
     _translations: dict | None
     _entry: ConfigEntry | None
     _entry_id: str
@@ -53,7 +52,6 @@ class AquaTempConfigManager:
 
         self._entity_descriptions = {}
 
-        self._devices = {}
         self._api_profile = None
         self._device_profiles = None
         self._translations = None
@@ -102,6 +100,22 @@ class AquaTempConfigManager:
         config_data = self._config_data
 
         return config_data
+
+    @property
+    def api_profile(self) -> ApiProfile:
+        return self._api_profile
+
+    @property
+    def device_profiles(self) -> DeviceProfiles:
+        return self._device_profiles
+
+    @property
+    def credentials(self) -> Credentials:
+        credentials = Credentials(
+            username=self._config_data.username, password=self._config_data.password
+        )
+
+        return credentials
 
     @property
     def log_session_token(self) -> bool:
@@ -183,66 +197,11 @@ class AquaTempConfigManager:
 
         await self._save()
 
-    def set_device(self, device_code: str, product_id: str):
-        device_profile = self._device_profiles.for_product(product_id)
-
-        self._devices[device_code] = device_profile
-
-        _LOGGER.info(
-            f"Device {device_code} mapped to "
-            f"Product ID {product_id}, "
-            f"Mapping Key: {device_profile.mapping_id}, "
-            f"Entity Description Key: {device_profile.catalog_id}"
-        )
-
     def get_temperature_unit(self, device_code: str):
         temperature_units = self._data.get(CONF_TEMPERATURE_UNIT, {})
         temperature_unit = temperature_units.get(device_code, UnitOfTemperature.CELSIUS)
 
         return temperature_unit
-
-    def get_supported_protocol_codes(self, device_code) -> list[str]:
-        result = self._get_device_profile(device_code).poll_codes
-
-        return result
-
-    def get_pc_key(self, device_code: str, key: str):
-        protocol_code_key = self._get_device_profile(device_code).get_pc_key(key)
-
-        return protocol_code_key
-
-    def get_hvac_mode_pc_key(self, device_code: str, hvac_mode: str, key: str):
-        device_profile = self._get_device_profile(device_code)
-        protocol_code_key = device_profile.get_hvac_mode_pc_key(hvac_mode, key)
-
-        return protocol_code_key
-
-    def get_hvac_modes(self, device_code: str) -> dict[str, str | None]:
-        result = self._get_device_profile(device_code).hvac_modes
-
-        return result
-
-    def get_fan_modes(self, device_code: str) -> dict[str, str]:
-        result = self._get_device_profile(device_code).fan_modes
-
-        return result
-
-    def get_fan_reverse_mapping(self, device_code, fan_mode) -> str:
-        fan_modes = self._get_device_profile(device_code).fan_modes_reverse
-        result = fan_modes.get(fan_mode)
-
-        return result
-
-    def get_hvac_reverse_mapping(self, device_code, hvac_mode) -> str:
-        hvac_modes = self._get_device_profile(device_code).hvac_modes_reverse
-        result = hvac_modes.get(hvac_mode)
-
-        return result
-
-    def get_api_param(self, param: APIParam):
-        result = self._api_profile.get(param)
-
-        return result
 
     def get_debug_data(self) -> dict:
         data = self._config_data.to_dict()
@@ -363,18 +322,8 @@ class AquaTempConfigManager:
             ):
                 self.platforms.append(entity_description.platform)
 
-    def _get_device_profile(self, device_code: str) -> DeviceProfile:
-        device_profile = self._devices.get(device_code)
-
-        if device_profile is None:
-            device_profile = self._device_profiles.for_product(PRODUCT_ID_DEFAULT)
-
-        return device_profile
-
-    def get_entity_descriptions(self, device_code):
-        catalog_id = self._get_device_profile(device_code).catalog_id
-
-        result = self._entity_descriptions.get(catalog_id)
+    def get_entity_descriptions(self, device_profile: DeviceProfile):
+        result = self._entity_descriptions.get(device_profile.catalog_id)
 
         if result is None:
             result = self._entity_descriptions.get(PRODUCT_ID_DEFAULT)

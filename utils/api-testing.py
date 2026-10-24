@@ -3,15 +3,13 @@ import json
 import logging
 import os
 import sys
-from unittest.mock import patch
 
+from aiohttp import ClientSession
+
+from custom_components.aqua_temp.cloud.api_profile import ApiProfile
 from custom_components.aqua_temp.cloud.api_types import APIType
-from custom_components.aqua_temp.common.consts import CONF_API_TYPE
-from custom_components.aqua_temp.managers.aqua_temp_api import AquaTempAPI
-from custom_components.aqua_temp.managers.aqua_temp_config_manager import (
-    AquaTempConfigManager,
-)
-from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
+from custom_components.aqua_temp.cloud.client import AquaTempAPI, Credentials
+from custom_components.aqua_temp.cloud.device_profiles import DeviceProfiles
 
 DEBUG = str(os.environ.get("DEBUG", False)).lower() == str(True).lower()
 USERNAME = os.environ.get("USERNAME", False)
@@ -30,30 +28,31 @@ root.addHandler(stream_handler)
 
 _LOGGER = logging.getLogger(__name__)
 
-# New-device signals need a running HA instance; there is none here
-patch(
-    "custom_components.aqua_temp.managers.aqua_temp_api.async_dispatcher_send"
-).start()
-
 
 class Test:
     def __init__(self):
-        config_manager = AquaTempConfigManager(None, None)
+        self._session = None
+        self._api = None
 
-        self._entry_config = {
-            CONF_USERNAME: USERNAME,
-            CONF_PASSWORD: PASSWORD,
-            CONF_API_TYPE: str(APIType.AquaTemp),
-        }
+    async def _create_api(self):
+        api_profile = await ApiProfile.load(str(APIType.AquaTemp))
+        device_profiles = await DeviceProfiles.load()
 
-        self._config_manager = config_manager
-        self._api = AquaTempAPI(None, config_manager)
+        self._session = ClientSession()
+        self._api = AquaTempAPI(
+            self._session,
+            Credentials(username=USERNAME, password=PASSWORD),
+            api_profile,
+            device_profiles,
+        )
 
     async def parameters_list(self):
+        await self._create_api()
+
         await self._api.initialize()
 
     async def list_data(self):
-        await self._config_manager.initialize(self._entry_config)
+        await self._create_api()
 
         await self._api.initialize()
 
@@ -64,7 +63,7 @@ class Test:
 
             _LOGGER.info(f"{device_code}: {json.dumps(device_data, indent=4)}")
 
-        await self._api.terminate()
+        await self.terminate()
 
     @staticmethod
     async def entities_mapping():
@@ -82,6 +81,8 @@ class Test:
                 )
 
     async def api_test(self):
+        await self._create_api()
+
         await self._api.initialize()
 
         for i in range(1, 10):
@@ -92,7 +93,7 @@ class Test:
             await asyncio.sleep(30)
 
     async def terminate(self):
-        await self._api.terminate()
+        await self._session.close()
 
 
 loop = asyncio.new_event_loop()

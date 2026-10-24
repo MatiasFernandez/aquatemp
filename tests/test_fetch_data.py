@@ -28,24 +28,24 @@ def default_profile_codes() -> list[str]:
     return ["Mode", *profile]
 
 
-def register_data(cloud, api_type, config_manager, *fixtures):
+def register_data(cloud, api_type, api_profile, *fixtures):
     """Queue getDataByCode responses; each is served once, in the order given."""
-    url = endpoint_url(config_manager, Endpoints.DeviceData)
+    url = endpoint_url(api_profile, Endpoints.DeviceData)
 
     for fixture in fixtures:
         cloud.post(url, payload=load_fixture(api_type, fixture))
 
 
-def requests_to(cloud, config_manager, endpoint):
-    url = URL(endpoint_url(config_manager, endpoint))
+def requests_to(cloud, api_profile, endpoint):
+    url = URL(endpoint_url(api_profile, endpoint))
 
     return cloud.requests.get(("POST", url), [])
 
 
-async def test_requests_device_protocol_codes(api, cloud, api_type, config_manager):
+async def test_requests_device_protocol_codes(api, cloud, api_type, api_profile):
     # Reads are due to move to v5/getDataByCode with a `codes` field; this test
     # changes with them on purpose
-    register_data(cloud, api_type, config_manager, "get_data_by_code.idle")
+    register_data(cloud, api_type, api_profile, "get_data_by_code.idle")
 
     await api.update()
 
@@ -64,8 +64,8 @@ async def test_requests_device_protocol_codes(api, cloud, api_type, config_manag
     assert body["protocalCodes"].count("Mode") == 2
 
 
-async def test_reported_values_become_device_data(api, cloud, api_type, config_manager):
-    register_data(cloud, api_type, config_manager, "get_data_by_code.idle")
+async def test_reported_values_become_device_data(api, cloud, api_type, api_profile):
+    register_data(cloud, api_type, api_profile, "get_data_by_code.idle")
 
     await api.update()
 
@@ -75,8 +75,8 @@ async def test_reported_values_become_device_data(api, cloud, api_type, config_m
     assert device_data["Mode"] == "1"  # ENUM
 
 
-async def test_empty_value_becomes_none(api, cloud, api_type, config_manager):
-    register_data(cloud, api_type, config_manager, "get_data_by_code.idle")
+async def test_empty_value_becomes_none(api, cloud, api_type, api_profile):
+    register_data(cloud, api_type, api_profile, "get_data_by_code.idle")
 
     await api.update()
 
@@ -88,41 +88,41 @@ async def test_empty_value_becomes_none(api, cloud, api_type, config_manager):
 
 
 async def test_expired_token_logs_in_again_and_retries(
-    api, cloud, api_type, config_manager
+    api, cloud, api_type, api_profile
 ):
     """A -100 response clears the token, logs in again and retries the read."""
     register_data(
         cloud,
         api_type,
-        config_manager,
+        api_profile,
         "synthetic/error_token_expired",
         "get_data_by_code.idle",
     )
 
     await api.update()
 
-    assert len(requests_to(cloud, config_manager, Endpoints.Login)) == 2
-    assert len(requests_to(cloud, config_manager, Endpoints.DeviceData)) == 2
+    assert len(requests_to(cloud, api_profile, Endpoints.Login)) == 2
+    assert len(requests_to(cloud, api_profile, Endpoints.DeviceData)) == 2
     assert api.get_device_data(DEVICE_CODE)["T02"] == "13.0"
 
 
-async def test_read_failing_every_attempt_raises(api, cloud, config_manager):
+async def test_read_failing_every_attempt_raises(api, cloud, api_profile):
     """Three attempts, each after a fresh login, then the last error is raised."""
-    url = endpoint_url(config_manager, Endpoints.DeviceData)
+    url = endpoint_url(api_profile, Endpoints.DeviceData)
     cloud.post(url, status=500, repeat=True)
 
     with pytest.raises(ClientResponseError):
         await api.update()
 
     # One login by the api fixture, then one before each retry
-    assert len(requests_to(cloud, config_manager, Endpoints.Login)) == 3
-    assert len(requests_to(cloud, config_manager, Endpoints.DeviceData)) == 3
+    assert len(requests_to(cloud, api_profile, Endpoints.Login)) == 3
+    assert len(requests_to(cloud, api_profile, Endpoints.DeviceData)) == 3
 
 
 async def test_error_response_keeps_device_list_data(
-    api, cloud, api_type, config_manager, caplog
+    api, cloud, api_type, api_profile, caplog
 ):
-    register_data(cloud, api_type, config_manager, "synthetic/error_generic")
+    register_data(cloud, api_type, api_profile, "synthetic/error_generic")
 
     with caplog.at_level(logging.ERROR):
         await api.update()

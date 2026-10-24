@@ -71,7 +71,7 @@ skip_covered = true
 [tool.mutmut]
 # The modules the tests drive; add others as tests reach them
 source_paths = [
-    "custom_components/aqua_temp/managers/aqua_temp_api.py",
+    "custom_components/aqua_temp/cloud/client.py",
     "custom_components/aqua_temp/managers/aqua_temp_config_manager.py",
 ]
 also_copy = ["custom_components"]
