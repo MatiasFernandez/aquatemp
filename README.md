@@ -8,7 +8,7 @@ It also reports all parameters available in sensors and sensors.
 
 AquaTemp's cloud protocol is based on [aquatemp](https://github.com/dst6se/aquatemp) project with additional functionality.
 
-[Changelog](CHANGELOG.md)
+[Changelog](CHANGELOG.md) · [Contributing](CONTRIBUTING.md)
 
 ## Differences from upstream
 
@@ -101,26 +101,6 @@ Additional components are according to following mapping:
 | Default                      | [JSON](custom_components/aqua_temp/parameters/default.json)             |
 | Hitemp 1245226668902080512   | [JSON](custom_components/aqua_temp/parameters/1245226668902080512.json) |
 | AquaTemp 1442284873216843776 | [JSON](custom_components/aqua_temp/parameters/1442284873216843776.json) |
-
-## Run API over CLI
-
-### Requirements
-
-- Python 3.10
-- Python virtual environment
-- Install all dependencies, using `pip install -r requirements.txt` command
-
-### Environment variables
-
-| Environment Variable | Type    | Default | Description                                                                                                               |
-| -------------------- | ------- | ------- | ------------------------------------------------------------------------------------------------------------------------- |
-| Username             | String  | -       | Username used for Aqua Temp                                                                                               |
-| Password             | String  | -       | Password used for Aqua Temp                                                                                               |
-| DEBUG                | Boolean | False   | Setting to True will present DEBUG log level message while testing the code, False will set the minimum log level to INFO |
-
-### Execution
-
-Run file located in `tests/main.py`
 
 ## Troubleshooting
 
