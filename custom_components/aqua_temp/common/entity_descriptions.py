@@ -27,7 +27,6 @@ from .consts import API_STATUS
 @dataclass(frozen=True, kw_only=True)
 class AquaTempEntityDescription(EntityDescription):
     platform: Platform | None = None
-    is_protocol_code: bool = True
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -68,7 +67,6 @@ DEFAULT_ENTITY_DESCRIPTIONS: list[AquaTempEntityDescription] = [
         key=API_STATUS,
         name="API Status",
         entity_category=EntityCategory.DIAGNOSTIC,
-        is_protocol_code=False,
         device_class=BinarySensorDeviceClass.CONNECTIVITY,
         on_value=True,
         translation_key=API_STATUS,
@@ -78,14 +76,12 @@ DEFAULT_ENTITY_DESCRIPTIONS: list[AquaTempEntityDescription] = [
         name="Temperature Unit",
         options=[UnitOfTemperature.CELSIUS, UnitOfTemperature.FAHRENHEIT],
         entity_category=EntityCategory.CONFIG,
-        is_protocol_code=False,
         translation_key="temperature_unit",
     ),
     AquaTempBinarySensorEntityDescription(
         key="is_fault",
         name="Fault",
         on_value=POWER_MODE_ON,
-        is_protocol_code=False,
         device_class=BinarySensorDeviceClass.PROBLEM,
         attributes=["fault"],
         translation_key="is_fault",
@@ -94,7 +90,6 @@ DEFAULT_ENTITY_DESCRIPTIONS: list[AquaTempEntityDescription] = [
         key="device_status",
         name="Status",
         on_value="ONLINE",
-        is_protocol_code=False,
         device_class=BinarySensorDeviceClass.CONNECTIVITY,
         translation_key="device_status",
     ),
@@ -125,7 +120,6 @@ def get_derived_entity_descriptions(
             AquaTempSensorEntityDescription(
                 key="water_delta_t",
                 name="Water ΔT",
-                is_protocol_code=False,
                 device_class=SensorDeviceClass.TEMPERATURE_DELTA,
                 state_class=SensorStateClass.MEASUREMENT,
                 suggested_display_precision=1,

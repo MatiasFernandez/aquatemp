@@ -2,8 +2,6 @@ from copy import copy
 import json
 import logging
 
-import aiofiles
-
 from homeassistant.components.sensor import SensorStateClass
 from homeassistant.config_entries import STORAGE_VERSION, ConfigEntry
 from homeassistant.const import (
@@ -20,9 +18,9 @@ from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.json import JSONEncoder
 from homeassistant.helpers.storage import Store
 
-from ..cloud.api_profile import PROFILES_PATH, ApiProfile
+from ..cloud.api_profile import ApiProfile
 from ..cloud.api_types import APIParam
-from ..cloud.consts import PRODUCT_ID_DEFAULT, PRODUCT_IDS, ProductParameter
+from ..cloud.consts import PRODUCT_ID_DEFAULT, PRODUCT_IDS
 from ..cloud.device_profiles import DeviceProfile, DeviceProfiles
 from ..common.consts import (
     CONF_LOG_SESSION_TOKEN,
@@ -279,14 +277,10 @@ class AquaTempConfigManager:
 
         await self._save()
 
-        # Profiles first: entity descriptions read their mappings for derived
-        # entities
         self._device_profiles = await DeviceProfiles.load()
 
-        await self._load_entity_descriptions(PRODUCT_ID_DEFAULT)
-
-        for product_id in PRODUCT_IDS:
-            await self._load_entity_descriptions(product_id)
+        for product_id in [PRODUCT_ID_DEFAULT, *PRODUCT_IDS]:
+            self._load_entity_descriptions(product_id)
 
         log_messages = [
             f"Entity Descriptions: {len(self._entity_descriptions)}",
@@ -353,25 +347,21 @@ class AquaTempConfigManager:
 
             await self._store.async_save(store_data)
 
-    async def _load_entity_descriptions(self, product_id: str):
-        entities = copy(DEFAULT_ENTITY_DESCRIPTIONS)
-        file_path = (
-            PROFILES_PATH / f"{ProductParameter.ENTITY_DESCRIPTION}.{product_id}.json"
-        )
+    def _load_entity_descriptions(self, product_id: str):
+        device_profile = self._device_profiles.for_product(product_id)
+        catalog_id = device_profile.catalog_id
 
-        if not file_path.exists():
+        # Products without a catalog of their own use the default's
+        # descriptions, see get_entity_descriptions
+        if catalog_id != product_id:
             return
 
-        file = await aiofiles.open(file_path)
-        json_str = await file.read()
-        await file.close()
+        entities = copy(DEFAULT_ENTITY_DESCRIPTIONS)
 
-        json_data = json.loads(json_str)
-
-        for data_item in json_data:
+        for data_item in device_profile.parameters:
             platform = data_item.get("platform")
             key = data_item.get("key")
-            translation_key = f"{product_id}_{key}".replace("/", "").lower()
+            translation_key = f"{catalog_id}_{key}".replace("/", "").lower()
 
             if platform == Platform.SENSOR:
                 state_class = data_item.get("state_class")
@@ -407,15 +397,12 @@ class AquaTempConfigManager:
 
                 entities.append(entity)
 
-        # Same fallback as set_device: a product without its own mapping uses
-        # the default one
-        pc_mapping = self._device_profiles.for_product(product_id).mapping
-
-        entities.extend(get_derived_entity_descriptions(pc_mapping))
+        # A product without its own mapping uses the default one
+        entities.extend(get_derived_entity_descriptions(device_profile.mapping))
 
         self._update_platforms(entities)
 
-        self._entity_descriptions[product_id] = entities
+        self._entity_descriptions[catalog_id] = entities
 
     def _update_platforms(self, entity_descriptions):
         for entity_description in entity_descriptions:
