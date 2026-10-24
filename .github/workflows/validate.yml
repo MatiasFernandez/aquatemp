@@ -29,6 +29,9 @@ jobs:
       - uses: hacs/action@main # zizmor: ignore[unpinned-uses]
         with:
           category: integration
+          # No upstream license exists (fork chain), so the license check cannot pass.
+          # Remove once https://github.com/radical-squared/aquatemp/issues/134 is resolved.
+          ignore: license
 
   hassfest:
     name: Hassfest
