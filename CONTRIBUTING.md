@@ -7,7 +7,7 @@ Requires Python 3.13 or newer, the minimum of the oldest supported Home Assistan
 ```bash
 python3 -m venv .venv
 source .venv/bin/activate
-pip install -r requirements.txt
+pip install -r requirements-test.txt                     # requirements.txt plus the test tools
 
 pre-commit install                                        # run the hooks on every commit
 git config blame.ignoreRevsFile .git-blame-ignore-revs   # skip formatting-only commits in git blame
@@ -19,7 +19,7 @@ Install pre-commit itself once per machine, for example with `uv tool install pr
 
 ## Quality checks
 
-There is no unit test suite and no build step. Checks run as pre-commit hooks:
+There is no build step. Checks run as pre-commit hooks:
 
 - [ruff](https://docs.astral.sh/ruff/) lint and format for Python, configured in [pyproject.toml](pyproject.toml)
 - codespell, yamllint, prettier (Markdown, JSON, YAML) and basic file checks
@@ -30,11 +30,25 @@ pre-commit run --all-files                   # everything
 pre-commit run ruff-check --files <path>     # one hook on specific files
 ```
 
-CI additionally runs `hassfest` and the HACS validation action.
+CI additionally runs the [tests](#tests), `hassfest` and the HACS validation action.
 
 When raising the minimum Home Assistant version in `hacs.json`, update `target-version` in `pyproject.toml` to the Python version that release requires.
 
 If a commit only reformats code, add its full SHA to [.git-blame-ignore-revs](.git-blame-ignore-revs).
+
+## Tests
+
+[pytest](https://docs.pytest.org/) runs offline against a mocked cloud ([aioresponses](https://github.com/pnuckowski/aioresponses)), driving the real config manager and API client through a full update cycle. Any request without a registered response fails the test, so nothing reaches the real cloud.
+
+```bash
+pytest                                    # everything
+pytest tests/test_fetch_data.py -k shape  # one file, tests matching a name
+```
+
+Fixtures live in [tests/fixtures/](tests/fixtures/), one folder per API type, and are catalogued in its [README](tests/fixtures/README.md). List new fixtures there; a test fails otherwise.
+
+- Top-level files are real responses recorded from a device, merged and sanitised (device code replaced, metadata dropped). The maintainer regenerates them from private probe recordings; don't edit them by hand.
+- Files under `synthetic/` are written by hand for endpoints that were never recorded.
 
 ## Developer scripts
 

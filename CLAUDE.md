@@ -6,9 +6,10 @@ Development setup, quality checks, developer scripts and release conventions are
 
 ## Commands
 
-There is no unit test suite and no build step.
+There is no build step.
 
 ```bash
 pre-commit run --all-files                   # full lint/format pass
 pre-commit run ruff-check --files <path>     # single hook on specific files
+pytest                                       # offline test suite
 ```
