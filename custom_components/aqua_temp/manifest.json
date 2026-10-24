@@ -8,5 +8,5 @@
   "iot_class": "cloud_polling",
   "issue_tracker": "https://github.com/MatiasFernandez/aquatemp/issues",
   "requirements": [],
-  "version": "3.0.43"
+  "version": "3.1.0"
 }
