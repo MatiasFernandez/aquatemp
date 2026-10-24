@@ -3,6 +3,7 @@ import json
 import logging
 import os
 import sys
+from unittest.mock import patch
 
 from custom_components.aqua_temp.common.api_types import APIType
 from custom_components.aqua_temp.common.consts import CONF_API_TYPE
@@ -29,18 +30,21 @@ root.addHandler(stream_handler)
 
 _LOGGER = logging.getLogger(__name__)
 
+# New-device signals need a running HA instance; there is none here
+patch(
+    "custom_components.aqua_temp.managers.aqua_temp_api.async_dispatcher_send"
+).start()
+
 
 class Test:
     def __init__(self):
         config_manager = AquaTempConfigManager(None, None)
 
-        data = {
+        self._entry_config = {
             CONF_USERNAME: USERNAME,
             CONF_PASSWORD: PASSWORD,
             CONF_API_TYPE: str(APIType.AquaTemp),
         }
-
-        config_manager.update_credentials(data)
 
         self._config_manager = config_manager
         self._api = AquaTempAPI(None, config_manager)
@@ -49,7 +53,7 @@ class Test:
         await self._api.initialize()
 
     async def list_data(self):
-        await self._config_manager.initialize()
+        await self._config_manager.initialize(self._entry_config)
 
         await self._api.initialize()
 

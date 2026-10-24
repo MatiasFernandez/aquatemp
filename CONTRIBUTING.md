@@ -42,10 +42,10 @@ Both scripts import `custom_components` and `utils` as top-level packages, so ru
 
 ### Call the cloud API from the CLI
 
-[tests/api-testing.py](tests/api-testing.py) logs in with the AquaTemp API type, fetches every device on the account and logs its data. It keeps running until stopped with Ctrl+C.
+[utils/api-testing.py](utils/api-testing.py) logs in with the AquaTemp API type, fetches every device on the account and logs its data. It keeps running until stopped with Ctrl+C.
 
 ```bash
-USERNAME=you@example.com PASSWORD=secret DEBUG=true PYTHONPATH=. python tests/api-testing.py
+USERNAME=you@example.com PASSWORD=secret DEBUG=true PYTHONPATH=. python utils/api-testing.py
 ```
 
 | Environment variable | Default | Description                       |
