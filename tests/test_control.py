@@ -9,7 +9,7 @@ import json
 
 import pytest
 
-from custom_components.aqua_temp.models.exceptions import OperationFailedException
+from custom_components.aqua_temp.cloud.exceptions import OperationFailedException
 
 from .conftest import DEVICE_CODE, cloud_with, data_with
 

@@ -2,12 +2,6 @@ from collections.abc import Callable
 from dataclasses import dataclass
 from functools import partial
 
-from custom_components.aqua_temp.common.consts import (
-    API_STATUS,
-    CONFIG_INLET_WATER_TEMPERATURE,
-    CONFIG_OUTLET_WATER_TEMPERATURE,
-    POWER_MODE_ON,
-)
 from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
     BinarySensorEntityDescription,
@@ -21,6 +15,13 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.const import EntityCategory, Platform, UnitOfTemperature
 from homeassistant.helpers.entity import EntityDescription
+
+from ..cloud.consts import (
+    CONFIG_INLET_WATER_TEMPERATURE,
+    CONFIG_OUTLET_WATER_TEMPERATURE,
+    POWER_MODE_ON,
+)
+from .consts import API_STATUS
 
 
 @dataclass(frozen=True, kw_only=True)

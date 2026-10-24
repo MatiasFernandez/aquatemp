@@ -5,7 +5,7 @@ import os
 import sys
 from unittest.mock import patch
 
-from custom_components.aqua_temp.common.api_types import APIType
+from custom_components.aqua_temp.cloud.api_types import APIType
 from custom_components.aqua_temp.common.consts import CONF_API_TYPE
 from custom_components.aqua_temp.managers.aqua_temp_api import AquaTempAPI
 from custom_components.aqua_temp.managers.aqua_temp_config_manager import (

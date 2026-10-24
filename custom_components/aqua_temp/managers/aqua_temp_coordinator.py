@@ -5,7 +5,8 @@ from homeassistant.core import Event
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from ..common.api_types import APIParam
+from ..cloud.api_types import APIParam
+from ..cloud.exceptions import LoginError
 from ..common.consts import (
     DATA_ITEM_CONFIG,
     DATA_ITEM_DEVICES,
@@ -13,7 +14,6 @@ from ..common.consts import (
     DOMAIN,
     UPDATE_API_INTERVAL,
 )
-from ..models.exceptions import LoginError
 from .aqua_temp_api import AquaTempAPI
 from .aqua_temp_config_manager import AquaTempConfigManager
 

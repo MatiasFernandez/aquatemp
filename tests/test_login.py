@@ -3,7 +3,7 @@
 import pytest
 from yarl import URL
 
-from custom_components.aqua_temp.models.exceptions import LoginError
+from custom_components.aqua_temp.cloud.exceptions import LoginError
 
 from .conftest import DEVICE_CODE, cloud_with
 

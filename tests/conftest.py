@@ -12,9 +12,9 @@ from unittest.mock import AsyncMock, patch
 from aioresponses import aioresponses
 import pytest
 
-from custom_components.aqua_temp.common.api_types import APIParam, APIType
+from custom_components.aqua_temp.cloud.api_types import APIParam, APIType
+from custom_components.aqua_temp.cloud.endpoints import Endpoints
 from custom_components.aqua_temp.common.consts import CONF_API_TYPE
-from custom_components.aqua_temp.common.endpoints import Endpoints
 from custom_components.aqua_temp.managers.aqua_temp_api import AquaTempAPI
 from custom_components.aqua_temp.managers.aqua_temp_config_manager import (
     AquaTempConfigManager,

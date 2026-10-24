@@ -2,8 +2,8 @@
 
 from unittest.mock import call, patch
 
-from custom_components.aqua_temp.common.api_types import APIType
-from custom_components.aqua_temp.common.consts import PRODUCT_IDS
+from custom_components.aqua_temp.cloud.api_types import APIType
+from custom_components.aqua_temp.cloud.consts import PRODUCT_IDS
 
 from .conftest import DEVICE_CODE, cloud_with, load_fixture
 

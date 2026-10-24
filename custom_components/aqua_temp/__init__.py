@@ -3,12 +3,12 @@ import sys
 
 from cryptography.fernet import InvalidToken
 
-from custom_components.aqua_temp.models.exceptions import LoginError
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EVENT_HOMEASSISTANT_START
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv
 
+from .cloud.exceptions import LoginError
 from .common.consts import DEFAULT_NAME, DOMAIN, INVALID_TOKEN_SECTION
 from .managers.aqua_temp_config_manager import AquaTempConfigManager
 from .managers.aqua_temp_coordinator import AquaTempCoordinator

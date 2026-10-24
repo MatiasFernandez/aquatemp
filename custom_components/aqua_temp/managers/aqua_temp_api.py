@@ -10,18 +10,13 @@ import unicodedata
 
 from aiohttp import ClientResponseError, ClientSession
 
-from custom_components.aqua_temp.models.exceptions import (
-    InvalidTokenError,
-    LoginError,
-    OperationFailedException,
-)
 from homeassistant.components.climate.const import HVACMode
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_create_clientsession
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 
-from ..common.api_types import DEVICE_LISTS, DEVICE_REQUEST_PARAMETERS, APIParam
-from ..common.consts import (
+from ..cloud.api_types import DEVICE_LISTS, DEVICE_REQUEST_PARAMETERS, APIParam
+from ..cloud.consts import (
     API_MAX_ATTEMPTS,
     CONFIG_HVAC_MAXIMUM,
     CONFIG_HVAC_MINIMUM,
@@ -39,9 +34,10 @@ from ..common.consts import (
     HTTP_HEADER_X_TOKEN,
     POWER_MODE_OFF,
     POWER_MODE_ON,
-    SIGNAL_AQUA_TEMP_DEVICE_NEW,
 )
-from ..common.endpoints import Endpoints
+from ..cloud.endpoints import Endpoints
+from ..cloud.exceptions import InvalidTokenError, LoginError, OperationFailedException
+from ..common.consts import SIGNAL_AQUA_TEMP_DEVICE_NEW
 from .aqua_temp_config_manager import AquaTempConfigManager
 
 _LOGGER = logging.getLogger(__name__)

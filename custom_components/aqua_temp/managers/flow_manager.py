@@ -12,6 +12,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowHandler
 
+from ..cloud.exceptions import LoginError
 from ..common.consts import (
     CONF_API_TYPE,
     CONF_LOG_SESSION_TOKEN,
@@ -20,7 +21,6 @@ from ..common.consts import (
     INVALID_TOKEN_SECTION,
 )
 from ..models.config_data import DATA_KEYS, ConfigData
-from ..models.exceptions import LoginError
 from .aqua_temp_api import AquaTempAPI
 from .aqua_temp_config_manager import AquaTempConfigManager
 from .password_manager import PasswordManager
