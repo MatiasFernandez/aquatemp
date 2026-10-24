@@ -42,9 +42,9 @@ class AquaTempConfigManager:
     _entry_id: str
     _entry_title: str
     _config_data: ConfigData
-    _store: Store | None
+    _store: Store
 
-    def __init__(self, hass: HomeAssistant | None, entry: ConfigEntry | None):
+    def __init__(self, hass: HomeAssistant, entry: ConfigEntry | None):
         self._hass = hass
 
         self._data = None
@@ -64,12 +64,9 @@ class AquaTempConfigManager:
 
         self._is_initialized = False
 
-        self._store = None
-
-        if hass is not None:
-            self._store = Store(
-                hass, STORAGE_VERSION, CONFIGURATION_FILE, encoder=JSONEncoder
-            )
+        self._store = Store(
+            hass, STORAGE_VERSION, CONFIGURATION_FILE, encoder=JSONEncoder
+        )
 
     @property
     def is_initialized(self) -> bool:
@@ -133,19 +130,13 @@ class AquaTempConfigManager:
 
         self._api_profile = await ApiProfile.load(self._config_data.api_type)
 
-        if self._hass is None:
-            self._translations = {}
-        else:
-            self._translations = await translation.async_get_translations(
-                self._hass, self._hass.config.language, "entity", {DOMAIN}
-            )
+        self._translations = await translation.async_get_translations(
+            self._hass, self._hass.config.language, "entity", {DOMAIN}
+        )
 
         self._is_initialized = True
 
     async def remove(self, entry_id: str):
-        if self._store is None:
-            return
-
         store_data = await self._store.async_load()
 
         entries = [DEFAULT_ENTRY_ID, entry_id]
@@ -244,11 +235,10 @@ class AquaTempConfigManager:
         _LOGGER.debug(log_message)
 
     async def _load_config_from_file(self):
-        if self._store is not None:
-            store_data = await self._store.async_load()
+        store_data = await self._store.async_load()
 
-            if store_data is not None:
-                self._data = store_data.get(self._entry_id)
+        if store_data is not None:
+            self._data = store_data.get(self._entry_id)
 
     @staticmethod
     def _get_defaults() -> dict:
@@ -257,9 +247,6 @@ class AquaTempConfigManager:
         return data
 
     async def _save(self):
-        if self._store is None:
-            return
-
         should_save = False
         store_data = await self._store.async_load()
 
