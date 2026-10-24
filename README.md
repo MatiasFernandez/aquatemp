@@ -1,6 +1,6 @@
 # Home Assistant Aqua Temp & Hi Temp Heat Pumps
 
-> **This is a fork** of [tkejzlar/aquatemp](https://github.com/tkejzlar/aquatemp), itself a fork of [radical-squared/aquatemp](https://github.com/radical-squared/aquatemp). It evolves independently and has its own releases; upstream changes are merged in occasionally. See [Differences from upstream](#differences-from-upstream) for what is different here.
+> **This is a fork** of [tkejzlar/aquatemp](https://github.com/tkejzlar/aquatemp), itself a fork of [radical-squared/aquatemp](https://github.com/radical-squared/aquatemp). It evolves independently and has its own releases; upstream changes are merged in occasionally. What this fork changes is listed in the [changelog](CHANGELOG.md), starting with 3.1.0, its first release.
 
 This is Home Assistant's an integration for PHINX Aqua Temp / HiTemp compatible heat pumps.
 It allows controlling temperature, HVAC mode (heat, cool, auto, off) and fan mode (low, auto).
@@ -9,19 +9,6 @@ It also reports all parameters available in sensors and sensors.
 AquaTemp's cloud protocol is based on [aquatemp](https://github.com/dst6se/aquatemp) project with additional functionality.
 
 [Changelog](CHANGELOG.md) · [Contributing](CONTRIBUTING.md)
-
-## Differences from upstream
-
-Compared with [tkejzlar/aquatemp](https://github.com/tkejzlar/aquatemp) 3.0.43:
-
-<!-- prettier-ignore -->
-| Change | Why | Upstream status |
-| --- | --- | --- |
-| Keep target temperature visible and editable when mode is OFF | Upstream blanks the setpoint while the heat pump is off, so it can't be checked or changed until it is turned on | PR open: [tkejzlar/aquatemp#2](https://github.com/tkejzlar/aquatemp/pull/2) |
-| Document 16-char password truncation causing login failures | The app silently truncates passwords to 16 characters; longer passwords fail here with "Invalid credentials" | PR open: [tkejzlar/aquatemp#3](https://github.com/tkejzlar/aquatemp/pull/3) |
-| Promote inlet/outlet/ambient water temperatures to primary sensors with statistics | Upstream hides them under Diagnostic and records no long-term statistics, though they are the main readings for a pool heat pump | PR open: [tkejzlar/aquatemp#4](https://github.com/tkejzlar/aquatemp/pull/4) |
-| Opt-in session-token logging (options flow, off by default); saving options now reloads the entry | The API allows one login at a time, so reusing Home Assistant's session token is the only way to make manual API requests without logging it out | Not proposed |
-| Minimum Home Assistant version raised to 2025.11 (from 2024.1) | Covers ~91% of active installs per HA analytics and allows targeting Python 3.13 | Not proposed |
 
 ## How to
 

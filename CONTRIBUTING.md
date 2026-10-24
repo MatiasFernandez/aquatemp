@@ -73,4 +73,4 @@ Limitations of the script as it stands:
 
 - [CHANGELOG.md](CHANGELOG.md) follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Add user-facing changes under `## [Unreleased]`.
 - A release commit (`Release X.Y.Z`) moves the Unreleased entries to a dated version section and bumps `version` in [manifest.json](custom_components/aqua_temp/manifest.json).
-- When a change diverges from upstream, add a row to the "Differences from upstream" table in [README.md](README.md).
+- When a change is also proposed upstream, link the upstream PR from its changelog entry. When an upstream merge brings in a change this fork already had, note it in the changelog.
