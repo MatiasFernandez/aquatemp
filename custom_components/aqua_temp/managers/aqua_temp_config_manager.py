@@ -1,15 +1,11 @@
-from copy import copy
 import json
 import logging
 
-from homeassistant.components.sensor import SensorStateClass
 from homeassistant.config_entries import STORAGE_VERSION, ConfigEntry
 from homeassistant.const import (
     CONF_PASSWORD,
     CONF_TEMPERATURE_UNIT,
     CONF_USERNAME,
-    EntityCategory,
-    Platform,
     UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant
@@ -30,11 +26,8 @@ from ..common.consts import (
     DOMAIN,
 )
 from ..common.entity_descriptions import (
-    DEFAULT_ENTITY_DESCRIPTIONS,
-    AquaTempBinarySensorEntityDescription,
     AquaTempEntityDescription,
-    AquaTempSensorEntityDescription,
-    get_derived_entity_descriptions,
+    build_entity_descriptions,
 )
 from ..models.config_data import ConfigData
 
@@ -356,49 +349,7 @@ class AquaTempConfigManager:
         if catalog_id != product_id:
             return
 
-        entities = copy(DEFAULT_ENTITY_DESCRIPTIONS)
-
-        for data_item in device_profile.parameters:
-            platform = data_item.get("platform")
-            key = data_item.get("key")
-            translation_key = f"{catalog_id}_{key}".replace("/", "").lower()
-
-            if platform == Platform.SENSOR:
-                state_class = data_item.get("state_class")
-
-                sensor_entity = AquaTempSensorEntityDescription(
-                    key=key,
-                    name=data_item.get("name"),
-                    device_class=data_item.get("device_class"),
-                    native_unit_of_measurement=data_item.get("unit_of_measurement"),
-                    entity_category=self._get_entity_category(data_item),
-                    state_class=(
-                        None if state_class is None else SensorStateClass(state_class)
-                    ),
-                    translation_key=translation_key,
-                )
-
-                entities.append(sensor_entity)
-
-            elif platform == Platform.BINARY_SENSOR:
-                binary_sensor_entity = AquaTempBinarySensorEntityDescription(
-                    key=key,
-                    name=data_item.get("name"),
-                    device_class=data_item.get("device_class"),
-                    on_value=data_item.get("on_value"),
-                    entity_category=self._get_entity_category(data_item),
-                    translation_key=translation_key,
-                )
-
-                entities.append(binary_sensor_entity)
-
-            else:
-                entity = AquaTempEntityDescription(key=key, name=data_item.get("name"))
-
-                entities.append(entity)
-
-        # A product without its own mapping uses the default one
-        entities.extend(get_derived_entity_descriptions(device_profile.mapping))
+        entities = build_entity_descriptions(device_profile)
 
         self._update_platforms(entities)
 
@@ -429,18 +380,3 @@ class AquaTempConfigManager:
             result = self._entity_descriptions.get(PRODUCT_ID_DEFAULT)
 
         return result
-
-    @staticmethod
-    def _get_entity_category(data_item: dict) -> EntityCategory | None:
-        """Resolve entity_category for a JSON-defined entity.
-
-        An absent key keeps the historical DIAGNOSTIC behaviour, so every product
-        profile that does not opt in is unaffected. An explicit null promotes the
-        entity to the device's primary section.
-        """
-        if "entity_category" not in data_item:
-            return EntityCategory.DIAGNOSTIC
-
-        value = data_item["entity_category"]
-
-        return None if value is None else EntityCategory(value)

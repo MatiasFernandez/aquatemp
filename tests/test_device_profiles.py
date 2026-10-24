@@ -11,6 +11,9 @@ from pathlib import Path
 import pytest
 
 from custom_components.aqua_temp.cloud.device_profiles import DeviceProfiles
+from custom_components.aqua_temp.common.entity_descriptions import (
+    build_entity_descriptions,
+)
 
 PROFILES = Path(__file__).parents[1] / "custom_components/aqua_temp/cloud/profiles"
 
@@ -38,19 +41,13 @@ async def device_profiles() -> DeviceProfiles:
 
 
 @pytest.fixture
-def resolve(device_profiles, config_manager):
+def resolve(device_profiles):
     """Everything the profile resolved for a product's device decides, by product id."""
-    return partial(resolve_with_profiles, device_profiles, config_manager)
+    return partial(resolve_with_profiles, device_profiles)
 
 
-def resolve_with_profiles(
-    device_profiles: DeviceProfiles, config_manager, product_id: str
-) -> dict:
+def resolve_with_profiles(device_profiles: DeviceProfiles, product_id: str) -> dict:
     profile = device_profiles.for_product(product_id)
-
-    # Platforms are Home Assistant's, still decided by the config manager
-    device_code = f"device-{product_id}"
-    config_manager.set_device(device_code, product_id)
 
     return {
         "mapping_id": profile.mapping_id,
@@ -67,7 +64,7 @@ def resolve_with_profiles(
         "poll_codes": profile.poll_codes,
         "platforms": {
             str(description.platform)
-            for description in config_manager.get_entity_descriptions(device_code)
+            for description in build_entity_descriptions(profile)
             if description.platform is not None
         },
     }
