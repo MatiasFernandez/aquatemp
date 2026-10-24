@@ -4,7 +4,7 @@ Home Assistant custom integration (domain `aqua_temp`, installed via HACS) for P
 
 ## Commands
 
-There is no unit test suite and no build step. Quality gates are pre-commit hooks (black, isort, flake8, pyupgrade `--py39-plus`, autoflake, bandit, codespell, yamllint, prettier, JSON/YAML checks) plus CI-only `hassfest` and HACS validation.
+There is no unit test suite and no build step. Quality gates are pre-commit hooks (ruff lint + format, configured in `pyproject.toml` with `target-version` tied to the `hacs.json` minimum HA version; codespell, yamllint, prettier, JSON/YAML checks) plus CI-only `hassfest` and HACS validation. Install once per clone with `pre-commit install`.
 
 ```bash
 pre-commit run --all-files            # full lint/format pass

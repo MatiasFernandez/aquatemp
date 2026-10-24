@@ -14,6 +14,7 @@ AquaTemp's cloud protocol is based on [aquatemp](https://github.com/dst6se/aquat
 
 Compared with [tkejzlar/aquatemp](https://github.com/tkejzlar/aquatemp) 3.0.43:
 
+<!-- prettier-ignore -->
 | Change | Why | Upstream status |
 | --- | --- | --- |
 | Keep target temperature visible and editable when mode is OFF | Upstream blanks the setpoint while the heat pump is off, so it can't be checked or changed until it is turned on | PR open: [tkejzlar/aquatemp#2](https://github.com/tkejzlar/aquatemp/pull/2) |

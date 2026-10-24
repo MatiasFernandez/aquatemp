@@ -1,8 +1,5 @@
 ignore: |
-  azure-*.yml
-  .yamllint
-  action.yml
-  main.yml
+  .github/workflows/action.yml
 rules:
   braces:
     level: error
