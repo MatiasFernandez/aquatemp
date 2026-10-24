@@ -8,7 +8,7 @@ from aiohttp import ClientResponseError
 import pytest
 from yarl import URL
 
-from custom_components.aqua_temp.common.endpoints import Endpoints
+from custom_components.aqua_temp.cloud.endpoints import Endpoints
 from custom_components.aqua_temp.common.entity_descriptions import (
     DEFAULT_ENTITY_DESCRIPTIONS,
 )

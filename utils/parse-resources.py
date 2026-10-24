@@ -6,7 +6,7 @@ import sys
 
 import xmltodict
 
-from custom_components.aqua_temp.common.consts import ProductParameter
+from custom_components.aqua_temp.cloud.consts import ProductParameter
 from utils.common.component_handlers import ComponentHandlers
 from utils.common.consts import CUSTOM_PARAMETERS, PROMOTED_PARAMETERS
 from utils.devices.default.consts import PARAMETER_MAPPING as PARAMETER_MAPPING_DEFAULT

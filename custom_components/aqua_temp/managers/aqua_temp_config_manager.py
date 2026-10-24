@@ -22,19 +22,21 @@ from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.json import JSONEncoder
 from homeassistant.helpers.storage import Store
 
-from ..common.api_types import APIParam
-from ..common.consts import (
-    CONF_LOG_SESSION_TOKEN,
+from ..cloud.api_types import APIParam
+from ..cloud.consts import (
     CONFIG_FAN_MODES,
     CONFIG_HVAC_MODES,
     CONFIG_HVAC_SET,
+    PRODUCT_ID_DEFAULT,
+    PRODUCT_IDS,
+    ProductParameter,
+)
+from ..common.consts import (
+    CONF_LOG_SESSION_TOKEN,
     CONFIGURATION_FILE,
     DEFAULT_ENTRY_ID,
     DEFAULT_NAME,
     DOMAIN,
-    PRODUCT_ID_DEFAULT,
-    PRODUCT_IDS,
-    ProductParameter,
 )
 from ..common.entity_descriptions import (
     DEFAULT_ENTITY_DESCRIPTIONS,

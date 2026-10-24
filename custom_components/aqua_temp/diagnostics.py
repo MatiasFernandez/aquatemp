@@ -11,7 +11,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.device_registry import DeviceEntry
 
-from .common.api_types import APIParam
+from .cloud.api_types import APIParam
 from .common.consts import (
     DATA_ITEM_CONFIG,
     DATA_ITEM_DEVICES,

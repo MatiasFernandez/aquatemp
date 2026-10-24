@@ -4,7 +4,7 @@ from voluptuous import Schema
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.helpers import selector
 
-from ..common.api_types import API_TYPE_LEGACY, API_TYPES, APIType
+from ..cloud.api_types import API_TYPE_LEGACY, API_TYPES, APIType
 from ..common.consts import (
     CONF_API_TYPE,
     CONF_LOG_SESSION_TOKEN,
