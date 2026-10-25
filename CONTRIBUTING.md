@@ -14,7 +14,7 @@ Prefix commands with `uv run` (as below), or activate `.venv` to run them direct
 
 Dependencies are declared in [pyproject.toml](pyproject.toml): `dependencies` for what the integration and developer scripts import, the `dev` group for test and lint tools. Change them with `uv add` / `uv remove` (`--dev` for the group), which also updates `uv.lock`; commit both. Dependabot opens weekly PRs bumping the lock.
 
-`uv.lock` resolves `homeassistant` per Python version, so the 3.13 environment gets the newest Home Assistant release that still supports 3.13, not the latest one.
+The dev group's exact `pytest-homeassistant-custom-component` pin decides the Home Assistant version (and `pytest`, `pytest-asyncio`, `pytest-cov`): each release pins one `homeassistant` release exactly. To move Home Assistant, bump it to the release pinning the one wanted, keeping that release's Python requirement within `.python-version`.
 
 ## Quality checks
 
@@ -38,6 +38,8 @@ If a commit only reformats code, add its full SHA to [.git-blame-ignore-revs](.g
 ## Tests
 
 [pytest](https://docs.pytest.org/) runs offline against a mocked cloud ([aioresponses](https://github.com/pnuckowski/aioresponses)), driving the cloud library's real API client and profiles through a full update cycle. Any request without a registered response fails the test, so nothing reaches the real cloud.
+
+[tests/test_integration.py](tests/test_integration.py) sets up a config entry on a real Home Assistant from [pytest-homeassistant-custom-component](https://github.com/MatthewFlamm/pytest-homeassistant-custom-component) (its `hass` fixture), against the same mocked cloud, to cover the integration side: entities, the device registry, climate services and diagnostics. The other test modules use no Home Assistant instance.
 
 ```bash
 uv run pytest                                    # everything
