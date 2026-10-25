@@ -15,8 +15,9 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  pytest:
-    name: pytest
+  # The latest Home Assistant, from uv.lock
+  pytest-latest:
+    name: pytest (latest)
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -29,9 +30,11 @@ jobs:
       - uses: astral-sh/setup-uv@1c37ad07a6a961277cf70c0d37d6f313000f5884 # v10.3.0
       - run: uv sync --locked
       - run: uv run pytest --cov --cov-report=term --cov-report=xml --junitxml=junit.xml -o junit_family=legacy
+      # Codecov merges it with the floor job's, flagged by Home Assistant version
       - uses: codecov/codecov-action@303a32d7a59b442fa8d48b6a1cc6825c09c847a5 # v7.1.1
         with:
           files: coverage.xml
+          flags: latest
           use_oidc: true
       # Runs even when tests fail, so Codecov can report the failures on the PR
       - if: ${{ !cancelled() }}
@@ -39,4 +42,32 @@ jobs:
         with:
           files: junit.xml
           report_type: test_results
+          flags: latest
+          use_oidc: true
+
+  # The oldest supported Home Assistant (hacs.json), from tests/floor-requirements.txt
+  pytest-floor:
+    name: pytest (floor)
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write # Codecov upload authenticates with OIDC instead of a token secret
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: astral-sh/setup-uv@1c37ad07a6a961277cf70c0d37d6f313000f5884 # v10.3.0
+      - run: uv run --no-project -p 3.13 --with-requirements tests/floor-requirements.txt pytest --cov --cov-report=term --cov-report=xml --junitxml=junit.xml -o junit_family=legacy
+      # Covers what only the floor runs, like fallbacks for older Home Assistant releases
+      - uses: codecov/codecov-action@303a32d7a59b442fa8d48b6a1cc6825c09c847a5 # v7.1.1
+        with:
+          files: coverage.xml
+          flags: floor
+          use_oidc: true
+      - if: ${{ !cancelled() }}
+        uses: codecov/codecov-action@303a32d7a59b442fa8d48b6a1cc6825c09c847a5 # v7.1.1
+        with:
+          files: junit.xml
+          report_type: test_results
+          flags: floor
           use_oidc: true

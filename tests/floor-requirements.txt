@@ -1,0 +1,12 @@
+# The oldest supported Home Assistant (hacs.json), for the floor test job:
+#   uv run --no-project -p 3.13 --with-requirements tests/floor-requirements.txt pytest
+# Kept out of uv.lock, which holds the latest Home Assistant: Dependabot can't bump
+# a lock that also pins the floor. Moves with hacs.json, by hand.
+
+# The release whose homeassistant pin is hacs.json's minimum
+pytest-homeassistant-custom-component==0.13.294
+# Home Assistant 2025.11.0's aiodns 3.5.0 breaks with pycares 5
+pycares<5
+aioresponses
+aiofiles
+xmltodict

@@ -2,7 +2,7 @@
 
 ## Development setup
 
-Requires [uv](https://docs.astral.sh/uv/). It installs the Python in [.python-version](.python-version), the minimum of the oldest supported Home Assistant release (see `homeassistant` in [hacs.json](hacs.json)), and the exact dependency versions in [uv.lock](uv.lock).
+Requires [uv](https://docs.astral.sh/uv/). It installs the Python in [.python-version](.python-version), the one the latest stable Home Assistant release needs, and the exact dependency versions in [uv.lock](uv.lock). The development environment runs that latest release; the oldest supported one (see `homeassistant` in [hacs.json](hacs.json)) is covered by the [floor tests](#tests).
 
 ```bash
 uv sync                                                   # create .venv with the integration's and dev dependencies
@@ -14,7 +14,7 @@ Prefix commands with `uv run` (as below), or activate `.venv` to run them direct
 
 Dependencies are declared in [pyproject.toml](pyproject.toml): `dependencies` for what the integration and developer scripts import, the `dev` group for test and lint tools. Change them with `uv add` / `uv remove` (`--dev` for the group), which also updates `uv.lock`; commit both. Dependabot opens weekly PRs bumping the lock.
 
-The dev group's exact `pytest-homeassistant-custom-component` pin decides the Home Assistant version (and `pytest`, `pytest-asyncio`, `pytest-cov`): each release pins one `homeassistant` release exactly. To move Home Assistant, bump it to the release pinning the one wanted, keeping that release's Python requirement within `.python-version`.
+The dev group's exact `pytest-homeassistant-custom-component` pin decides the Home Assistant version (and `pytest`, `pytest-asyncio`, `pytest-cov`): each release pins one `homeassistant` release exactly. It tracks the latest stable Home Assistant, and Dependabot bumps it. That only works while `requires-python` is that Home Assistant's minimum Python: Dependabot resolves at the lowest Python `requires-python` allows, and doesn't see plugin releases that need a newer one. When a bump needs a newer Python, raise `requires-python` and [.python-version](.python-version) with it. The oldest supported Home Assistant isn't in the lock (Dependabot couldn't bump the pin otherwise): it lives in [tests/floor-requirements.txt](tests/floor-requirements.txt).
 
 ## Quality checks
 
@@ -31,7 +31,13 @@ uv run pre-commit run ruff-check --files <path>     # one hook on specific files
 
 CI additionally runs the [tests](#tests), `hassfest` and the HACS validation action.
 
-When raising the minimum Home Assistant version in `hacs.json`, update to match in [pyproject.toml](pyproject.toml): the `homeassistant` lower bound, `requires-python` and ruff's `target-version`, plus [.python-version](.python-version). Then run `uv lock`.
+The oldest supported Home Assistant (the floor) and the latest one stay at most 12 months apart, Home Assistant's minimum deprecation window, so testing both covers every release in between. Raise the floor when the latest moves further ahead. To raise it:
+
+- `homeassistant` in [hacs.json](hacs.json), and the `homeassistant` lower bound in [pyproject.toml](pyproject.toml) (then `uv lock`).
+- [tests/floor-requirements.txt](tests/floor-requirements.txt): the `pytest-homeassistant-custom-component` release pinning the new floor exactly; check whether the `pycares` constraint is still needed.
+- ruff's `target-version` in [pyproject.toml](pyproject.toml), if the floor's minimum Python changed, and the `-p` of the floor command (see [Tests](#tests)) and its CI job.
+- Fallbacks kept for older releases. Once the floor reaches 2026.8.0, `async_get_ha_device` in [common/device_lookup.py](custom_components/aqua_temp/common/device_lookup.py) can drop its `async_get_device` fallback.
+- [CHANGELOG.md](CHANGELOG.md): users on older Home Assistant releases can no longer install it.
 
 If a commit only reformats code, add its full SHA to [.git-blame-ignore-revs](.git-blame-ignore-revs).
 
@@ -47,7 +53,13 @@ uv run pytest tests/test_fetch_data.py -k shape  # one file, tests matching a na
 uv run pytest --cov                              # with a coverage report (add --cov-report=html for htmlcov/)
 ```
 
-CI runs the suite with coverage and uploads it to [Codecov](https://codecov.io/gh/MatiasFernandez/aquatemp), which comments on pull requests with the coverage of the changed lines and any failing tests.
+`uv run pytest` runs on the latest Home Assistant, from the lock. To run the suite on the oldest supported one, outside the project environment, with that release's Python:
+
+```bash
+uv run --no-project -p 3.13 --with-requirements tests/floor-requirements.txt pytest
+```
+
+CI runs both, and both must pass. Both upload coverage and test results to [Codecov](https://codecov.io/gh/MatiasFernandez/aquatemp), flagged `latest` and `floor`. It merges the two, so code only one of them runs (a fallback for older Home Assistant releases) still counts as covered, and comments on pull requests with the coverage of the changed lines and any failing tests.
 
 Fixtures live in [tests/fixtures/](tests/fixtures/), one folder per API type, and are catalogued in its [README](tests/fixtures/README.md). List new fixtures there; a test fails otherwise.
 
