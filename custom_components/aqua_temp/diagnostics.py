@@ -8,7 +8,7 @@ from typing import Any
 from homeassistant.components.diagnostics import async_redact_data
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers import device_registry as dr, entity_registry as er
+from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.device_registry import DeviceEntry
 
 from .common.consts import (
@@ -18,6 +18,7 @@ from .common.consts import (
     DOMAIN,
     TO_REDACT,
 )
+from .common.device_lookup import async_get_ha_device
 from .managers.aqua_temp_coordinator import AquaTempCoordinator
 
 _LOGGER = logging.getLogger(__name__)
@@ -72,7 +73,7 @@ def _async_get_diagnostics(
         for device_code in devices:
             device_details = devices[device_code]
             if coordinator.get_device_meta(device_code).device_id == device_id:
-                data |= _async_device_as_dict(hass, device_details)
+                data |= _async_device_as_dict(hass, entry.entry_id, device_details)
 
     else:
         _LOGGER.debug("Getting diagnostic information for all devices")
@@ -81,6 +82,7 @@ def _async_get_diagnostics(
             devices=[
                 _async_device_as_dict(
                     hass,
+                    entry.entry_id,
                     coordinator.get_device_meta(device_code).device_id,
                     devices[device_code],
                 )
@@ -93,13 +95,12 @@ def _async_get_diagnostics(
 
 @callback
 def _async_device_as_dict(
-    hass: HomeAssistant, device_id: str, device_data: dict
+    hass: HomeAssistant, config_entry_id: str, device_id: str, device_data: dict
 ) -> dict[str, Any]:
     """Represent a Shinobi monitor as a dictionary."""
-    device_registry = dr.async_get(hass)
     entity_registry = er.async_get(hass)
 
-    ha_device = device_registry.async_get_device(identifiers={(DOMAIN, device_id)})
+    ha_device = async_get_ha_device(hass, config_entry_id, device_id)
     data = {}
 
     if ha_device:
