@@ -1,9 +1,11 @@
 [project]
 # Not a Python package: Home Assistant loads the integration from custom_components/,
-# and manifest.json holds its version. This section only describes the dev environment.
+# and manifest.json holds its version. This section only describes the dev environment,
+# which runs the latest Home Assistant: requires-python is that release's minimum Python,
+# so Dependabot (which resolves at the lowest Python allowed) can bump the plugin below
 name = "aqua-temp"
 version = "0"
-requires-python = ">=3.13.2"
+requires-python = ">=3.14.2"
 dependencies = [
     "aiofiles",
     "aiohttp",
@@ -15,19 +17,22 @@ dependencies = [
 
 [dependency-groups]
 dev = [
-    "aioresponses>=0.7.9",
+    # Unreleased fix for aiohttp 3.14 (pnuckowski/aioresponses#288); back to a release once it ships
+    "aioresponses @ git+https://github.com/agners/aioresponses@8f40e0db2eed16621607ecfc857168240c795755",
     "mutmut>=3.8.0",
     "pre-commit>=4",
-    # Pins homeassistant, pytest, pytest-asyncio and pytest-cov exactly; bump
-    # it to move them, to the release whose homeassistant pin is wanted
-    "pytest-homeassistant-custom-component==0.13.316",
+    # Pins homeassistant, pytest, pytest-asyncio and pytest-cov exactly: the latest
+    # stable Home Assistant, which Dependabot moves. The oldest supported one is
+    # tested from tests/floor-requirements.txt
+    "pytest-homeassistant-custom-component==0.13.374",
 ]
 
 [tool.uv]
 package = false
 
 [tool.ruff]
-# Minimum Python of the oldest supported Home Assistant (hacs.json)
+# Minimum Python of the oldest supported Home Assistant (hacs.json), not the
+# dev environment's: keeps the code runnable there
 target-version = "py313"
 
 [tool.ruff.lint]
