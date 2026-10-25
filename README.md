@@ -1,6 +1,11 @@
 # Home Assistant Aqua Temp & Hi Temp Heat Pumps
 
-> **This is a fork** of [tkejzlar/aquatemp](https://github.com/tkejzlar/aquatemp), itself a fork of [radical-squared/aquatemp](https://github.com/radical-squared/aquatemp). It evolves independently and has its own releases; upstream changes are merged in occasionally. See [Differences from upstream](#differences-from-upstream) for what is different here.
+[![Validate](https://github.com/MatiasFernandez/aquatemp/actions/workflows/validate.yml/badge.svg?branch=main)](https://github.com/MatiasFernandez/aquatemp/actions/workflows/validate.yml)
+[![Coverage](https://codecov.io/gh/MatiasFernandez/aquatemp/branch/main/graph/badge.svg)](https://codecov.io/gh/MatiasFernandez/aquatemp)
+[![Release](https://img.shields.io/github/v/release/MatiasFernandez/aquatemp)](https://github.com/MatiasFernandez/aquatemp/releases)
+[![HACS Custom](https://img.shields.io/badge/HACS-Custom-41BDF5.svg)](https://hacs.xyz/docs/faq/custom_repositories/)
+
+> **This is a fork** of [tkejzlar/aquatemp](https://github.com/tkejzlar/aquatemp), itself a fork of [radical-squared/aquatemp](https://github.com/radical-squared/aquatemp). It evolves independently and has its own releases; upstream changes are merged in occasionally. What this fork changes is listed in the [changelog](CHANGELOG.md), starting with 3.1.0, its first release.
 
 This is Home Assistant's an integration for PHINX Aqua Temp / HiTemp compatible heat pumps.
 It allows controlling temperature, HVAC mode (heat, cool, auto, off) and fan mode (low, auto).
@@ -8,18 +13,7 @@ It also reports all parameters available in sensors and sensors.
 
 AquaTemp's cloud protocol is based on [aquatemp](https://github.com/dst6se/aquatemp) project with additional functionality.
 
-[Changelog](CHANGELOG.md)
-
-## Differences from upstream
-
-Compared with [tkejzlar/aquatemp](https://github.com/tkejzlar/aquatemp) 3.0.43:
-
-| Change | Why | Upstream status |
-| --- | --- | --- |
-| Keep target temperature visible and editable when mode is OFF | Upstream blanks the setpoint while the heat pump is off, so it can't be checked or changed until it is turned on | PR open: [tkejzlar/aquatemp#2](https://github.com/tkejzlar/aquatemp/pull/2) |
-| Document 16-char password truncation causing login failures | The app silently truncates passwords to 16 characters; longer passwords fail here with "Invalid credentials" | PR open: [tkejzlar/aquatemp#3](https://github.com/tkejzlar/aquatemp/pull/3) |
-| Promote inlet/outlet/ambient water temperatures to primary sensors with statistics | Upstream hides them under Diagnostic and records no long-term statistics, though they are the main readings for a pool heat pump | PR open: [tkejzlar/aquatemp#4](https://github.com/tkejzlar/aquatemp/pull/4) |
-| Opt-in session-token logging (options flow, off by default); saving options now reloads the entry | The API allows one login at a time, so reusing Home Assistant's session token is the only way to make manual API requests without logging it out | Not proposed |
+[Changelog](CHANGELOG.md) · [Contributing](CONTRIBUTING.md)
 
 ## How to
 
@@ -99,26 +93,6 @@ Additional components are according to following mapping:
 | Default                      | [JSON](custom_components/aqua_temp/parameters/default.json)             |
 | Hitemp 1245226668902080512   | [JSON](custom_components/aqua_temp/parameters/1245226668902080512.json) |
 | AquaTemp 1442284873216843776 | [JSON](custom_components/aqua_temp/parameters/1442284873216843776.json) |
-
-## Run API over CLI
-
-### Requirements
-
-- Python 3.10
-- Python virtual environment
-- Install all dependencies, using `pip install -r requirements.txt` command
-
-### Environment variables
-
-| Environment Variable | Type    | Default | Description                                                                                                               |
-| -------------------- | ------- | ------- | ------------------------------------------------------------------------------------------------------------------------- |
-| Username             | String  | -       | Username used for Aqua Temp                                                                                               |
-| Password             | String  | -       | Password used for Aqua Temp                                                                                               |
-| DEBUG                | Boolean | False   | Setting to True will present DEBUG log level message while testing the code, False will set the minimum log level to INFO |
-
-### Execution
-
-Run file located in `tests/main.py`
 
 ## Troubleshooting
 

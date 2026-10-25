@@ -41,7 +41,7 @@ class Test:
         self._devices = {
             "default": PARAMETER_MAPPING_DEFAULT,
             "device_1245226668902080512": PARAMETER_MAPPING_1245226668902080512,
-            "device_1442284873216843776": PARAMETER_MAPPING_DEFAULT_1442284873216843776
+            "device_1442284873216843776": PARAMETER_MAPPING_DEFAULT_1442284873216843776,
         }
 
     def initialize(self):
@@ -54,13 +54,15 @@ class Test:
     def initialize_file(self, device, parameter_mapping):
         try:
             device_name = device.replace("device_", "")
-            xml_file_path = os.path.join(os.path.dirname(__file__), f'devices\\{device}\\resources.xml')
+            xml_file_path = os.path.join(
+                os.path.dirname(__file__), f"devices\\{device}\\resources.xml"
+            )
 
             json_file_key = f"{ProductParameter.ENTITY_DESCRIPTION}.{device_name}"
 
-            json_file_path = os.path.join(
+            json_file_path = os.path.join(  # noqa: F841 - used by the commented-out write below
                 os.path.dirname(__file__),
-                f"..\\custom_components\\aqua_temp\\parameters\\{json_file_key}.json"
+                f"..\\custom_components\\aqua_temp\\parameters\\{json_file_key}.json",
             )
 
             with open(xml_file_path, encoding="utf-8") as xml_file:
@@ -90,9 +92,7 @@ class Test:
                     parameter_name = parameter.get("name")
 
                     key = f"{device_name}_{parameter_key}".lower()
-                    self._translation_keys[key] = {
-                        "name": parameter_name
-                    }
+                    self._translation_keys[key] = {"name": parameter_name}
 
                 _LOGGER.info(f"{device_name}: {parameters}")
 

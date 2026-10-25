@@ -1,4 +1,5 @@
 """Platform for climate integration."""
+
 from asyncio import sleep
 from copy import copy
 import hashlib
@@ -483,9 +484,7 @@ class AquaTempAPI:
 
         config_data = self._config_manager.config_data
 
-        password_hashed = hashlib.md5(
-            config_data.password.encode("utf-8")
-        ).hexdigest()
+        password_hashed = hashlib.md5(config_data.password.encode("utf-8")).hexdigest()
 
         data = {param_username: config_data.username, "password": password_hashed}
 
@@ -618,9 +617,7 @@ class AquaTempAPI:
                     device_list_url, request_data
                 )
             except Exception as ex:
-                _LOGGER.debug(
-                    f"Unfiltered discovery to {device_list_url} failed: {ex}"
-                )
+                _LOGGER.debug(f"Unfiltered discovery to {device_list_url} failed: {ex}")
                 continue
 
             devices = device_code_response.get(param_object_result, [])

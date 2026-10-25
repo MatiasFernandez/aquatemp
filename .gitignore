@@ -44,6 +44,8 @@ htmlcov/
 .cache
 nosetests.xml
 coverage.xml
+junit.xml
+mutants/
 *,cover
 
 # Translations
@@ -62,6 +64,7 @@ target/
 /.idea
 .vscode/
 
+.venv/
 venv/
 
 __test__.py

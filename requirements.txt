@@ -1,7 +1,0 @@
-homeassistant
-aiohttp
-
-voluptuous
-
-xmltodict
-cryptography

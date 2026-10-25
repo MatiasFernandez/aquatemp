@@ -7,6 +7,20 @@ predate this fork and keep their original format.
 
 ## [Unreleased]
 
+## [3.2.0] - 2026-10-24
+
+### Added
+
+- "Water ΔT" sensor (outlet minus inlet water temperature) on devices whose profile maps the inlet and outlet water temperatures (the default profile does)
+
+### Changed
+
+- Require Home Assistant 2025.11 or newer (was 2024.1)
+
+### Security
+
+- Stop logging config and options flow input, which included the plaintext password; only the API type and session-token toggle are logged on submit
+
 ## [3.1.0] - 2026-10-24
 
 _First release of the [MatiasFernandez/aquatemp](https://github.com/MatiasFernandez/aquatemp) fork, based on upstream 3.0.43_
@@ -14,18 +28,18 @@ _First release of the [MatiasFernandez/aquatemp](https://github.com/MatiasFernan
 ### Added
 
 - Allow parameter JSON files to override `entity_category` and `state_class` per sensor
-- Document login failures caused by passwords longer than 16 characters
+- Document login failures caused by passwords longer than 16 characters (proposed upstream in [tkejzlar/aquatemp#3](https://github.com/tkejzlar/aquatemp/pull/3))
 - Opt-in option to log the session token at WARNING level, for making manual API requests without logging the integration out
 
 ### Changed
 
-- Promote inlet, outlet and ambient water temperatures to primary sensors with long-term statistics
+- Promote inlet, outlet and ambient water temperatures to primary sensors with long-term statistics (proposed upstream in [tkejzlar/aquatemp#4](https://github.com/tkejzlar/aquatemp/pull/4))
 - Point manifest documentation, issue tracker and code owner at this fork
 - Saving options reloads the integration, so changes take effect without a manual reload
 
 ### Fixed
 
-- Keep target temperature visible and editable when HVAC mode is OFF
+- Keep target temperature visible and editable when HVAC mode is OFF (proposed upstream in [tkejzlar/aquatemp#2](https://github.com/tkejzlar/aquatemp/pull/2))
 
 ## [3.0.43] - 2026-05-12
 
@@ -289,7 +303,8 @@ As result of that process, you need to re-setup the integration.
 - Simplified `climate` component to include just its functionality without additional attributes (moved to dedicated components)
 - Add mapping of more Protocol Codes (Parameters) for later support of more sensors/binary_sensors
 
-[Unreleased]: https://github.com/MatiasFernandez/aquatemp/compare/v3.1.0...HEAD
+[Unreleased]: https://github.com/MatiasFernandez/aquatemp/compare/v3.2.0...HEAD
+[3.2.0]: https://github.com/MatiasFernandez/aquatemp/compare/v3.1.0...v3.2.0
 [3.1.0]: https://github.com/MatiasFernandez/aquatemp/compare/b163b69...v3.1.0
 [3.0.43]: https://github.com/tkejzlar/aquatemp/compare/07b9856...b163b69
 [3.0.42]: https://github.com/tkejzlar/aquatemp/compare/7d6e14b...07b9856

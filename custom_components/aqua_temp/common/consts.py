@@ -15,7 +15,7 @@ ADD_COMPONENT_SIGNALS = [SIGNAL_AQUA_TEMP_DEVICE_NEW]
 
 STORAGE_DATA_KEY = "key"
 
-INVALID_TOKEN_SECTION = "https://github.com/radical-squared/aquatemp#invalid-token"
+INVALID_TOKEN_SECTION = "https://github.com/MatiasFernandez/aquatemp#invalid-token"
 
 DEFAULT_ENTRY_ID = "config"
 
@@ -66,6 +66,8 @@ CONFIG_SET_POWER = "power"
 CONFIG_SET_TEMPERATURE = "temperature"
 CONFIG_SET_FAN = "fan"
 CONFIG_SET_CURRENT_TEMPERATURE = "current_temperature"
+CONFIG_INLET_WATER_TEMPERATURE = "inlet_water_temperature"
+CONFIG_OUTLET_WATER_TEMPERATURE = "outlet_water_temperature"
 
 API_STATUS = "api_status"
 

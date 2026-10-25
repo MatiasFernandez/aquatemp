@@ -40,7 +40,10 @@ class AquaTempSensorEntity(BaseEntity, SensorEntity):
             entity_description.native_unit_of_measurement
         )
 
-        if entity_description.device_class == SensorDeviceClass.TEMPERATURE:
+        if entity_description.device_class in (
+            SensorDeviceClass.TEMPERATURE,
+            SensorDeviceClass.TEMPERATURE_DELTA,
+        ):
             self._attr_native_unit_of_measurement = coordinator.get_temperature_unit(
                 device_code
             )
@@ -49,10 +52,14 @@ class AquaTempSensorEntity(BaseEntity, SensorEntity):
         """Fetch new state parameters for the sensor."""
         device_data = self.local_coordinator.get_device_data(self.device_code)
 
-        state = device_data.get(self.entity_description.key)
+        if self.entity_description.value_fn is not None:
+            state = self.entity_description.value_fn(device_data)
 
-        if isinstance(state, str):
-            state = float(state)
+        else:
+            state = device_data.get(self.entity_description.key)
+
+            if isinstance(state, str):
+                state = float(state)
 
         self._attr_native_value = state
 

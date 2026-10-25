@@ -46,7 +46,7 @@ class ComponentHandlers:
             "name": name,
             "platform": str(Platform.SENSOR),
             "device_class": str(SensorDeviceClass.PRESSURE),
-            "unit_of_measurement": str(UnitOfPressure.BAR)
+            "unit_of_measurement": str(UnitOfPressure.BAR),
         }
 
         return data
@@ -58,7 +58,7 @@ class ComponentHandlers:
             "name": name,
             "platform": str(Platform.SENSOR),
             "device_class": str(SensorDeviceClass.FREQUENCY),
-            "unit_of_measurement": str(UnitOfFrequency.HERTZ)
+            "unit_of_measurement": str(UnitOfFrequency.HERTZ),
         }
 
         return data
@@ -70,7 +70,7 @@ class ComponentHandlers:
             "name": name,
             "platform": str(Platform.SENSOR),
             "device_class": str(SensorDeviceClass.CURRENT),
-            "unit_of_measurement": str(UnitOfElectricCurrent.AMPERE)
+            "unit_of_measurement": str(UnitOfElectricCurrent.AMPERE),
         }
 
         return data
@@ -82,7 +82,7 @@ class ComponentHandlers:
             "name": name,
             "platform": str(Platform.SENSOR),
             "device_class": str(SensorDeviceClass.TEMPERATURE),
-            "unit_of_measurement": str(UnitOfTemperature.CELSIUS)
+            "unit_of_measurement": str(UnitOfTemperature.CELSIUS),
         }
 
         return data
@@ -94,7 +94,7 @@ class ComponentHandlers:
             "name": name,
             "platform": str(Platform.SENSOR),
             "device_class": str(SensorDeviceClass.DURATION),
-            "unit_of_measurement": str(UnitOfTime.MINUTES)
+            "unit_of_measurement": str(UnitOfTime.MINUTES),
         }
 
         return data
@@ -106,7 +106,7 @@ class ComponentHandlers:
             "name": name,
             "platform": str(Platform.SENSOR),
             "device_class": str(SensorDeviceClass.DURATION),
-            "unit_of_measurement": str(UnitOfTime.HOURS)
+            "unit_of_measurement": str(UnitOfTime.HOURS),
         }
 
         return data
@@ -118,7 +118,7 @@ class ComponentHandlers:
             "name": name,
             "platform": str(Platform.SENSOR),
             "device_class": str(SensorDeviceClass.DURATION),
-            "unit_of_measurement": str(UnitOfTime.DAYS)
+            "unit_of_measurement": str(UnitOfTime.DAYS),
         }
 
         return data
@@ -130,7 +130,7 @@ class ComponentHandlers:
             "name": name,
             "platform": str(Platform.SENSOR),
             "device_class": None,
-            "unit_of_measurement": "%"
+            "unit_of_measurement": "%",
         }
 
         return data
@@ -142,7 +142,7 @@ class ComponentHandlers:
             "name": name,
             "platform": str(Platform.SENSOR),
             "device_class": None,
-            "unit_of_measurement": "r"
+            "unit_of_measurement": "r",
         }
 
         return data
@@ -154,7 +154,7 @@ class ComponentHandlers:
             "name": name,
             "platform": str(Platform.SENSOR),
             "device_class": str(SensorDeviceClass.VOLTAGE),
-            "unit_of_measurement": str(UnitOfElectricPotential.VOLT)
+            "unit_of_measurement": str(UnitOfElectricPotential.VOLT),
         }
 
         return data
@@ -166,7 +166,7 @@ class ComponentHandlers:
             "name": name,
             "platform": str(Platform.SENSOR),
             "device_class": None,
-            "unit_of_measurement": None
+            "unit_of_measurement": None,
         }
 
         return data

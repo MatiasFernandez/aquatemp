@@ -1,13 +1,24 @@
+from collections.abc import Callable
 from dataclasses import dataclass
+from functools import partial
 
-from custom_components.aqua_temp.common.consts import API_STATUS, POWER_MODE_ON
+from custom_components.aqua_temp.common.consts import (
+    API_STATUS,
+    CONFIG_INLET_WATER_TEMPERATURE,
+    CONFIG_OUTLET_WATER_TEMPERATURE,
+    POWER_MODE_ON,
+)
 from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
     BinarySensorEntityDescription,
 )
 from homeassistant.components.climate import ClimateEntityDescription, HVACMode
 from homeassistant.components.select import SelectEntityDescription
-from homeassistant.components.sensor import SensorEntityDescription
+from homeassistant.components.sensor import (
+    SensorDeviceClass,
+    SensorEntityDescription,
+    SensorStateClass,
+)
 from homeassistant.const import EntityCategory, Platform, UnitOfTemperature
 from homeassistant.helpers.entity import EntityDescription
 
@@ -41,6 +52,7 @@ class AquaTempSensorEntityDescription(
     SensorEntityDescription, AquaTempEntityDescription
 ):
     platform: Platform | None = Platform.SENSOR
+    value_fn: Callable[[dict], float | None] | None = None
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -87,3 +99,40 @@ DEFAULT_ENTITY_DESCRIPTIONS: list[AquaTempEntityDescription] = [
     ),
     AquaTempClimateEntityDescription(key="Mode", name=None, translation_key="mode"),
 ]
+
+
+def water_delta_t(device_data: dict, inlet_code: str, outlet_code: str) -> float | None:
+    """Outlet minus inlet water temperature, signed."""
+    try:
+        return float(device_data[outlet_code]) - float(device_data[inlet_code])
+
+    except (KeyError, TypeError, ValueError):
+        return None
+
+
+def get_derived_entity_descriptions(
+    pc_mapping: dict,
+) -> list[AquaTempEntityDescription]:
+    """Entities computed from other codes, for the roles the mapping defines."""
+    entity_descriptions = []
+
+    inlet_code = pc_mapping.get(CONFIG_INLET_WATER_TEMPERATURE)
+    outlet_code = pc_mapping.get(CONFIG_OUTLET_WATER_TEMPERATURE)
+
+    if inlet_code is not None and outlet_code is not None:
+        entity_descriptions.append(
+            AquaTempSensorEntityDescription(
+                key="water_delta_t",
+                name="Water ΔT",
+                is_protocol_code=False,
+                device_class=SensorDeviceClass.TEMPERATURE_DELTA,
+                state_class=SensorStateClass.MEASUREMENT,
+                suggested_display_precision=1,
+                value_fn=partial(
+                    water_delta_t, inlet_code=inlet_code, outlet_code=outlet_code
+                ),
+                translation_key="water_delta_t",
+            )
+        )
+
+    return entity_descriptions

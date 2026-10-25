@@ -6,6 +6,7 @@ from pathlib import Path
 
 import aiofiles
 
+from homeassistant.components.sensor import SensorStateClass
 from homeassistant.config_entries import STORAGE_VERSION, ConfigEntry
 from homeassistant.const import (
     CONF_PASSWORD,
@@ -15,7 +16,6 @@ from homeassistant.const import (
     Platform,
     UnitOfTemperature,
 )
-from homeassistant.components.sensor import SensorStateClass
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import translation
 from homeassistant.helpers.entity import DeviceInfo
@@ -24,9 +24,9 @@ from homeassistant.helpers.storage import Store
 
 from ..common.api_types import APIParam
 from ..common.consts import (
+    CONF_LOG_SESSION_TOKEN,
     CONFIG_FAN_MODES,
     CONFIG_HVAC_MODES,
-    CONF_LOG_SESSION_TOKEN,
     CONFIG_HVAC_SET,
     CONFIGURATION_FILE,
     DEFAULT_ENTRY_ID,
@@ -41,6 +41,7 @@ from ..common.entity_descriptions import (
     AquaTempBinarySensorEntityDescription,
     AquaTempEntityDescription,
     AquaTempSensorEntityDescription,
+    get_derived_entity_descriptions,
 )
 from ..models.config_data import ConfigData
 
@@ -54,6 +55,7 @@ class AquaTempConfigManager:
     _entry_id: str
     _entry_title: str
     _config_data: ConfigData
+    _store: Store | None
 
     def __init__(self, hass: HomeAssistant | None, entry: ConfigEntry | None):
         self._hass = hass
@@ -82,6 +84,8 @@ class AquaTempConfigManager:
         self._config_data = ConfigData()
 
         self._is_initialized = False
+
+        self._store = None
 
         if hass is not None:
             self._store = Store(
@@ -134,9 +138,12 @@ class AquaTempConfigManager:
 
         await self._load_api_config()
 
-        self._translations = await translation.async_get_translations(
-            self._hass, self._hass.config.language, "entity", {DOMAIN}
-        )
+        if self._hass is None:
+            self._translations = {}
+        else:
+            self._translations = await translation.async_get_translations(
+                self._hass, self._hass.config.language, "entity", {DOMAIN}
+            )
 
         self._is_initialized = True
 
@@ -306,12 +313,13 @@ class AquaTempConfigManager:
 
         await self._save()
 
-        await self._load_entity_descriptions("default")
+        # Mappings first: entity descriptions read them for derived entities
         await self._load_pc_mapping("default")
+        await self._load_entity_descriptions("default")
 
         for product_id in PRODUCT_IDS:
-            await self._load_entity_descriptions(product_id)
             await self._load_pc_mapping(product_id)
+            await self._load_entity_descriptions(product_id)
 
         log_messages = [
             f"Entity Descriptions: {len(self._entity_descriptions)}",
@@ -437,6 +445,14 @@ class AquaTempConfigManager:
                 entity = AquaTempEntityDescription(key=key, name=data_item.get("name"))
 
                 entities.append(entity)
+
+        # Same fallback as set_device: a product without its own mapping uses
+        # the default one
+        pc_mapping = self._protocol_codes_configuration.get(
+            product_id, self._protocol_codes_configuration.get(PRODUCT_ID_DEFAULT)
+        )
+
+        entities.extend(get_derived_entity_descriptions(pc_mapping))
 
         self._update_platforms(entities)
         self._update_protocol_codes(product_id, entities)

@@ -10,7 +10,7 @@ PARAMETER_MAPPING = {
         "percentage": [],
         "rotation": [],
         "skip": [5],
-        "bar_parameter": "-bar"
+        "bar_parameter": "-bar",
     },
     "factory_parameter_e": {
         "name": "E",
@@ -22,7 +22,7 @@ PARAMETER_MAPPING = {
         "duration_h": [],
         "percentage": [],
         "rotation": [],
-        "skip": [8]
+        "skip": [8],
     },
     "factory_parameter_fh0": {
         "name": "F",
@@ -36,7 +36,7 @@ PARAMETER_MAPPING = {
         "rotation": [15, 17, 19, 23, 27],
         "skip": [8, 9],
         "bar_parameter": "-bar",
-        "rotation_parameter": "-r"
+        "rotation_parameter": "-r",
     },
     "factory_parameter_h": {
         "name": "H",
@@ -48,7 +48,7 @@ PARAMETER_MAPPING = {
         "duration_h": [],
         "percentage": [],
         "rotation": [],
-        "skip": [4, 5]
+        "skip": [4, 5],
     },
     "factory_parameter_p": {
         "name": "P",
@@ -60,7 +60,7 @@ PARAMETER_MAPPING = {
         "duration_h": [5, 6, 7, 8],
         "percentage": [],
         "rotation": [],
-        "skip": []
+        "skip": [],
     },
     "factory_parameter_r": {
         "name": "R",
@@ -72,7 +72,7 @@ PARAMETER_MAPPING = {
         "duration_h": [],
         "percentage": [],
         "rotation": [],
-        "skip": [6, 7]
+        "skip": [6, 7],
     },
     "factory_parameter_o": {
         "name": "O",
@@ -84,7 +84,7 @@ PARAMETER_MAPPING = {
         "duration_h": [],
         "percentage": [],
         "rotation": [],
-        "skip": []
+        "skip": [],
     },
     "factory_parameter_s": {
         "name": "S",
@@ -96,7 +96,7 @@ PARAMETER_MAPPING = {
         "duration_h": [],
         "percentage": [],
         "rotation": [],
-        "skip": []
+        "skip": [],
     },
     "factory_parameter_t": {
         "name": "T",
@@ -109,6 +109,6 @@ PARAMETER_MAPPING = {
         "duration_h": [],
         "percentage": [7],
         "rotation": [11, 15, 16, 17],
-        "skip": []
+        "skip": [],
     },
 }
