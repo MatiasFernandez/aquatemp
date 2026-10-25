@@ -12,3 +12,7 @@ updates:
       interval: weekly
     cooldown:
       default-days: 7
+    # Home Assistant pins its own dependencies exactly, so transitive
+    # updates can't resolve until a homeassistant bump brings them in.
+    allow:
+      - dependency-type: direct
