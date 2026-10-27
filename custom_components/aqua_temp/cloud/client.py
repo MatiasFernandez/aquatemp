@@ -521,6 +521,8 @@ class AquaTempAPI:
 
         credentials = self._credentials
 
+        # MD5 is a weak hash for passwords, but the cloud API's login expects
+        # exactly this; we can't choose another without breaking login
         password_hashed = hashlib.md5(credentials.password.encode("utf-8")).hexdigest()
 
         data = {param_username: credentials.username, "password": password_hashed}
