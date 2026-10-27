@@ -27,7 +27,6 @@ from .consts import (
     CONFIG_SET_TEMPERATURE,
     DEVICE_CONTROL_PARAM,
     DEVICE_CONTROL_VALUE,
-    FAN_MODE_MAPPING,
     HEADERS,
     HTTP_HEADER_X_TOKEN,
     POWER_MODE_OFF,
@@ -369,13 +368,14 @@ class AquaTempAPI:
         await self._perform_action(request_data, mode_pc_key)
 
     async def set_fan_mode(self, device_code: str, fan_mode: FanMode):
-        """Set the fan mode; only FanMode.AUTO and FanMode.LOW have a wire value."""
-        fan_pc_key = self._get_device_profile(device_code).get_pc_key(CONFIG_SET_FAN)
+        """Set the fan mode to its wire value in the device's profile."""
+        device_profile = self._get_device_profile(device_code)
+        fan_pc_key = device_profile.get_pc_key(CONFIG_SET_FAN)
 
         param_device_code = self._api_profile.get(APIParam.DeviceCode)
         param_protocol_code = self._api_profile.get(APIParam.ProtocolCode)
 
-        value = FAN_MODE_MAPPING.get(fan_mode)
+        value = device_profile.fan_modes.get(fan_mode)
 
         request_data = {
             DEVICE_CONTROL_PARAM: [

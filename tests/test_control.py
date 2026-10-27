@@ -17,13 +17,16 @@ from .conftest import DEVICE_CODE, cloud_with, data_with
 CONTROL = "app/device/control"
 DATA = "app/device/getDataByCode"
 STATUS = "app/device/getDeviceStatus"
+SHARED_APPECT = "app/device/getMyAppectDeviceShareDataList"
+
+HITEMP_DEVICE_CODE = "000000000002"
 
 
-def control(*params: tuple[str, object]) -> dict:
+def control(*params: tuple[str, object], device_code: str = DEVICE_CODE) -> dict:
     """Control body setting each (protocolCode, value) on the device."""
     return {
         "param": [
-            {"deviceCode": DEVICE_CODE, "protocolCode": code, "value": value}
+            {"deviceCode": device_code, "protocolCode": code, "value": value}
             for code, value in params
         ]
     }
@@ -96,10 +99,19 @@ async def test_set_temperature_writes_mode_target_and_set_temp(heat_pump, wire):
 async def test_set_fan_mode_writes_manual_mute(heat_pump, wire, fan_mode, value):
     await heat_pump.set_fan_mode(DEVICE_CODE, fan_mode)
 
-    # Suspect (AT-039): values come from a hard-coded mapping, not the
-    # profile's fan_modes; they agree for the default profile
     assert [endpoint for endpoint, _ in wire] == [CONTROL]
     assert_sent(wire[0][1], control(("Manual-mute", value)))
+
+
+@cloud_with(RESPONSES | {SHARED_APPECT: "synthetic/device_list_shared"})
+@pytest.mark.parametrize(
+    ("fan_mode", "value"), [("off", "0"), ("low", "1"), ("high", "2")]
+)
+async def test_set_fan_mode_writes_the_profile_value(heat_pump, wire, fan_mode, value):
+    await heat_pump.set_fan_mode(HITEMP_DEVICE_CODE, fan_mode)
+
+    assert [endpoint for endpoint, _ in wire] == [CONTROL]
+    assert_sent(wire[0][1], control(("M17", value), device_code=HITEMP_DEVICE_CODE))
 
 
 @cloud_with(

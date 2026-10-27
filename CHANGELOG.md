@@ -17,6 +17,7 @@ predate this fork and keep their original format.
 - Report a rejected login as invalid credentials when the response carries no login result, instead of failing setup with a generic "Failed to initialize session" error
 - Release the HTTP session the config and options flows use to check credentials once the check finishes; each form submission used to keep one session and one shutdown listener until Home Assistant stopped
 - With two config entries, each logged the other out, because they shared one session token
+- On Hitemp heat pumps, setting the fan mode to off or high sent no value; fan mode writes now use the device profile's values
 
 ## [3.2.0] - 2026-10-24
 
