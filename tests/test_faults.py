@@ -69,7 +69,7 @@ async def test_fault_without_records_sets_no_fault(api):
 async def test_missing_fault_flag_still_reads_the_fault(api, wire):
     await api.update()
 
-    # Suspect (AT-043): the flag defaults to the string "False", which is
+    # Possible bug: the flag defaults to the string "False", which is
     # truthy, so a status without isFault still reads the fault
     assert wire[-1] == (FAULT, {"deviceCode": DEVICE_CODE})
     assert "fault" not in api.get_device_data(DEVICE_CODE)

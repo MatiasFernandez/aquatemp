@@ -63,7 +63,7 @@ async def heat_pump(api, wire):
 async def test_hvac_off_powers_off(heat_pump, wire):
     await heat_pump.set_hvac_mode(DEVICE_CODE, "off")
 
-    # Suspect (AT-038): the profile's code is "Power", sent lowercased
+    # Possible bug: the profile's code is "Power", sent lowercased
     assert [endpoint for endpoint, _ in wire] == [CONTROL]
     assert_sent(wire[0][1], control(("power", "0")))
 
@@ -72,7 +72,7 @@ async def test_hvac_heat_when_off_powers_on_reads_then_sets_mode(heat_pump, wire
     await heat_pump.set_hvac_mode(DEVICE_CODE, "heat")
 
     assert [endpoint for endpoint, _ in wire] == [CONTROL, DATA, STATUS, CONTROL]
-    # Suspect (AT-038): lowercased "power", as above
+    # Possible bug: lowercased "power", as above
     assert_sent(wire[0][1], control(("power", "1")))
     assert_sent(wire[3][1], control(("Set_Temp", 28.0), ("Mode", "1")))
 
@@ -81,7 +81,7 @@ async def test_hvac_heat_when_off_powers_on_reads_then_sets_mode(heat_pump, wire
 async def test_hvac_cool_when_on_sets_mode(heat_pump, wire):
     await heat_pump.set_hvac_mode(DEVICE_CODE, "cool")
 
-    # Suspect (AT-038): Set_Temp gets the current mode's target (heat's R02,
+    # Possible bug: Set_Temp gets the current mode's target (heat's R02,
     # 28.0), not cool's R01 (27.0)
     assert [endpoint for endpoint, _ in wire] == [CONTROL]
     assert_sent(wire[0][1], control(("Set_Temp", 28.0), ("Mode", "0")))
@@ -90,7 +90,7 @@ async def test_hvac_cool_when_on_sets_mode(heat_pump, wire):
 async def test_set_temperature_writes_mode_target_and_set_temp(heat_pump, wire):
     await heat_pump.set_temperature(DEVICE_CODE, 26.5)
 
-    # Suspect (AT-038): the mode's target code and Set_Temp, written together
+    # Possible bug: the mode's target code and Set_Temp, written together
     assert [endpoint for endpoint, _ in wire] == [CONTROL]
     assert_sent(wire[0][1], control(("R02", 26.5), ("Set_Temp", 26.5)))
 
@@ -132,7 +132,7 @@ async def test_expired_token_on_write_logs_in_again_and_retries(heat_pump, wire)
     ]
     assert_sent(wire[-1][1], wire[0][1])
 
-    # Suspect (AT-042): rediscovery replaces the polled values with the
+    # Possible bug: rediscovery replaces the polled values with the
     # device-list entry until the next poll
     assert "T02" not in heat_pump.get_device_data(DEVICE_CODE)
 
