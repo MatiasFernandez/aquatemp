@@ -30,65 +30,56 @@ _LOGGER = logging.getLogger(__name__)
 
 
 class Test:
-    def __init__(self):
-        self._session = None
-        self._api = None
-
-    async def _create_api(self):
+    @staticmethod
+    async def _create_api(session: ClientSession) -> AquaTempAPI:
         api_profile = await ApiProfile.load(str(APIType.AquaTemp))
         device_profiles = await DeviceProfiles.load()
 
-        self._session = ClientSession()
-        self._api = AquaTempAPI(
-            self._session,
+        return AquaTempAPI(
+            session,
             Credentials(username=USERNAME, password=PASSWORD),
             api_profile,
             device_profiles,
         )
 
     async def parameters_list(self):
-        await self._create_api()
+        async with ClientSession() as session:
+            api = await self._create_api(session)
 
-        await self._api.initialize()
+            await api.initialize()
 
     async def list_data(self):
-        await self._create_api()
+        async with ClientSession() as session:
+            api = await self._create_api(session)
 
-        await self._api.initialize()
+            await api.initialize()
 
-        await self._api.update()
+            await api.update()
 
-        for device_code in self._api.devices:
-            device_data = self._api.get_device_data(device_code)
+            for device_code in api.devices:
+                device_data = api.get_device_data(device_code)
 
-            _LOGGER.info(f"{device_code}: {json.dumps(device_data, indent=4)}")
-
-        await self.terminate()
+                _LOGGER.info(f"{device_code}: {json.dumps(device_data, indent=4)}")
 
     async def api_test(self):
-        await self._create_api()
+        async with ClientSession() as session:
+            api = await self._create_api(session)
 
-        await self._api.initialize()
+            await api.initialize()
 
-        for i in range(1, 10):
-            await self._api.update()
+            for i in range(1, 10):
+                await api.update()
 
-            _LOGGER.info(self._api.devices)
+                _LOGGER.info(api.devices)
 
-            await asyncio.sleep(30)
+                await asyncio.sleep(30)
 
-    async def terminate(self):
-        await self._session.close()
-
-
-loop = asyncio.new_event_loop()
 
 instance = Test()
 
+# asyncio.run cancels the task on Ctrl+C, so the session still closes
 try:
-    loop.create_task(instance.list_data())
-    loop.run_forever()
-
+    asyncio.run(instance.list_data())
 
 except KeyboardInterrupt:
     _LOGGER.info("Aborted")
