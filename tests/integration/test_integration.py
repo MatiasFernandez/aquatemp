@@ -33,6 +33,8 @@ from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.update_coordinator import REQUEST_REFRESH_DEFAULT_COOLDOWN
 from homeassistant.util import dt as dt_util, slugify
 from tests.cloud.mock_cloud import (
+    DATA,
+    DATA_IDLE,
     DEVICE_CODE,
     cloud_with,
     data_untyped,
@@ -41,7 +43,6 @@ from tests.cloud.mock_cloud import (
 )
 
 CONTROL = "app/device/control"
-DATA = "app/device/getDataByCode"
 DEVICE_LIST = "app/device/deviceList"
 STATUS = "app/device/getDeviceStatus"
 
@@ -76,7 +77,7 @@ def two_device_list() -> dict:
 
 RESPONSES = {
     DEVICE_LIST: device_list(),
-    DATA: "get_data_by_code.idle",
+    DATA: DATA_IDLE,
     CONTROL: "synthetic/control_success",
 }
 
@@ -317,7 +318,7 @@ async def test_pressing_refresh_data_polls_the_cloud(hass, entry, wire, freezer)
     assert [endpoint for endpoint, _ in wire] == [DATA, STATUS]
 
 
-@cloud_with(RESPONSES | {DATA: ["get_data_by_code.idle", 500, 500, 500]})
+@cloud_with(RESPONSES | {DATA: [DATA_IDLE, 500, 500, 500]})
 async def test_refresh_data_stays_available_after_a_failed_update(hass, entry, freezer):
     with patch("custom_components.aqua_temp.cloud.client.sleep"):
         await hass.services.async_call(

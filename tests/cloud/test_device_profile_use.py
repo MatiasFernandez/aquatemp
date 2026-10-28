@@ -13,11 +13,10 @@ import pytest
 
 from custom_components.aqua_temp.cloud.client import DeviceMeta
 
-from .mock_cloud import DEVICE_CODE, cloud_with, data_with
+from .mock_cloud import DATA, DATA_IDLE, DEVICE_CODE, cloud_with, data_with
 
 # Literal on purpose: the expected values must not come from the config under test
 CONTROL = "app/device/control"
-DATA = "app/device/getDataByCode"
 SHARED_APPECT = "app/device/getMyAppectDeviceShareDataList"
 
 HITEMP_DEVICE_CODE = "000000000002"
@@ -118,7 +117,7 @@ async def test_each_device_polls_its_catalog_codes(api, wire):
     assert hitemp_request["protocalCodes"] == ["Mode", *hitemp_codes]
 
 
-@cloud_with(RESPONSES | {DATA: "get_data_by_code.idle"})
+@cloud_with(RESPONSES | {DATA: DATA_IDLE})
 async def test_hitemp_mode_is_never_polled(api, wire):
     await api.update()
 

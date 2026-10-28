@@ -17,17 +17,16 @@ from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, EVENT_HOMEASSISTAN
 from homeassistant.core import CoreState, HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.update_coordinator import REQUEST_REFRESH_DEFAULT_COOLDOWN
-from tests.cloud.mock_cloud import cloud_with
+from tests.cloud.mock_cloud import DATA, DATA_IDLE, cloud_with
 
 from .conftest import add_entry
 
 # Literal on purpose: the expected values must not come from the config under test
 LOGIN = "app/user/login"
-DATA = "app/device/getDataByCode"
 CONFIG_STORE = "aqua_temp.config.json"
 LEGACY_KEY_STORE = ".aqua_temp"
 
-RESPONSES = {DATA: "get_data_by_code.idle"}
+RESPONSES = {DATA: DATA_IDLE}
 
 
 @pytest.fixture(autouse=True)

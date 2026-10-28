@@ -7,14 +7,13 @@ from custom_components.aqua_temp.common.consts import DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.util import slugify
-from tests.cloud.mock_cloud import DEVICE_CODE, cloud_with, data_with
+from tests.cloud.mock_cloud import DATA, DATA_IDLE, DEVICE_CODE, cloud_with, data_with
 
 # Literal on purpose: the expected values must not come from the config under test
-DATA = "app/device/getDataByCode"
 STATUS = "app/device/getDeviceStatus"
 FAULT = "app/device/getFaultDataByDeviceCode"
 
-RESPONSES = {DATA: "get_data_by_code.idle"}
+RESPONSES = {DATA: DATA_IDLE}
 
 
 @pytest.fixture(autouse=True)
