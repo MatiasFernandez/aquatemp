@@ -7,6 +7,10 @@ predate this fork and keep their original format.
 
 ## [Unreleased]
 
+### Fixed
+
+- Downloading diagnostics for a single device failed with an error; it now returns that device's data and entities, as in the config entry diagnostics
+
 ## [3.2.0] - 2026-10-24
 
 ### Added

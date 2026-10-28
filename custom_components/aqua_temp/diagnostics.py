@@ -75,7 +75,7 @@ def _async_get_diagnostics(
         for device_code in devices:
             device_details = devices[device_code]
             if device_details.get(device_id_param) == device_id:
-                data |= _async_device_as_dict(hass, device_details)
+                data |= _async_device_as_dict(hass, device_id, device_details)
 
     else:
         _LOGGER.debug("Getting diagnostic information for all devices")
