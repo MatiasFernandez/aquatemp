@@ -14,6 +14,7 @@ import pytest
 from pytest_homeassistant_custom_component.common import MockConfigEntry
 
 from custom_components.aqua_temp.common.consts import CONF_API_TYPE, DOMAIN
+from custom_components.aqua_temp.common.device_lookup import async_get_ha_device
 from custom_components.aqua_temp.diagnostics import (
     async_get_config_entry_diagnostics,
     async_get_device_diagnostics,
@@ -21,7 +22,7 @@ from custom_components.aqua_temp.diagnostics import (
 from custom_components.aqua_temp.managers.password_manager import PasswordManager
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import device_registry as dr, entity_registry as er
+from homeassistant.helpers import entity_registry as er
 from homeassistant.util import slugify
 from tests.cloud.mock_cloud import DEVICE_CODE, cloud_with, data_with, load_fixture
 
@@ -132,11 +133,18 @@ def expected_unique_ids(catalog_id: str) -> set[str]:
 
 
 async def test_device_is_registered_from_the_device_list(hass, entry):
-    device = dr.async_get(hass).async_get_device(identifiers={(DOMAIN, DEVICE_ID)})
+    device = async_get_ha_device(hass, entry.entry_id, DEVICE_ID)
 
     assert device is not None
     assert device.name == "Heat pump"
     assert device.model == MODEL
+
+
+async def test_device_lookup_ignores_other_entries_devices(hass, entry):
+    other_entry = MockConfigEntry(domain=DOMAIN)
+    other_entry.add_to_hass(hass)
+
+    assert async_get_ha_device(hass, other_entry.entry_id, DEVICE_ID) is None
 
 
 async def test_device_gets_its_catalog_entities(hass, entry):
@@ -223,7 +231,7 @@ async def test_setting_fan_mode_writes_manual_mute(hass, entry, wire):
 async def test_device_diagnostics_match_its_entry_in_the_config_entry_ones(
     hass, entry, device_id
 ):
-    device = dr.async_get(hass).async_get_device(identifiers={(DOMAIN, device_id)})
+    device = async_get_ha_device(hass, entry.entry_id, device_id)
 
     device_data = await async_get_device_diagnostics(hass, entry, device)
     entry_data = await async_get_config_entry_diagnostics(hass, entry)
