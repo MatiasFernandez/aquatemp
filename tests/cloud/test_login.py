@@ -106,7 +106,7 @@ async def test_unauthorized_read_logs_in_again_and_retries(api, wire):
         DATA,
         "app/device/getDeviceStatus",
     ]
-    assert api.get_device_data(DEVICE_CODE)["T02"] == "13.0"
+    assert api.get_device_data(DEVICE_CODE)["T02"] == "12.5"
 
 
 @cloud_with(

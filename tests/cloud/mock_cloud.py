@@ -26,8 +26,8 @@ DEVICE_CODE = "000000000001"
 # Where devices are read from, and the recorded idle response tests serve
 # there. Literal on purpose: the expected values must not come from the config
 # under test
-DATA = "app/device/getDataByCode"
-DATA_IDLE = "get_data_by_code.idle"
+DATA = "app/device/v5/getDataByCode"
+DATA_IDLE = "get_data_by_code.v5-idle"
 
 # What the cloud answers unless a test says otherwise, every time it is asked.
 # getDataByCode is left out: tests serve it themselves.
