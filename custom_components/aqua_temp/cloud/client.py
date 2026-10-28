@@ -513,6 +513,7 @@ class AquaTempAPI:
             if code not in unknown_codes
         ]
 
+        param_data_endpoint = self._api_profile.get(APIParam.DataEndpoint)
         param_device_code = self._api_profile.get(APIParam.DeviceCode)
         param_data_codes = self._api_profile.get(APIParam.DataCodes)
         param_object_result = self._api_profile.get(APIParam.ObjectResult)
@@ -524,7 +525,7 @@ class AquaTempAPI:
             param_data_codes: codes,
         }
 
-        data_response = await self._post_request(Endpoints.DeviceData, data)
+        data_response = await self._post_request(param_data_endpoint, data)
         error_msg = data_response.get(param_error_msg)
 
         object_result_items = data_response.get(param_object_result, [])

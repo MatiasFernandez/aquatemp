@@ -17,6 +17,7 @@ class APIParam(StrEnum):
     PageSize = "page_size"
     ToUser = "to_user"
     DeviceCode = "device_code"
+    DataEndpoint = "data_endpoint"
     DataCodes = "data_codes"
     ProtocolCode = "protocol_code"
     IsFault = "is_fault"
