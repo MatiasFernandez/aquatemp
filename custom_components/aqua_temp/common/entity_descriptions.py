@@ -100,7 +100,8 @@ DEFAULT_ENTITY_DESCRIPTIONS: list[AquaTempEntityDescription] = [
         device_class=BinarySensorDeviceClass.CONNECTIVITY,
         translation_key="device_status",
     ),
-    AquaTempClimateEntityDescription(key="Mode", name=None, translation_key="mode"),
+    # Named after the device
+    AquaTempClimateEntityDescription(key="Mode", name=None),
 ]
 
 

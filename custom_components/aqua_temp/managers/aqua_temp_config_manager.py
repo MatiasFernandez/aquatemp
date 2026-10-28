@@ -9,8 +9,6 @@ from homeassistant.const import (
     UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import translation
-from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.json import JSONEncoder
 from homeassistant.helpers.storage import Store
 
@@ -23,10 +21,8 @@ from ..common.consts import (
     CONFIGURATION_FILE,
     DEFAULT_ENTRY_ID,
     DEFAULT_NAME,
-    DOMAIN,
 )
 from ..common.entity_descriptions import (
-    AquaTempEntityDescription,
     build_entity_descriptions,
 )
 from ..models.config_data import ConfigData
@@ -37,7 +33,6 @@ _LOGGER = logging.getLogger(__name__)
 class AquaTempConfigManager:
     _api_profile: ApiProfile | None
     _device_profiles: DeviceProfiles | None
-    _translations: dict | None
     _entry: ConfigEntry | None
     _entry_id: str
     _entry_title: str
@@ -54,7 +49,6 @@ class AquaTempConfigManager:
 
         self._api_profile = None
         self._device_profiles = None
-        self._translations = None
 
         self._entry = entry
         self._entry_id = DEFAULT_ENTRY_ID if entry is None else entry.entry_id
@@ -130,10 +124,6 @@ class AquaTempConfigManager:
 
         self._api_profile = await ApiProfile.load(self._config_data.api_type)
 
-        self._translations = await translation.async_get_translations(
-            self._hass, self._hass.config.language, "entity", {DOMAIN}
-        )
-
         self._is_initialized = True
 
     async def remove(self, entry_id: str):
@@ -153,33 +143,6 @@ class AquaTempConfigManager:
 
             if should_save:
                 await self._store.async_save(data)
-
-    def get_entity_name(
-        self, entity_description: AquaTempEntityDescription, device_info: DeviceInfo
-    ) -> str:
-        entity_key = entity_description.key
-        platform = entity_description.platform
-
-        device_name = device_info.get("name")
-
-        translation_key = f"component.{DOMAIN}.entity.{platform}.{entity_key}.name"
-
-        translated_name = self._translations.get(
-            translation_key, entity_description.name
-        )
-
-        _LOGGER.debug(
-            f"Translations requested, Key: {translation_key}, "
-            f"Entity: {entity_description.name}, Value: {translated_name}"
-        )
-
-        entity_name = (
-            device_name
-            if translated_name is None or translated_name == ""
-            else f"{device_name} {translated_name}"
-        )
-
-        return entity_name
 
     async def update_temperature_unit(self, device_code: str, value: str):
         _LOGGER.debug(f"Set temperature unit for device '{device_code}' to {value}")

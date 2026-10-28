@@ -26,7 +26,7 @@ from custom_components.aqua_temp.diagnostics import (
 )
 from homeassistant.const import CONF_USERNAME
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.update_coordinator import REQUEST_REFRESH_DEFAULT_COOLDOWN
 from homeassistant.util import slugify
 from tests.cloud.mock_cloud import (
@@ -98,10 +98,14 @@ async def set_up(hass: HomeAssistant, entry: MockConfigEntry) -> MockConfigEntry
     return entry
 
 
-def climate_entity_id(hass: HomeAssistant) -> str:
-    unique_id = slugify(f"{DOMAIN}_climate_Mode_{DEVICE_CODE}")
+def entity_id(hass: HomeAssistant, platform: str, key: str) -> str | None:
+    unique_id = slugify(f"{DOMAIN}_{platform}_{key}_{DEVICE_CODE}")
 
-    return er.async_get(hass).async_get_entity_id("climate", DOMAIN, unique_id)
+    return er.async_get(hass).async_get_entity_id(platform, DOMAIN, unique_id)
+
+
+def climate_entity_id(hass: HomeAssistant) -> str:
+    return entity_id(hass, "climate", "Mode")
 
 
 # Answered with an empty value and dataType in the idle recording
@@ -222,6 +226,56 @@ async def test_entity_registered_for_an_unknown_code_is_kept(hass, config_entry)
     assert entity_id is not None
     # No entity provides it, so it has no state
     assert hass.states.get(entity_id) is None
+
+
+async def test_entity_ids_name_the_device_once(hass, entry):
+    assert entity_id(hass, "sensor", "water_delta_t") == "sensor.heat_pump_water_dt"
+    assert climate_entity_id(hass) == "climate.heat_pump"
+
+
+async def test_entity_ids_use_the_device_name_given_in_home_assistant(
+    hass, config_entry
+):
+    # The device renamed before its entities were registered
+    device = dr.async_get(hass).async_get_or_create(
+        config_entry_id=config_entry.entry_id, identifiers={(DOMAIN, DEVICE_ID)}
+    )
+    dr.async_get(hass).async_update_device(device.id, name_by_user="Pool")
+
+    await set_up(hass, config_entry)
+
+    assert entity_id(hass, "sensor", "water_delta_t") == "sensor.pool_water_dt"
+    assert climate_entity_id(hass) == "climate.pool"
+
+
+async def test_entity_names_follow_the_device_name(hass, entry):
+    device = async_get_ha_device(hass, entry.entry_id, DEVICE_ID)
+
+    dr.async_get(hass).async_update_device(device.id, name_by_user="Pool")
+    await hass.async_block_till_done()
+
+    water_delta_t = hass.states.get(entity_id(hass, "sensor", "water_delta_t"))
+    climate = hass.states.get(climate_entity_id(hass))
+
+    assert water_delta_t.attributes["friendly_name"] == "Pool Water ΔT"
+    assert climate.attributes["friendly_name"] == "Pool"
+
+
+async def test_registered_entities_keep_their_entity_id(hass, config_entry):
+    # As registered while the integration named entities itself, for a
+    # device renamed in Home Assistant
+    registered = er.async_get(hass).async_get_or_create(
+        "sensor",
+        DOMAIN,
+        slugify(f"{DOMAIN}_sensor_water_delta_t_{DEVICE_CODE}"),
+        suggested_object_id="pool_heat_pump_water_dt",
+        config_entry=config_entry,
+    )
+
+    await set_up(hass, config_entry)
+
+    assert entity_id(hass, "sensor", "water_delta_t") == registered.entity_id
+    assert hass.states.get(registered.entity_id) is not None
 
 
 async def test_device_entities_are_added_once(hass, entry):

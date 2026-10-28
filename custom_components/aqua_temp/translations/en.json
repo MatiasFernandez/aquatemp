@@ -77,11 +77,6 @@
         "name": "Power"
       }
     },
-    "climate": {
-      "mode": {
-        "name": ""
-      }
-    },
     "select": {
       "temperature_unit": {
         "name": "Temperature Unit"
