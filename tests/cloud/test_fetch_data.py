@@ -12,7 +12,13 @@ from custom_components.aqua_temp.cloud.api_profile import ApiProfile
 from custom_components.aqua_temp.cloud.api_types import APIParam
 from custom_components.aqua_temp.cloud.endpoints import Endpoints
 
-from .mock_cloud import DEVICE_CODE, data_untyped, endpoint_url, load_fixture
+from .mock_cloud import (
+    DATA_IDLE,
+    DEVICE_CODE,
+    data_untyped,
+    endpoint_url,
+    load_fixture,
+)
 
 # Literal on purpose: the expected values must not come from the config under test
 DATA_URL = "https://cloud.linked-go.com:449/crmservice/api/app/device/getDataByCode"
@@ -75,7 +81,7 @@ def requests_to(cloud, api_profile, endpoint):
 async def test_requests_device_protocol_codes(api, cloud, api_type, api_profile):
     # Reads are due to move to v5/getDataByCode with a `codes` field; this test
     # changes with them on purpose
-    register_data(cloud, api_type, api_profile, "get_data_by_code.idle")
+    register_data(cloud, api_type, api_profile, DATA_IDLE)
 
     await api.update()
 
@@ -95,7 +101,7 @@ async def test_requests_device_protocol_codes(api, cloud, api_type, api_profile)
 
 
 async def test_reported_values_become_device_data(api, cloud, api_type, api_profile):
-    register_data(cloud, api_type, api_profile, "get_data_by_code.idle")
+    register_data(cloud, api_type, api_profile, DATA_IDLE)
 
     await api.update()
 
@@ -106,7 +112,7 @@ async def test_reported_values_become_device_data(api, cloud, api_type, api_prof
 
 
 async def test_empty_value_becomes_none(api, cloud, api_type, api_profile):
-    register_data(cloud, api_type, api_profile, "get_data_by_code.idle")
+    register_data(cloud, api_type, api_profile, DATA_IDLE)
 
     await api.update()
 
@@ -126,7 +132,7 @@ async def test_expired_token_logs_in_again_and_retries(
         api_type,
         api_profile,
         "synthetic/error_token_expired",
-        "get_data_by_code.idle",
+        DATA_IDLE,
     )
 
     await api.update()
@@ -164,7 +170,7 @@ async def test_error_response_keeps_device_list_data(
 
 
 async def test_untyped_codes_are_unknown(api, cloud, api_type, api_profile):
-    register_data(cloud, api_type, api_profile, "get_data_by_code.idle")
+    register_data(cloud, api_type, api_profile, DATA_IDLE)
 
     await api.update()
 
@@ -176,7 +182,7 @@ async def test_nothing_is_unknown_before_the_first_read(api):
 
 
 async def test_unknown_codes_are_logged(api, cloud, api_type, api_profile, caplog):
-    register_data(cloud, api_type, api_profile, "get_data_by_code.idle")
+    register_data(cloud, api_type, api_profile, DATA_IDLE)
 
     with caplog.at_level(logging.DEBUG):
         await api.update()
@@ -211,7 +217,7 @@ async def test_all_codes_untyped_leaves_nothing_unknown(
 async def test_null_or_missing_data_type_is_not_unknown(
     api, cloud, api_type, api_profile
 ):
-    data = load_fixture(api_type, "get_data_by_code.idle")
+    data = load_fixture(api_type, DATA_IDLE)
     items = {item["code"]: item for item in data["objectResult"]}
     items["T02"]["dataType"] = None
     del items["T03"]["dataType"]
@@ -224,7 +230,7 @@ async def test_null_or_missing_data_type_is_not_unknown(
 
 
 async def test_untyped_item_without_code_is_ignored(api, cloud, api_type, api_profile):
-    data = load_fixture(api_type, "get_data_by_code.idle")
+    data = load_fixture(api_type, DATA_IDLE)
     data["objectResult"].append({"value": "", "dataType": ""})
 
     register_data(cloud, api_type, api_profile, data)
@@ -242,7 +248,7 @@ async def test_first_answered_read_decides_unknown_codes(
         api_type,
         api_profile,
         "synthetic/error_generic",
-        "get_data_by_code.idle",
+        DATA_IDLE,
     )
 
     await api.update()
@@ -261,7 +267,7 @@ async def test_unknown_codes_are_kept_after_later_reads(
         cloud,
         api_type,
         api_profile,
-        "get_data_by_code.idle",
+        DATA_IDLE,
         data_untyped("T02"),
     )
 
@@ -279,7 +285,7 @@ async def test_unknown_codes_survive_logging_in_again(
         cloud,
         api_type,
         api_profile,
-        "get_data_by_code.idle",
+        DATA_IDLE,
         "synthetic/error_token_expired",
         data_untyped("T02"),
     )
@@ -296,8 +302,8 @@ async def test_unknown_codes_are_no_longer_requested(api, cloud, api_type, api_p
         cloud,
         api_type,
         api_profile,
-        "get_data_by_code.idle",
-        "get_data_by_code.idle",
+        DATA_IDLE,
+        DATA_IDLE,
     )
 
     await api.update()

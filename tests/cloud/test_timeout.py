@@ -13,9 +13,7 @@ import pytest
 
 from custom_components.aqua_temp.cloud.client import AquaTempAPI, Credentials
 
-from .mock_cloud import cloud_with
-
-DATA = "app/device/getDataByCode"
+from .mock_cloud import DATA, cloud_with
 
 
 @pytest.fixture
