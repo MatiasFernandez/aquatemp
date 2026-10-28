@@ -13,6 +13,7 @@ predate this fork and keep their original format.
 - The setup and options forms explain that the cloud allows one login per account, that the username is the email address, that the app may have cut a password longer than 16 characters to its first 16, and which API type to pick
 - Refresh Data button on each device, in its Diagnostic section, to poll the cloud on demand instead of waiting for the next scheduled update. It stays available after a failed update, so it can be used to retry
 - **Polling interval** and **Request timeout** options in the integration's Configure dialog: how often the cloud is polled, from 30 to 3600 seconds (default 300, as before), and how long a request may take before it fails, from 5 to 60 seconds (default 10)
+- A warning in the log when the cloud answers a device read with no values
 
 ### Fixed
 
