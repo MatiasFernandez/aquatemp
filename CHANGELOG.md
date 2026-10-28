@@ -11,6 +11,7 @@ predate this fork and keep their original format.
 
 - Support for 15 more Aqua Temp heat pump product IDs, the ones the official app lists as heat pumps and the allow-list missed. They use the default profile. Until now such a unit was only found when no other device on the account matched the allow-list, and was missing otherwise
 - The setup and options forms explain that the cloud allows one login per account, that the username is the email address, that the app may have cut a password longer than 16 characters to its first 16, and which API type to pick
+- Refresh Data button on each device, in its Diagnostic section, to poll the cloud on demand instead of waiting for the next scheduled update. It stays available after a failed update, so it can be used to retry
 
 ### Fixed
 
