@@ -12,7 +12,7 @@ from custom_components.aqua_temp.cloud.api_profile import ApiProfile
 from custom_components.aqua_temp.cloud.api_types import APIParam
 from custom_components.aqua_temp.cloud.endpoints import Endpoints
 
-from .mock_cloud import DEVICE_CODE, endpoint_url, load_fixture
+from .mock_cloud import DATA_IDLE, DEVICE_CODE, endpoint_url, load_fixture
 
 # Literal on purpose: the expected values must not come from the config under test
 DATA_URL = "https://cloud.linked-go.com:449/crmservice/api/app/device/getDataByCode"
@@ -51,7 +51,7 @@ def requests_to(cloud, api_profile, endpoint):
 async def test_requests_device_protocol_codes(api, cloud, api_type, api_profile):
     # Reads are due to move to v5/getDataByCode with a `codes` field; this test
     # changes with them on purpose
-    register_data(cloud, api_type, api_profile, "get_data_by_code.idle")
+    register_data(cloud, api_type, api_profile, DATA_IDLE)
 
     await api.update()
 
@@ -71,7 +71,7 @@ async def test_requests_device_protocol_codes(api, cloud, api_type, api_profile)
 
 
 async def test_reported_values_become_device_data(api, cloud, api_type, api_profile):
-    register_data(cloud, api_type, api_profile, "get_data_by_code.idle")
+    register_data(cloud, api_type, api_profile, DATA_IDLE)
 
     await api.update()
 
@@ -82,7 +82,7 @@ async def test_reported_values_become_device_data(api, cloud, api_type, api_prof
 
 
 async def test_empty_value_becomes_none(api, cloud, api_type, api_profile):
-    register_data(cloud, api_type, api_profile, "get_data_by_code.idle")
+    register_data(cloud, api_type, api_profile, DATA_IDLE)
 
     await api.update()
 
@@ -102,7 +102,7 @@ async def test_expired_token_logs_in_again_and_retries(
         api_type,
         api_profile,
         "synthetic/error_token_expired",
-        "get_data_by_code.idle",
+        DATA_IDLE,
     )
 
     await api.update()

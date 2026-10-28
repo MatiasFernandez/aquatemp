@@ -23,6 +23,12 @@ FIXTURES = Path(__file__).parent / "fixtures"
 
 DEVICE_CODE = "000000000001"
 
+# Where devices are read from, and the recorded idle response tests serve
+# there. Literal on purpose: the expected values must not come from the config
+# under test
+DATA = "app/device/getDataByCode"
+DATA_IDLE = "get_data_by_code.idle"
+
 # What the cloud answers unless a test says otherwise, every time it is asked.
 # getDataByCode is left out: tests serve it themselves.
 BASE_RESPONSES = {
@@ -44,7 +50,7 @@ def load_fixture(api_type: str, name: str) -> dict:
 
 def data_with(**values) -> dict:
     """The recorded idle getDataByCode response, with some codes' values replaced."""
-    data = load_fixture(APIType.AquaTemp, "get_data_by_code.idle")
+    data = load_fixture(APIType.AquaTemp, DATA_IDLE)
     items = {item["code"]: item for item in data["objectResult"]}
 
     for code, value in values.items():
