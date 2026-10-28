@@ -7,9 +7,11 @@ predate this fork and keep their original format.
 
 ## [Unreleased]
 
+## [3.3.0] - 2026-10-28
+
 ### Changed
 
-- The cloud API client is now a subpackage (`cloud/`) with no Home Assistant imports
+- Internal restructuring of the cloud API client; no configuration changes needed
 
 ### Fixed
 
@@ -315,7 +317,8 @@ As result of that process, you need to re-setup the integration.
 - Simplified `climate` component to include just its functionality without additional attributes (moved to dedicated components)
 - Add mapping of more Protocol Codes (Parameters) for later support of more sensors/binary_sensors
 
-[Unreleased]: https://github.com/MatiasFernandez/aquatemp/compare/v3.2.0...HEAD
+[Unreleased]: https://github.com/MatiasFernandez/aquatemp/compare/v3.3.0...HEAD
+[3.3.0]: https://github.com/MatiasFernandez/aquatemp/compare/v3.2.0...v3.3.0
 [3.2.0]: https://github.com/MatiasFernandez/aquatemp/compare/v3.1.0...v3.2.0
 [3.1.0]: https://github.com/MatiasFernandez/aquatemp/compare/b163b69...v3.1.0
 [3.0.43]: https://github.com/tkejzlar/aquatemp/compare/07b9856...b163b69
