@@ -66,6 +66,15 @@
       },
       "device_status": {
         "name": "Status"
+      },
+      "default_power": {
+        "name": "Power"
+      },
+      "1245226668902080512_power": {
+        "name": "Power"
+      },
+      "1442284873216843776_power": {
+        "name": "Power"
       }
     },
     "climate": {
@@ -81,9 +90,6 @@
     "sensor": {
       "water_delta_t": {
         "name": "Water ΔT"
-      },
-      "default_power": {
-        "name": "Power"
       },
       "default_mode": {
         "name": "Mode"
@@ -586,9 +592,6 @@
       "default_t28": {
         "name": "Target frequency [T28]"
       },
-      "1245226668902080512_power": {
-        "name": "Power"
-      },
       "1245226668902080512_mode": {
         "name": "Mode"
       },
@@ -873,9 +876,6 @@
       },
       "1245226668902080512_t12": {
         "name": "\u8bb0\u5fc6\u82af\u7247EEPROM\u5b58\u50a8\u6b21\u6570 [T12]"
-      },
-      "1442284873216843776_power": {
-        "name": "Power"
       },
       "1442284873216843776_mode": {
         "name": "Mode"
