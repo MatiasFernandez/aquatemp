@@ -6,6 +6,8 @@ from .modes import FanMode, Mode
 
 HTTP_HEADER_X_TOKEN = "x-token"
 
+# Every heat pump the Aqua Temp Android app lists as of version 2.1.5, plus Hitemp,
+# which the app doesn't list
 PRODUCT_IDS = [
     "1245226668902080512",  # Hitemp
     "1132174963097280512",  # Aqua Temp
@@ -22,8 +24,22 @@ PRODUCT_IDS = [
     "1548963836789501952",  # Aqua Temp
     "1669159229372477440",  # Aqua Temp
     "1650758828508766208",  # Aqua Temp
-    "1664085465655808000",  # Aqua Temp
     "1845987289788989441",  # Aqua Temp
+    "1245644363707658240",  # Aqua Temp
+    "1411880504755519488",  # Aqua Temp
+    "1580015159123103744",  # Aqua Temp
+    "1723968101434449921",  # Aqua Temp
+    "1747074936915042306",  # Aqua Temp
+    "1747077846280486914",  # Aqua Temp
+    "1752888899863797762",  # Aqua Temp
+    "1777261505886740482",  # Aqua Temp
+    "1811606097627443201",  # Aqua Temp
+    "1821729460190392321",  # Aqua Temp
+    "1833329364592959490",  # Aqua Temp
+    "1855893688663838722",  # Aqua Temp
+    "1905164506956177410",  # Aqua Temp
+    "2034832864020103169",  # Aqua Temp
+    "2039970527406370818",  # Aqua Temp
 ]
 
 POWER_MODE_OFF = "0"

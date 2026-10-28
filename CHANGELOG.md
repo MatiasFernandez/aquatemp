@@ -7,6 +7,14 @@ predate this fork and keep their original format.
 
 ## [Unreleased]
 
+### Added
+
+- Support for 15 more Aqua Temp heat pump product IDs, the ones the official app lists as heat pumps and the allow-list missed. They use the default profile. Until now such a unit was only found when no other device on the account matched the allow-list, and was missing otherwise
+
+### Removed
+
+- Product ID 1664085465655808000 from the allow-list: the official app treats it as a dehumidifier, which got heat pump sensors and a thermostat that reported nothing. If it is the only device on the account, it is still found through the unfiltered fallback
+
 ## [3.3.0] - 2026-10-28
 
 ### Changed
