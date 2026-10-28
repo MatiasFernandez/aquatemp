@@ -8,6 +8,8 @@ from aiohttp import ClientResponseError
 import pytest
 from yarl import URL
 
+from custom_components.aqua_temp.cloud.api_profile import ApiProfile
+from custom_components.aqua_temp.cloud.api_types import APIParam
 from custom_components.aqua_temp.cloud.endpoints import Endpoints
 
 from .mock_cloud import DEVICE_CODE, data_untyped, endpoint_url, load_fixture
@@ -45,12 +47,16 @@ UNKNOWN_CODES = {
 }
 
 
+def data_endpoint(api_profile: ApiProfile) -> str:
+    return api_profile.get(APIParam.DataEndpoint)
+
+
 def register_data(cloud, api_type, api_profile, *fixtures):
     """Queue getDataByCode responses; each is served once, in the order given.
 
     A fixture is a name or a payload dict.
     """
-    url = endpoint_url(api_profile, Endpoints.DeviceData)
+    url = endpoint_url(api_profile, data_endpoint(api_profile))
 
     for fixture in fixtures:
         payload = (
@@ -126,13 +132,13 @@ async def test_expired_token_logs_in_again_and_retries(
     await api.update()
 
     assert len(requests_to(cloud, api_profile, Endpoints.Login)) == 2
-    assert len(requests_to(cloud, api_profile, Endpoints.DeviceData)) == 2
+    assert len(requests_to(cloud, api_profile, data_endpoint(api_profile))) == 2
     assert api.get_device_data(DEVICE_CODE)["T02"] == "13.0"
 
 
 async def test_read_failing_every_attempt_raises(api, cloud, api_profile):
     """Three attempts, each after a fresh login, then the last error is raised."""
-    url = endpoint_url(api_profile, Endpoints.DeviceData)
+    url = endpoint_url(api_profile, data_endpoint(api_profile))
     cloud.post(url, status=500, repeat=True)
 
     with pytest.raises(ClientResponseError):
@@ -140,7 +146,7 @@ async def test_read_failing_every_attempt_raises(api, cloud, api_profile):
 
     # One login by the api fixture, then one before each retry
     assert len(requests_to(cloud, api_profile, Endpoints.Login)) == 3
-    assert len(requests_to(cloud, api_profile, Endpoints.DeviceData)) == 3
+    assert len(requests_to(cloud, api_profile, data_endpoint(api_profile))) == 3
 
 
 async def test_error_response_keeps_device_list_data(
