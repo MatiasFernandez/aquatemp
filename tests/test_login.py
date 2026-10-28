@@ -57,13 +57,13 @@ async def test_rejected_login_raises_and_leaves_no_token(client, wire):
 
 
 @cloud_with({LOGIN: "synthetic/login_rejected_null"})
-async def test_rejected_login_with_null_result_crashes(client):
-    # Suspect (AT-040): `.get(key, {})` returns the null, so a rejection shaped
-    # like the other error responses never becomes LoginError
-    with pytest.raises(AttributeError):
+async def test_rejected_login_with_null_result_raises(client, wire):
+    """A null objectResult, as in the cloud's other error responses."""
+    with pytest.raises(LoginError):
         await client.initialize(throw_error=True)
 
     assert not client.is_connected
+    assert [endpoint for endpoint, _ in wire] == [LOGIN]
 
 
 @cloud_with({DATA: [401, "get_data_by_code.idle"]})

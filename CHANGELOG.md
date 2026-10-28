@@ -10,6 +10,7 @@ predate this fork and keep their original format.
 ### Fixed
 
 - Downloading diagnostics for a single device failed with an error; it now returns that device's data and entities, as in the config entry diagnostics
+- Report a rejected login as invalid credentials when the response carries no login result, instead of failing setup with a generic "Failed to initialize session" error
 
 ## [3.2.0] - 2026-10-24
 
