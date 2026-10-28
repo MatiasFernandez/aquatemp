@@ -33,6 +33,7 @@ predate this fork and keep their original format.
 - A control to a heat pump the cloud reports offline fails right away with an error saying so, instead of waiting for the cloud to give up on it
 - Entities for values the heat pump doesn't report are no longer created, and those values are no longer polled. The integration tells them apart from the heat pump's first answer after setup or reload. Entities created for them before stay in the entity registry, shown as no longer provided, and can be deleted
 - Entities are named after the device as named in Home Assistant, instead of its nickname in the Aqua Temp app. New entities of a device renamed in Home Assistant no longer repeat the device in their entity ID (`sensor.pool_water_dt`, not `sensor.pool_heat_pump_water_dt`), and friendly names follow later renames. Friendly names change for devices already renamed in Home Assistant. Existing entity IDs are kept; to fix doubled ones, use "Recreate entity IDs" on the device page
+- Aqua Temp accounts read device data from the cloud's versioned endpoint (`v5/getDataByCode`), the one the official app uses; Hitemp and old Aqua Temp accounts are unchanged
 
 ### Removed
 

@@ -7,7 +7,7 @@ from custom_components.aqua_temp.cloud.api_types import APIParam, APIType
 
 # Literal on purpose: the expected values must not come from the config under test
 DATA_REQUESTS = {
-    APIType.AquaTemp: ("app/device/getDataByCode", "protocalCodes"),
+    APIType.AquaTemp: ("app/device/v5/getDataByCode", "codes"),
     APIType.HiTemp: ("app/device/getDataByCode", "protocalCodes"),
     APIType.AquaTempOld: ("app/device/getDataByCode", "protocal_codes"),
 }

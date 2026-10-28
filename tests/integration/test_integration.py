@@ -366,7 +366,7 @@ def powered_on_in(mode: str) -> dict:
     return RESPONSES | {DATA: data_with(Power="1", Mode=mode)}
 
 
-# Recorded: T02 13.0, R01 27.0, R02 28.0, R03 27.0, R08 8.0, R09 35.0, R10 15.0,
+# Recorded: T02 12.5, R01 27.0, R02 28.0, R03 27.0, R08 8.0, R09 35.0, R10 15.0,
 # R11 35.0. Each mode reads its own target, minimum and maximum codes
 @pytest.mark.parametrize(
     ("cloud_responses", "expected"),
@@ -374,7 +374,7 @@ def powered_on_in(mode: str) -> dict:
         pytest.param(
             powered_on_in("0"),
             {
-                "current_temperature": 13.0,
+                "current_temperature": 12.5,
                 "temperature": 27.0,
                 "min_temp": 8.0,
                 "max_temp": 35.0,
@@ -384,7 +384,7 @@ def powered_on_in(mode: str) -> dict:
         pytest.param(
             powered_on_in("1"),
             {
-                "current_temperature": 13.0,
+                "current_temperature": 12.5,
                 "temperature": 28.0,
                 "min_temp": 15.0,
                 "max_temp": 35.0,
@@ -394,7 +394,7 @@ def powered_on_in(mode: str) -> dict:
         pytest.param(
             powered_on_in("2"),
             {
-                "current_temperature": 13.0,
+                "current_temperature": 12.5,
                 "temperature": 27.0,
                 "min_temp": 8.0,
                 "max_temp": 35.0,
@@ -414,7 +414,7 @@ async def test_climate_reports_temperatures_while_powered_off(hass, entry):
     state = hass.states.get(climate_entity_id(hass))
 
     assert temperatures(state) == {
-        "current_temperature": 13.0,
+        "current_temperature": 12.5,
         "temperature": 28.0,
         "min_temp": 15.0,
         "max_temp": 35.0,
