@@ -32,6 +32,10 @@ DEVICE_LIST = "app/device/deviceList"
 PROFILES = Path(__file__).parents[2] / "custom_components/aqua_temp/cloud/profiles"
 
 DEVICE_ID = "device-id-1"
+OTHER_DEVICE_ID = "device-id-2"
+
+# The listed device's id, under the AquaTemp API type's field name
+DEVICE_ID_PARAM = "deviceId"
 MODEL = "Model X"
 
 
@@ -39,6 +43,17 @@ def device_list() -> dict:
     """The synthetic device list, with the id and model the registry reads."""
     payload = load_fixture("aqua_temp", "synthetic/device_list")
     payload["objectResult"][0] |= {"deviceId": DEVICE_ID, "custModel": MODEL}
+
+    return payload
+
+
+def two_device_list() -> dict:
+    """The device list with a second device, which has its own id."""
+    payload = device_list()
+    payload["objectResult"].append(
+        payload["objectResult"][0]
+        | {"deviceCode": "000000000002", "deviceId": OTHER_DEVICE_ID}
+    )
 
     return payload
 
@@ -203,14 +218,25 @@ async def test_setting_fan_mode_writes_manual_mute(hass, entry, wire):
     ]
 
 
-async def test_device_diagnostics_return_the_device(hass, entry):
-    device = dr.async_get(hass).async_get_device(identifiers={(DOMAIN, DEVICE_ID)})
+@cloud_with(RESPONSES | {DEVICE_LIST: two_device_list()})
+@pytest.mark.parametrize("device_id", [DEVICE_ID, OTHER_DEVICE_ID])
+async def test_device_diagnostics_match_its_entry_in_the_config_entry_ones(
+    hass, entry, device_id
+):
+    device = dr.async_get(hass).async_get_device(identifiers={(DOMAIN, device_id)})
 
-    diagnostics = await async_get_device_diagnostics(hass, entry, device)
+    device_data = await async_get_device_diagnostics(hass, entry, device)
+    entry_data = await async_get_config_entry_diagnostics(hass, entry)
 
-    assert diagnostics["device"]["data"]
-    assert diagnostics["device"]["entities"]
-    assert diagnostics["device"]["name"] == "Heat pump"
+    all_devices = entry_data.pop("devices")
+    [this_device] = [
+        listed
+        for listed in all_devices
+        if listed["device"]["data"][DEVICE_ID_PARAM] == device_id
+    ]
+
+    assert device_data == entry_data | this_device
+    assert device_data["device"]["data"][DEVICE_ID_PARAM] == device_id
 
 
 async def test_entry_diagnostics_list_each_device(hass, entry):
