@@ -489,7 +489,7 @@ class AquaTempAPI:
         data = {param_username: config_data.username, "password": password_hashed}
 
         login_response = await self._post_request(Endpoints.Login, data)
-        object_result = login_response.get(param_object_result, {})
+        object_result = login_response.get(param_object_result) or {}
 
         self._login_details = object_result
 
