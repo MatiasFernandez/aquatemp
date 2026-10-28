@@ -11,6 +11,7 @@ from cryptography.fernet import InvalidToken
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowHandler
+from homeassistant.helpers.aiohttp_client import async_create_clientsession
 
 from ..common.consts import (
     CONF_API_TYPE,
@@ -80,9 +81,19 @@ class IntegrationFlowManager:
             try:
                 await self._config_manager.initialize(user_input)
 
-                api = AquaTempAPI(self._hass, self._config_manager)
+                # A flow runs outside config entry setup, so HA would only
+                # detach an auto-cleaned session at shutdown, keeping one per
+                # submission until then. Detach it here instead; close() would
+                # act on HA's shared connector.
+                session = async_create_clientsession(self._hass, auto_cleanup=False)
 
-                await api.initialize(True)
+                try:
+                    api = AquaTempAPI(self._hass, self._config_manager, session)
+
+                    await api.initialize(True)
+
+                finally:
+                    session.detach()
 
                 _LOGGER.debug("User inputs are valid")
 

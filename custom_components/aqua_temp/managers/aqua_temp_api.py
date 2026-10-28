@@ -52,19 +52,27 @@ class AquaTempAPI:
     _login_details: dict | None
 
     _session: ClientSession | None
+    _owns_session: bool
     _config_manager: AquaTempConfigManager
     _token: str | None
     _hass: HomeAssistant | None
 
     def __init__(
-        self, hass: HomeAssistant | None, config_manager: AquaTempConfigManager
+        self,
+        hass: HomeAssistant | None,
+        config_manager: AquaTempConfigManager,
+        session: ClientSession | None = None,
     ):
-        """Initialize the climate entity."""
+        """Initialize the climate entity.
+
+        A session passed in belongs to the caller, which must release it.
+        """
 
         self._devices = {}
         self._login_details = None
 
-        self._session = None
+        self._session = session
+        self._owns_session = session is None
         self._token = None
 
         self._hass = hass
@@ -122,7 +130,7 @@ class AquaTempAPI:
             await self._load_devices()
 
     async def terminate(self):
-        if self._hass is None:
+        if self._hass is None and self._owns_session:
             await self._session.close()
 
     async def update(self):
