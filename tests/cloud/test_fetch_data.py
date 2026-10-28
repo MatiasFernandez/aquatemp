@@ -316,3 +316,56 @@ async def test_unknown_codes_are_no_longer_requested(api, cloud, api_type, api_p
         code for code in default_profile_codes() if code not in UNKNOWN_CODES
     ]
     assert second.kwargs["json"]["protocalCodes"].count("Mode") == 2
+
+
+def empty_read_warnings(caplog) -> list[str]:
+    return [
+        record.getMessage()
+        for record in caplog.records
+        if record.levelno == logging.WARNING and "no values" in record.getMessage()
+    ]
+
+
+async def test_empty_read_warns_once(api, cloud, api_type, api_profile, caplog):
+    register_data(
+        cloud,
+        api_type,
+        api_profile,
+        DATA_IDLE,
+        "synthetic/data_empty",
+        "synthetic/data_empty",
+    )
+
+    await api.update()
+    device_data = api.get_device_data(DEVICE_CODE)
+
+    with caplog.at_level(logging.WARNING):
+        await api.update()
+        await api.update()
+
+    assert empty_read_warnings(caplog) == [
+        f"Device {DEVICE_CODE}: {data_endpoint(api_profile)} returned no values "
+        f"for the requested codes; the {api_profile.get(APIParam.DataCodes)} "
+        "field may be wrong, or the cloud changed"
+    ]
+    assert api.get_device_data(DEVICE_CODE) == device_data
+
+
+async def test_empty_read_warns_again_after_values(
+    api, cloud, api_type, api_profile, caplog
+):
+    register_data(
+        cloud,
+        api_type,
+        api_profile,
+        "synthetic/data_empty",
+        DATA_IDLE,
+        "synthetic/data_empty",
+    )
+
+    with caplog.at_level(logging.WARNING):
+        await api.update()
+        await api.update()
+        await api.update()
+
+    assert len(empty_read_warnings(caplog)) == 2
