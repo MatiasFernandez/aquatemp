@@ -7,5 +7,4 @@ class Endpoints:
     DeviceStatus = "app/device/getDeviceStatus"
     DeviceControl = "app/device/control"
     DeviceFault = "app/device/getFaultDataByDeviceCode"
-    DeviceData = "app/device/getDataByCode"
     DevicePassthroughInstruction = "device/sendDevicePassthroughInstruction"
