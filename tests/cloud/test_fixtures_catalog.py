@@ -2,7 +2,7 @@
 
 import re
 
-from .conftest import FIXTURES
+from .mock_cloud import FIXTURES
 
 CATALOG = FIXTURES / "README.md"
 

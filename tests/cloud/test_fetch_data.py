@@ -10,13 +10,13 @@ from yarl import URL
 
 from custom_components.aqua_temp.cloud.endpoints import Endpoints
 
-from .conftest import DEVICE_CODE, endpoint_url, load_fixture
+from .mock_cloud import DEVICE_CODE, endpoint_url, load_fixture
 
 # Literal on purpose: the expected values must not come from the config under test
 DATA_URL = "https://cloud.linked-go.com:449/crmservice/api/app/device/getDataByCode"
 
 DEFAULT_PROFILE = (
-    Path(__file__).parents[1]
+    Path(__file__).parents[2]
     / "custom_components/aqua_temp/cloud/profiles/entity_description.default.json"
 )
 

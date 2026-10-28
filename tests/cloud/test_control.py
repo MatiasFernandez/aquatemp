@@ -11,7 +11,7 @@ import pytest
 
 from custom_components.aqua_temp.cloud.exceptions import OperationFailedException
 
-from .conftest import DEVICE_CODE, cloud_with, data_with
+from .mock_cloud import DEVICE_CODE, cloud_with, data_with
 
 # Literal on purpose: the expected values must not come from the config under test
 CONTROL = "app/device/control"

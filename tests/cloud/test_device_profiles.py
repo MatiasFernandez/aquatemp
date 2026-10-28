@@ -11,11 +11,8 @@ from pathlib import Path
 import pytest
 
 from custom_components.aqua_temp.cloud.device_profiles import DeviceProfiles
-from custom_components.aqua_temp.common.entity_descriptions import (
-    build_entity_descriptions,
-)
 
-PROFILES = Path(__file__).parents[1] / "custom_components/aqua_temp/cloud/profiles"
+PROFILES = Path(__file__).parents[2] / "custom_components/aqua_temp/cloud/profiles"
 
 ROLES = [
     "mode",
@@ -57,11 +54,6 @@ def resolve_with_profiles(device_profiles: DeviceProfiles, product_id: str) -> d
             for mode in profile.hvac_modes
         },
         "poll_codes": profile.poll_codes,
-        "platforms": {
-            str(description.platform)
-            for description in build_entity_descriptions(profile)
-            if description.platform is not None
-        },
     }
 
 
@@ -121,8 +113,6 @@ AQUA_TEMP_MAPPING = DEFAULT_MAPPING | {
     }
 }
 
-PLATFORMS = {"binary_sensor", "climate", "select", "sensor"}
-
 
 @pytest.mark.parametrize(
     ("product_id", "mapping_id", "catalog_id", "mapping"),
@@ -147,5 +137,4 @@ def test_product_resolves_to_its_profile(
         # Possible bug: "Mode" leads even where the catalog lists it, and
         # even for Hitemp, whose mode role is mode_real
         "poll_codes": ["Mode", *catalog_keys(catalog_id)],
-        "platforms": PLATFORMS,
     }

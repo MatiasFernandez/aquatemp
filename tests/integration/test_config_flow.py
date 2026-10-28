@@ -8,8 +8,7 @@ import pytest
 from custom_components.aqua_temp.common.consts import CONF_API_TYPE
 from custom_components.aqua_temp.managers.flow_manager import IntegrationFlowManager
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
-
-from .conftest import cloud_with
+from tests.cloud.mock_cloud import cloud_with
 
 LOGIN = "app/user/login"
 

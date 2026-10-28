@@ -39,17 +39,20 @@ If a commit only reformats code, add its full SHA to [.git-blame-ignore-revs](.g
 
 [pytest](https://docs.pytest.org/) runs offline against a mocked cloud ([aioresponses](https://github.com/pnuckowski/aioresponses)), driving the cloud library's real API client and profiles through a full update cycle. Any request without a registered response fails the test, so nothing reaches the real cloud.
 
-[tests/test_integration.py](tests/test_integration.py) sets up a config entry on a real Home Assistant from [pytest-homeassistant-custom-component](https://github.com/MatthewFlamm/pytest-homeassistant-custom-component) (its `hass` fixture), against the same mocked cloud, to cover the integration side: entities, the device registry, climate services and diagnostics. The other test modules use no Home Assistant instance.
+The tests follow the cloud library boundary:
+
+- [tests/cloud/](tests/cloud/) tests the cloud library alone. Like the library, it must not import Home Assistant or the integration; its [ruff.toml](tests/cloud/ruff.toml) bans Home Assistant and the integration's modules one by one, but not the integration package itself. Home Assistant still has to be installed: importing `custom_components.aqua_temp.cloud` runs the integration's `__init__.py` first. The mocked cloud lives there too, in [mock_cloud.py](tests/cloud/mock_cloud.py), which the root [conftest.py](tests/conftest.py) registers as a pytest plugin, so the integration tests get the same fixtures.
+- [tests/integration/](tests/integration/) tests the integration side. [test_integration.py](tests/integration/test_integration.py) sets up a config entry on a real Home Assistant from [pytest-homeassistant-custom-component](https://github.com/MatthewFlamm/pytest-homeassistant-custom-component) (its `hass` fixture), against the mocked cloud: entities, the device registry, climate services and diagnostics.
 
 ```bash
-uv run pytest                                    # everything
-uv run pytest tests/test_fetch_data.py -k shape  # one file, tests matching a name
-uv run pytest --cov                              # with a coverage report (add --cov-report=html for htmlcov/)
+uv run pytest                                             # everything
+uv run pytest tests/cloud/test_fetch_data.py -k protocol  # one file, tests matching a name
+uv run pytest --cov                                       # with a coverage report (add --cov-report=html for htmlcov/)
 ```
 
 CI runs the suite with coverage and uploads it to [Codecov](https://codecov.io/gh/MatiasFernandez/aquatemp), which comments on pull requests with the coverage of the changed lines and any failing tests.
 
-Fixtures live in [tests/fixtures/](tests/fixtures/), one folder per API type, and are catalogued in its [README](tests/fixtures/README.md). List new fixtures there; a test fails otherwise.
+Fixtures live in [tests/cloud/fixtures/](tests/cloud/fixtures/), one folder per API type, and are catalogued in its [README](tests/cloud/fixtures/README.md). List new fixtures there; a test fails otherwise.
 
 - Top-level files are real responses recorded from a device, merged and sanitised (device code replaced, metadata dropped). The maintainer regenerates them from private probe recordings; don't edit them by hand.
 - Files under `synthetic/` are written by hand for endpoints that were never recorded.

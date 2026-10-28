@@ -8,7 +8,7 @@ from custom_components.aqua_temp.cloud.api_types import APIType
 from custom_components.aqua_temp.cloud.client import AquaTempAPI, Credentials
 from custom_components.aqua_temp.cloud.exceptions import LoginError
 
-from .conftest import DEVICE_CODE, cloud_with, load_fixture
+from .mock_cloud import DEVICE_CODE, cloud_with, load_fixture
 
 # Literal on purpose: the expected values must not come from the config under test
 LOGIN = "app/user/login"

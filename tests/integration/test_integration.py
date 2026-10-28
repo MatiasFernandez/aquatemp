@@ -23,14 +23,13 @@ from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.util import slugify
-
-from .conftest import DEVICE_CODE, cloud_with, data_with, load_fixture
+from tests.cloud.mock_cloud import DEVICE_CODE, cloud_with, data_with, load_fixture
 
 CONTROL = "app/device/control"
 DATA = "app/device/getDataByCode"
 DEVICE_LIST = "app/device/deviceList"
 
-PROFILES = Path(__file__).parents[1] / "custom_components/aqua_temp/cloud/profiles"
+PROFILES = Path(__file__).parents[2] / "custom_components/aqua_temp/cloud/profiles"
 
 DEVICE_ID = "device-id-1"
 MODEL = "Model X"
