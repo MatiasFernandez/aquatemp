@@ -498,14 +498,14 @@ class AquaTempAPI:
         ]
 
         param_device_code = self._api_profile.get(APIParam.DeviceCode)
-        param_protocal_codes = self._api_profile.get(APIParam.ProtocalCodes)
+        param_data_codes = self._api_profile.get(APIParam.DataCodes)
         param_object_result = self._api_profile.get(APIParam.ObjectResult)
         param_error_msg = self._api_profile.get(APIParam.ErrorMessage)
         param_error_code = self._api_profile.get(APIParam.ErrorCode)
 
         data = {
             param_device_code: device_code,
-            param_protocal_codes: codes,
+            param_data_codes: codes,
         }
 
         data_response = await self._post_request(Endpoints.DeviceData, data)
