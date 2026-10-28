@@ -71,3 +71,6 @@ __test__.py
 
 # MacOS
 .DS_Store
+
+# Claude
+.claude/worktrees
