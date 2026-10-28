@@ -69,6 +69,7 @@ class AquaTempAPI:
 
     _devices: dict
     _device_profiles_by_code: dict[str, DeviceProfile]
+    _devices_read_empty: set[str]
     _login_details: dict | None
 
     _session: ClientSession
@@ -94,6 +95,7 @@ class AquaTempAPI:
 
         self._devices = {}
         self._device_profiles_by_code = {}
+        self._devices_read_empty = set()
         self._login_details = None
 
         self._session = session
@@ -455,6 +457,14 @@ class AquaTempAPI:
         object_result_items = data_response.get(param_object_result, [])
 
         if error_msg == "Success":
+            if codes and not object_result_items:
+                self._warn_empty_read(
+                    device_code, param_data_endpoint, param_data_codes
+                )
+
+            else:
+                self._devices_read_empty.discard(device_code)
+
             for object_result_item in object_result_items:
                 code = object_result_item.get("code")
                 value = object_result_item.get("value")
@@ -471,6 +481,23 @@ class AquaTempAPI:
 
             else:
                 _LOGGER.error(f"Failed to fetch parameters, Error: {error_msg}")
+
+    def _warn_empty_read(self, device_code: str, endpoint: str, codes_field: str):
+        """Warn once per device until a read returns values again."""
+        if device_code in self._devices_read_empty:
+            return
+
+        self._devices_read_empty.add(device_code)
+
+        # The cloud answers a request with the wrong field name with success
+        # and no values, so a wrong profile or a backend change looks like this
+        _LOGGER.warning(
+            "Device %s: %s returned no values for the requested codes; "
+            "the %s field may be wrong, or the cloud changed",
+            device_code,
+            endpoint,
+            codes_field,
+        )
 
     async def _send_passthrough_instruction(self, device_code: str):
         param_device_code = self._api_profile.get(APIParam.DeviceCode)
