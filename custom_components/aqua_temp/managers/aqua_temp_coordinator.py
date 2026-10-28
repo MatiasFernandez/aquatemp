@@ -2,19 +2,22 @@ import logging
 
 from homeassistant.components.climate import HVACMode
 from homeassistant.core import Event
+from homeassistant.helpers.aiohttp_client import async_create_clientsession
+from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from ..common.api_types import APIParam
+from ..cloud.client import AquaTempAPI, DeviceMeta
+from ..cloud.device_profiles import DeviceProfile
+from ..cloud.exceptions import LoginError
 from ..common.consts import (
     DATA_ITEM_CONFIG,
     DATA_ITEM_DEVICES,
     DATA_ITEM_LOGIN_DETAILS,
     DOMAIN,
+    SIGNAL_AQUA_TEMP_DEVICE_NEW,
     UPDATE_API_INTERVAL,
 )
-from ..models.exceptions import LoginError
-from .aqua_temp_api import AquaTempAPI
 from .aqua_temp_config_manager import AquaTempConfigManager
 
 _LOGGER = logging.getLogger(__name__)
@@ -37,7 +40,15 @@ class AquaTempCoordinator(DataUpdateCoordinator):
             update_method=self._async_update_data,
         )
 
-        self._api = AquaTempAPI(hass, config_manager)
+        self._api = AquaTempAPI(
+            async_create_clientsession(hass=hass),
+            config_manager.credentials,
+            config_manager.api_profile,
+            config_manager.device_profiles,
+            on_new_device=self._on_new_device,
+            log_session_token=config_manager.log_session_token,
+            log_label=config_manager.entry_title,
+        )
         self._config_manager = config_manager
 
     @property
@@ -93,26 +104,34 @@ class AquaTempCoordinator(DataUpdateCoordinator):
 
         await self.async_request_refresh()
 
+    def _on_new_device(self, device_code: str):
+        async_dispatcher_send(
+            self.hass,
+            SIGNAL_AQUA_TEMP_DEVICE_NEW,
+            self._config_manager.entry_id,
+            device_code,
+        )
+
     def get_device(self, device_code: str) -> DeviceInfo:
-        param_nickname = self._config_manager.get_api_param(APIParam.Nickname)
-        param_device_id = self._config_manager.get_api_param(APIParam.DeviceId)
-        param_custom_model = self._config_manager.get_api_param(APIParam.CustomModel)
-
-        device_data = self.get_device_data(device_code)
-        device_nickname = device_data.get(param_nickname)
-        device_model = device_data.get(param_custom_model)
-        device_id = device_data.get(param_device_id)
-
-        if param_custom_model in device_data:
-            device_model = device_data.get(param_custom_model)
+        device_meta = self.get_device_meta(device_code)
 
         device_info = DeviceInfo(
-            identifiers={(DOMAIN, device_id)},
-            name=device_nickname,
-            model=device_model,
+            identifiers={(DOMAIN, device_meta.device_id)},
+            name=device_meta.nickname,
+            model=device_meta.model,
         )
 
         return device_info
+
+    def get_device_meta(self, device_code: str) -> DeviceMeta:
+        device_meta = self._api.get_device_meta(device_code)
+
+        return device_meta
+
+    def get_device_profile(self, device_code: str) -> DeviceProfile:
+        device_profile = self._api.get_device_profile(device_code)
+
+        return device_profile
 
     def get_debug_data(self) -> dict:
         config_data = self._config_manager.get_debug_data()
@@ -194,7 +213,7 @@ class AquaTempCoordinator(DataUpdateCoordinator):
         return maximum_temperature
 
     def get_device_hvac_mode(self, device_code: str) -> HVACMode:
-        hvac_mode = self._api.get_device_hvac_mode(device_code)
+        hvac_mode = HVACMode(self._api.get_device_hvac_mode(device_code))
 
         return hvac_mode
 
@@ -209,13 +228,13 @@ class AquaTempCoordinator(DataUpdateCoordinator):
         return power
 
     def get_hvac_modes(self, device_code: str) -> list[HVACMode]:
-        modes = self._config_manager.get_hvac_modes(device_code)
+        modes = self.get_device_profile(device_code).hvac_modes
 
         result = [HVACMode(mode) for mode in modes]
 
         return result
 
     def get_fan_modes(self, device_code: str) -> list[str]:
-        modes = self._config_manager.get_fan_modes(device_code)
+        modes = self.get_device_profile(device_code).fan_modes
 
         return modes

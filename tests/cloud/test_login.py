@@ -1,14 +1,14 @@
 """Login: request shape, the token on later requests, rejection and re-login."""
 
-from unittest.mock import AsyncMock, MagicMock
-
+from aiohttp import ClientSession
 import pytest
 from yarl import URL
 
-from custom_components.aqua_temp.managers.aqua_temp_api import AquaTempAPI
-from custom_components.aqua_temp.models.exceptions import LoginError
+from custom_components.aqua_temp.cloud.api_types import APIType
+from custom_components.aqua_temp.cloud.client import AquaTempAPI, Credentials
+from custom_components.aqua_temp.cloud.exceptions import LoginError
 
-from .conftest import DEVICE_CODE, cloud_with
+from .mock_cloud import DEVICE_CODE, cloud_with, load_fixture
 
 # Literal on purpose: the expected values must not come from the config under test
 LOGIN = "app/user/login"
@@ -24,6 +24,21 @@ def cloud_responses() -> dict:
     return {DATA: "get_data_by_code.idle"}
 
 
+def login_with_token(token: str) -> dict:
+    login = load_fixture(APIType.AquaTemp, "synthetic/login")
+    login["objectResult"]["x-token"] = token
+
+    return login
+
+
+def tokens_sent(cloud) -> set[str | None]:
+    return {
+        call.kwargs["headers"].get("x-token")
+        for calls in cloud.requests.values()
+        for call in calls
+    }
+
+
 async def test_login_sends_username_and_password_hash(client, wire):
     await client.initialize(throw_error=True)
 
@@ -32,6 +47,12 @@ async def test_login_sends_username_and_password_hash(client, wire):
         {"userName": "test@example.com", "password": PASSWORD_HASH},
     )
     assert client.login_details == {"x-token": "test-token"}
+
+
+def test_credentials_repr_hides_the_password():
+    credentials = Credentials(username="test@example.com", password="test-password")
+
+    assert "test-password" not in repr(credentials)
 
 
 async def test_token_sent_on_every_request_after_login(api, cloud):
@@ -89,9 +110,33 @@ async def test_unauthorized_read_logs_in_again_and_retries(api, wire):
     assert api.get_device_data(DEVICE_CODE)["T02"] == "13.0"
 
 
-async def test_terminate_leaves_a_session_passed_in_open(config_manager):
-    session = MagicMock(close=AsyncMock())
+@cloud_with(
+    {
+        DATA: "get_data_by_code.idle",
+        LOGIN: [login_with_token("token-a"), login_with_token("token-b")],
+    }
+)
+async def test_each_client_sends_its_own_token(
+    client, api_profile, device_profiles, cloud
+):
+    """Two clients, as two config entries have, do not log each other out."""
+    async with ClientSession() as session:
+        other = AquaTempAPI(
+            session,
+            Credentials(username="other@example.com", password="other-password"),
+            api_profile,
+            device_profiles,
+        )
 
-    await AquaTempAPI(None, config_manager, session).terminate()
+        await client.initialize(throw_error=True)
+        await other.initialize(throw_error=True)
 
-    session.close.assert_not_called()
+        cloud.requests.clear()
+        await client.update()
+
+        assert tokens_sent(cloud) == {"token-a"}
+
+        cloud.requests.clear()
+        await other.update()
+
+        assert tokens_sent(cloud) == {"token-b"}

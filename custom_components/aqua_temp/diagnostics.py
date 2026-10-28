@@ -11,7 +11,6 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.device_registry import DeviceEntry
 
-from .common.api_types import APIParam
 from .common.consts import (
     DATA_ITEM_CONFIG,
     DATA_ITEM_DEVICES,
@@ -60,8 +59,6 @@ def _async_get_diagnostics(
     config_data = debug_data.get(DATA_ITEM_CONFIG)
     login_details = debug_data.get(DATA_ITEM_LOGIN_DETAILS)
 
-    device_id_param = coordinator.config_manager.get_api_param(APIParam.DeviceId)
-
     data = {
         DATA_ITEM_LOGIN_DETAILS: login_details,
         DATA_ITEM_CONFIG: config_data,
@@ -74,7 +71,7 @@ def _async_get_diagnostics(
 
         for device_code in devices:
             device_details = devices[device_code]
-            if device_details.get(device_id_param) == device_id:
+            if coordinator.get_device_meta(device_code).device_id == device_id:
                 data |= _async_device_as_dict(hass, device_id, device_details)
 
     else:
@@ -83,7 +80,9 @@ def _async_get_diagnostics(
         data.update(
             devices=[
                 _async_device_as_dict(
-                    hass, devices[device_code][device_id_param], devices[device_code]
+                    hass,
+                    coordinator.get_device_meta(device_code).device_id,
+                    devices[device_code],
                 )
                 for device_code in devices
             ]

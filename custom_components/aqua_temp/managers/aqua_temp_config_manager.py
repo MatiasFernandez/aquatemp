@@ -1,19 +1,11 @@
-from copy import copy
 import json
 import logging
-import os
-from pathlib import Path
 
-import aiofiles
-
-from homeassistant.components.sensor import SensorStateClass
 from homeassistant.config_entries import STORAGE_VERSION, ConfigEntry
 from homeassistant.const import (
     CONF_PASSWORD,
     CONF_TEMPERATURE_UNIT,
     CONF_USERNAME,
-    EntityCategory,
-    Platform,
     UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant
@@ -22,26 +14,20 @@ from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.json import JSONEncoder
 from homeassistant.helpers.storage import Store
 
-from ..common.api_types import APIParam
+from ..cloud.api_profile import ApiProfile
+from ..cloud.client import Credentials
+from ..cloud.consts import PRODUCT_ID_DEFAULT, PRODUCT_IDS
+from ..cloud.device_profiles import DeviceProfile, DeviceProfiles
 from ..common.consts import (
     CONF_LOG_SESSION_TOKEN,
-    CONFIG_FAN_MODES,
-    CONFIG_HVAC_MODES,
-    CONFIG_HVAC_SET,
     CONFIGURATION_FILE,
     DEFAULT_ENTRY_ID,
     DEFAULT_NAME,
     DOMAIN,
-    PRODUCT_ID_DEFAULT,
-    PRODUCT_IDS,
-    ProductParameter,
 )
 from ..common.entity_descriptions import (
-    DEFAULT_ENTITY_DESCRIPTIONS,
-    AquaTempBinarySensorEntityDescription,
     AquaTempEntityDescription,
-    AquaTempSensorEntityDescription,
-    get_derived_entity_descriptions,
+    build_entity_descriptions,
 )
 from ..models.config_data import ConfigData
 
@@ -49,32 +35,25 @@ _LOGGER = logging.getLogger(__name__)
 
 
 class AquaTempConfigManager:
-    _api_config: dict | None
+    _api_profile: ApiProfile | None
+    _device_profiles: DeviceProfiles | None
     _translations: dict | None
     _entry: ConfigEntry | None
     _entry_id: str
     _entry_title: str
     _config_data: ConfigData
-    _store: Store | None
+    _store: Store
 
-    def __init__(self, hass: HomeAssistant | None, entry: ConfigEntry | None):
+    def __init__(self, hass: HomeAssistant, entry: ConfigEntry | None):
         self._hass = hass
 
         self._data = None
         self.platforms = []
 
         self._entity_descriptions = {}
-        self._protocol_codes = {}
-        self._protocol_codes_configuration = {}
 
-        self._hvac_modes = {}
-        self._hvac_modes_reverse = {}
-
-        self._fan_modes = {}
-        self._fan_modes_reverse = {}
-
-        self._devices = {}
-        self._api_config = None
+        self._api_profile = None
+        self._device_profiles = None
         self._translations = None
 
         self._entry = entry
@@ -85,12 +64,9 @@ class AquaTempConfigManager:
 
         self._is_initialized = False
 
-        self._store = None
-
-        if hass is not None:
-            self._store = Store(
-                hass, STORAGE_VERSION, CONFIGURATION_FILE, encoder=JSONEncoder
-            )
+        self._store = Store(
+            hass, STORAGE_VERSION, CONFIGURATION_FILE, encoder=JSONEncoder
+        )
 
     @property
     def is_initialized(self) -> bool:
@@ -123,6 +99,22 @@ class AquaTempConfigManager:
         return config_data
 
     @property
+    def api_profile(self) -> ApiProfile:
+        return self._api_profile
+
+    @property
+    def device_profiles(self) -> DeviceProfiles:
+        return self._device_profiles
+
+    @property
+    def credentials(self) -> Credentials:
+        credentials = Credentials(
+            username=self._config_data.username, password=self._config_data.password
+        )
+
+        return credentials
+
+    @property
     def log_session_token(self) -> bool:
         if self._entry is None:
             return False
@@ -136,21 +128,15 @@ class AquaTempConfigManager:
 
         self._config_data.update(entry_config)
 
-        await self._load_api_config()
+        self._api_profile = await ApiProfile.load(self._config_data.api_type)
 
-        if self._hass is None:
-            self._translations = {}
-        else:
-            self._translations = await translation.async_get_translations(
-                self._hass, self._hass.config.language, "entity", {DOMAIN}
-            )
+        self._translations = await translation.async_get_translations(
+            self._hass, self._hass.config.language, "entity", {DOMAIN}
+        )
 
         self._is_initialized = True
 
     async def remove(self, entry_id: str):
-        if self._store is None:
-            return
-
         store_data = await self._store.async_load()
 
         entries = [DEFAULT_ENTRY_ID, entry_id]
@@ -202,90 +188,11 @@ class AquaTempConfigManager:
 
         await self._save()
 
-    def set_device(self, device_code: str, product_id: str):
-        config = self._protocol_codes_configuration.get(product_id)
-        entity_descriptions = self._entity_descriptions.get(product_id)
-
-        mapping_key = "default" if config is None else product_id
-        entity_descriptions_key = (
-            "default" if entity_descriptions is None else product_id
-        )
-
-        self._devices[device_code] = {
-            ProductParameter.MAPPING: mapping_key,
-            ProductParameter.ENTITY_DESCRIPTION: entity_descriptions_key,
-        }
-
-        _LOGGER.info(
-            f"Device {device_code} mapped to "
-            f"Product ID {product_id}, "
-            f"Mapping Key: {mapping_key}, "
-            f"Entity Description Key: {entity_descriptions_key}"
-        )
-
     def get_temperature_unit(self, device_code: str):
         temperature_units = self._data.get(CONF_TEMPERATURE_UNIT, {})
         temperature_unit = temperature_units.get(device_code, UnitOfTemperature.CELSIUS)
 
         return temperature_unit
-
-    def get_supported_protocol_codes(self, device_code) -> list[str]:
-        product_id = self._get_product_id(
-            device_code, ProductParameter.ENTITY_DESCRIPTION
-        )
-        result = self._protocol_codes.get(product_id)
-
-        return result
-
-    def get_pc_key(self, device_code: str, key: str):
-        config = self._get_pc_mapping(device_code)
-        protocol_code_key = config.get(key)
-
-        return protocol_code_key
-
-    def get_hvac_mode_pc_key(self, device_code: str, hvac_mode: str, key: str):
-        config = self._get_pc_mapping(device_code)
-
-        hvac_modes = config.get(CONFIG_HVAC_MODES)
-        hvac_mode_config = hvac_modes.get(hvac_mode)
-        protocol_code_key = hvac_mode_config.get(key)
-
-        return protocol_code_key
-
-    def get_hvac_modes(self, device_code: str) -> list[str]:
-        product_id = self._get_product_id(device_code, ProductParameter.MAPPING)
-
-        result = self._hvac_modes.get(product_id)
-
-        return result
-
-    def get_fan_modes(self, device_code: str) -> list[str]:
-        product_id = self._get_product_id(device_code, ProductParameter.MAPPING)
-
-        result = self._fan_modes.get(product_id)
-
-        return result
-
-    def get_fan_reverse_mapping(self, device_code, fan_mode) -> str:
-        product_id = self._get_product_id(device_code, ProductParameter.MAPPING)
-
-        fan_modes = self._fan_modes_reverse.get(product_id)
-        result = fan_modes.get(fan_mode)
-
-        return result
-
-    def get_hvac_reverse_mapping(self, device_code, hvac_mode) -> str:
-        product_id = self._get_product_id(device_code, ProductParameter.MAPPING)
-
-        hvac_modes = self._hvac_modes_reverse.get(product_id)
-        result = hvac_modes.get(hvac_mode)
-
-        return result
-
-    def get_api_param(self, param: APIParam):
-        result = self._api_config.get(str(param))
-
-        return result
 
     def get_debug_data(self) -> dict:
         data = self._config_data.to_dict()
@@ -313,23 +220,14 @@ class AquaTempConfigManager:
 
         await self._save()
 
-        # Mappings first: entity descriptions read them for derived entities
-        await self._load_pc_mapping("default")
-        await self._load_entity_descriptions("default")
+        self._device_profiles = await DeviceProfiles.load()
 
-        for product_id in PRODUCT_IDS:
-            await self._load_pc_mapping(product_id)
-            await self._load_entity_descriptions(product_id)
+        for product_id in [PRODUCT_ID_DEFAULT, *PRODUCT_IDS]:
+            self._load_entity_descriptions(product_id)
 
         log_messages = [
             f"Entity Descriptions: {len(self._entity_descriptions)}",
-            f"protocol codes: {len(self._protocol_codes)}",
-            f"protocol codes configuration: {len(self._protocol_codes_configuration)}",
             f"platforms: {len(self.platforms)}",
-            f"HVAC modes: {self._hvac_modes}",
-            f"HVAC modes - reversed: {self._hvac_modes_reverse}",
-            f"Fan modes: {self._fan_modes}",
-            f"Fan modes - reversed: {self._fan_modes_reverse}",
         ]
 
         log_message = f"Initialized, {', '.join(log_messages)}"
@@ -337,11 +235,10 @@ class AquaTempConfigManager:
         _LOGGER.debug(log_message)
 
     async def _load_config_from_file(self):
-        if self._store is not None:
-            store_data = await self._store.async_load()
+        store_data = await self._store.async_load()
 
-            if store_data is not None:
-                self._data = store_data.get(self._entry_id)
+        if store_data is not None:
+            self._data = store_data.get(self._entry_id)
 
     @staticmethod
     def _get_defaults() -> dict:
@@ -350,9 +247,6 @@ class AquaTempConfigManager:
         return data
 
     async def _save(self):
-        if self._store is None:
-            return
-
         should_save = False
         store_data = await self._store.async_load()
 
@@ -392,128 +286,20 @@ class AquaTempConfigManager:
 
             await self._store.async_save(store_data)
 
-    async def _load_entity_descriptions(self, product_id: str):
-        entities = copy(DEFAULT_ENTITY_DESCRIPTIONS)
-        file_path = self._get_product_file(
-            ProductParameter.ENTITY_DESCRIPTION, product_id
-        )
+    def _load_entity_descriptions(self, product_id: str):
+        device_profile = self._device_profiles.for_product(product_id)
+        catalog_id = device_profile.catalog_id
 
-        if not os.path.exists(file_path):
+        # Products without a catalog of their own use the default's
+        # descriptions, see get_entity_descriptions
+        if catalog_id != product_id:
             return
 
-        file = await aiofiles.open(file_path)
-        json_str = await file.read()
-        await file.close()
-
-        json_data = json.loads(json_str)
-
-        for data_item in json_data:
-            platform = data_item.get("platform")
-            key = data_item.get("key")
-            translation_key = f"{product_id}_{key}".replace("/", "").lower()
-
-            if platform == Platform.SENSOR:
-                state_class = data_item.get("state_class")
-
-                sensor_entity = AquaTempSensorEntityDescription(
-                    key=key,
-                    name=data_item.get("name"),
-                    device_class=data_item.get("device_class"),
-                    native_unit_of_measurement=data_item.get("unit_of_measurement"),
-                    entity_category=self._get_entity_category(data_item),
-                    state_class=(
-                        None if state_class is None else SensorStateClass(state_class)
-                    ),
-                    translation_key=translation_key,
-                )
-
-                entities.append(sensor_entity)
-
-            elif platform == Platform.BINARY_SENSOR:
-                binary_sensor_entity = AquaTempBinarySensorEntityDescription(
-                    key=key,
-                    name=data_item.get("name"),
-                    device_class=data_item.get("device_class"),
-                    on_value=data_item.get("on_value"),
-                    entity_category=self._get_entity_category(data_item),
-                    translation_key=translation_key,
-                )
-
-                entities.append(binary_sensor_entity)
-
-            else:
-                entity = AquaTempEntityDescription(key=key, name=data_item.get("name"))
-
-                entities.append(entity)
-
-        # Same fallback as set_device: a product without its own mapping uses
-        # the default one
-        pc_mapping = self._protocol_codes_configuration.get(
-            product_id, self._protocol_codes_configuration.get(PRODUCT_ID_DEFAULT)
-        )
-
-        entities.extend(get_derived_entity_descriptions(pc_mapping))
+        entities = build_entity_descriptions(device_profile)
 
         self._update_platforms(entities)
-        self._update_protocol_codes(product_id, entities)
 
-        self._entity_descriptions[product_id] = entities
-
-    async def _load_pc_mapping(self, product_id: str):
-        file_path = self._get_product_file(ProductParameter.MAPPING, product_id)
-
-        if not os.path.exists(file_path):
-            return
-
-        hvac_mode_mapping = {}
-        hvac_mode_reverse_mapping = {}
-
-        fan_mode_mapping = {}
-        fan_mode_reverse_mapping = {}
-
-        file = await aiofiles.open(file_path)
-        json_str = await file.read()
-        await file.close()
-
-        json_data = json.loads(json_str)
-
-        self._protocol_codes_configuration[product_id] = json_data
-
-        hvac_modes = json_data.get(CONFIG_HVAC_MODES)
-
-        for hvac_mode_ha_key in hvac_modes:
-            hvac_mode = hvac_modes[hvac_mode_ha_key]
-            hvac_mode_api = hvac_mode.get(CONFIG_HVAC_SET)
-
-            hvac_mode_mapping[hvac_mode_ha_key] = hvac_mode_api
-            hvac_mode_reverse_mapping[hvac_mode_api] = hvac_mode_ha_key
-
-        fan_modes = json_data.get(CONFIG_FAN_MODES)
-
-        for fan_mode_ha in fan_modes:
-            fan_mode = fan_modes[fan_mode_ha]
-
-            fan_mode_mapping[fan_mode_ha] = fan_mode
-            fan_mode_reverse_mapping[fan_mode] = fan_mode_ha
-
-        self._hvac_modes[product_id] = hvac_mode_mapping
-        self._hvac_modes_reverse[product_id] = hvac_mode_reverse_mapping
-
-        self._fan_modes[product_id] = fan_mode_mapping
-        self._fan_modes_reverse[product_id] = fan_mode_reverse_mapping
-
-    async def _load_api_config(self):
-        api_type = self._config_data.api_type
-        config_file = f"../parameters/api.{api_type}.json"
-        file_path = os.path.join(os.path.dirname(__file__), config_file)
-
-        file = await aiofiles.open(file_path)
-        json_str = await file.read()
-        await file.close()
-
-        json_data = json.loads(json_str)
-
-        self._api_config = json_data
+        self._entity_descriptions[catalog_id] = entities
 
     def _update_platforms(self, entity_descriptions):
         for entity_description in entity_descriptions:
@@ -523,61 +309,10 @@ class AquaTempConfigManager:
             ):
                 self.platforms.append(entity_description.platform)
 
-    def _update_protocol_codes(self, product_id, entity_descriptions):
-        self._protocol_codes[product_id] = [
-            entity_description.key
-            for entity_description in entity_descriptions
-            if entity_description.is_protocol_code
-        ]
-
-    def _get_product_id(self, device_code: str, param: ProductParameter):
-        device = self._devices.get(device_code, {})
-        product_id = device.get(param)
-
-        return product_id
-
-    def _get_pc_mapping(self, device_code) -> dict:
-        product_id = self._get_product_id(device_code, ProductParameter.MAPPING)
-
-        result = self._protocol_codes_configuration.get(product_id)
-
-        if result is None:
-            result = self._protocol_codes_configuration.get(PRODUCT_ID_DEFAULT)
-
-        return result
-
-    def get_entity_descriptions(self, device_code):
-        product_id = self._get_product_id(
-            device_code, ProductParameter.ENTITY_DESCRIPTION
-        )
-
-        result = self._entity_descriptions.get(product_id)
+    def get_entity_descriptions(self, device_profile: DeviceProfile):
+        result = self._entity_descriptions.get(device_profile.catalog_id)
 
         if result is None:
             result = self._entity_descriptions.get(PRODUCT_ID_DEFAULT)
 
         return result
-
-    @staticmethod
-    def _get_entity_category(data_item: dict) -> EntityCategory | None:
-        """Resolve entity_category for a JSON-defined entity.
-
-        An absent key keeps the historical DIAGNOSTIC behaviour, so every product
-        profile that does not opt in is unaffected. An explicit null promotes the
-        entity to the device's primary section.
-        """
-        if "entity_category" not in data_item:
-            return EntityCategory.DIAGNOSTIC
-
-        value = data_item["entity_category"]
-
-        return None if value is None else EntityCategory(value)
-
-    @staticmethod
-    def _get_product_file(parameter: ProductParameter, product_id):
-        config_file = f"{parameter}.{product_id}.json"
-        current_path = Path(__file__)
-        parent_directory = current_path.parents[1]
-        file_path = os.path.join(parent_directory, "parameters", config_file)
-
-        return file_path

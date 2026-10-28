@@ -18,9 +18,9 @@ dev = [
     "aioresponses>=0.7.9",
     "mutmut>=3.8.0",
     "pre-commit>=4",
-    "pytest>=9.1.1",
-    "pytest-asyncio>=1.4.0",
-    "pytest-cov>=7.1.0",
+    # Pins homeassistant, pytest, pytest-asyncio and pytest-cov exactly; bump
+    # it to move them, to the release whose homeassistant pin is wanted
+    "pytest-homeassistant-custom-component==0.13.316",
 ]
 
 [tool.uv]
@@ -69,9 +69,6 @@ show_missing = true
 skip_covered = true
 
 [tool.mutmut]
-# The modules the tests drive; add others as tests reach them
-source_paths = [
-    "custom_components/aqua_temp/managers/aqua_temp_api.py",
-    "custom_components/aqua_temp/managers/aqua_temp_config_manager.py",
-]
+# The cloud library, which the tests drive
+source_paths = ["custom_components/aqua_temp/cloud"]
 also_copy = ["custom_components"]

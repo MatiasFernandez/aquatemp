@@ -3,15 +3,13 @@ import json
 import logging
 import os
 import sys
-from unittest.mock import patch
 
-from custom_components.aqua_temp.common.api_types import APIType
-from custom_components.aqua_temp.common.consts import CONF_API_TYPE
-from custom_components.aqua_temp.managers.aqua_temp_api import AquaTempAPI
-from custom_components.aqua_temp.managers.aqua_temp_config_manager import (
-    AquaTempConfigManager,
-)
-from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
+from aiohttp import ClientSession
+
+from custom_components.aqua_temp.cloud.api_profile import ApiProfile
+from custom_components.aqua_temp.cloud.api_types import APIType
+from custom_components.aqua_temp.cloud.client import AquaTempAPI, Credentials
+from custom_components.aqua_temp.cloud.device_profiles import DeviceProfiles
 
 DEBUG = str(os.environ.get("DEBUG", False)).lower() == str(True).lower()
 USERNAME = os.environ.get("USERNAME", False)
@@ -30,79 +28,58 @@ root.addHandler(stream_handler)
 
 _LOGGER = logging.getLogger(__name__)
 
-# New-device signals need a running HA instance; there is none here
-patch(
-    "custom_components.aqua_temp.managers.aqua_temp_api.async_dispatcher_send"
-).start()
-
 
 class Test:
-    def __init__(self):
-        config_manager = AquaTempConfigManager(None, None)
+    @staticmethod
+    async def _create_api(session: ClientSession) -> AquaTempAPI:
+        api_profile = await ApiProfile.load(str(APIType.AquaTemp))
+        device_profiles = await DeviceProfiles.load()
 
-        self._entry_config = {
-            CONF_USERNAME: USERNAME,
-            CONF_PASSWORD: PASSWORD,
-            CONF_API_TYPE: str(APIType.AquaTemp),
-        }
-
-        self._config_manager = config_manager
-        self._api = AquaTempAPI(None, config_manager)
+        return AquaTempAPI(
+            session,
+            Credentials(username=USERNAME, password=PASSWORD),
+            api_profile,
+            device_profiles,
+        )
 
     async def parameters_list(self):
-        await self._api.initialize()
+        async with ClientSession() as session:
+            api = await self._create_api(session)
+
+            await api.initialize()
 
     async def list_data(self):
-        await self._config_manager.initialize(self._entry_config)
+        async with ClientSession() as session:
+            api = await self._create_api(session)
 
-        await self._api.initialize()
+            await api.initialize()
 
-        await self._api.update()
+            await api.update()
 
-        for device_code in self._api.devices:
-            device_data = self._api.get_device_data(device_code)
+            for device_code in api.devices:
+                device_data = api.get_device_data(device_code)
 
-            _LOGGER.info(f"{device_code}: {json.dumps(device_data, indent=4)}")
-
-        await self._api.terminate()
-
-    @staticmethod
-    async def entities_mapping():
-        print("| Entity Name | Parameter | Platform | Protocol Code? |")
-        print("| ----------- | --------- | -------- | -------------- |")
-
-        for entity_description in []:
-            if entity_description.platform is not None:
-                print(
-                    f"| {{HA Device Name}} "
-                    f"{entity_description.name} | "
-                    f"{entity_description.key} | "
-                    f"{entity_description.platform} | "
-                    f"{entity_description.is_protocol_code} |"
-                )
+                _LOGGER.info(f"{device_code}: {json.dumps(device_data, indent=4)}")
 
     async def api_test(self):
-        await self._api.initialize()
+        async with ClientSession() as session:
+            api = await self._create_api(session)
 
-        for i in range(1, 10):
-            await self._api.update()
+            await api.initialize()
 
-            _LOGGER.info(self._api.devices)
+            for i in range(1, 10):
+                await api.update()
 
-            await asyncio.sleep(30)
+                _LOGGER.info(api.devices)
 
-    async def terminate(self):
-        await self._api.terminate()
+                await asyncio.sleep(30)
 
-
-loop = asyncio.new_event_loop()
 
 instance = Test()
 
+# asyncio.run cancels the task on Ctrl+C, so the session still closes
 try:
-    loop.create_task(instance.list_data())
-    loop.run_forever()
-
+    asyncio.run(instance.list_data())
 
 except KeyboardInterrupt:
     _LOGGER.info("Aborted")

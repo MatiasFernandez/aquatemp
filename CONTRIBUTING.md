@@ -14,7 +14,7 @@ Prefix commands with `uv run` (as below), or activate `.venv` to run them direct
 
 Dependencies are declared in [pyproject.toml](pyproject.toml): `dependencies` for what the integration and developer scripts import, the `dev` group for test and lint tools. Change them with `uv add` / `uv remove` (`--dev` for the group), which also updates `uv.lock`; commit both. Dependabot opens weekly PRs bumping the lock.
 
-`uv.lock` resolves `homeassistant` per Python version, so the 3.13 environment gets the newest Home Assistant release that still supports 3.13, not the latest one.
+The dev group's exact `pytest-homeassistant-custom-component` pin decides the Home Assistant version (and `pytest`, `pytest-asyncio`, `pytest-cov`): each release pins one `homeassistant` release exactly. To move Home Assistant, bump it to the release pinning the one wanted, keeping that release's Python requirement within `.python-version`.
 
 ## Quality checks
 
@@ -37,17 +37,22 @@ If a commit only reformats code, add its full SHA to [.git-blame-ignore-revs](.g
 
 ## Tests
 
-[pytest](https://docs.pytest.org/) runs offline against a mocked cloud ([aioresponses](https://github.com/pnuckowski/aioresponses)), driving the real config manager and API client through a full update cycle. Any request without a registered response fails the test, so nothing reaches the real cloud.
+[pytest](https://docs.pytest.org/) runs offline against a mocked cloud ([aioresponses](https://github.com/pnuckowski/aioresponses)), driving the cloud library's real API client and profiles through a full update cycle. Any request without a registered response fails the test, so nothing reaches the real cloud.
+
+The tests follow the cloud library boundary:
+
+- [tests/cloud/](tests/cloud/) tests the cloud library alone. Like the library, it must not import Home Assistant or the integration; its [ruff.toml](tests/cloud/ruff.toml) bans Home Assistant and the integration's modules one by one, but not the integration package itself. Home Assistant still has to be installed: importing `custom_components.aqua_temp.cloud` runs the integration's `__init__.py` first. The mocked cloud lives there too, in [mock_cloud.py](tests/cloud/mock_cloud.py), which the root [conftest.py](tests/conftest.py) registers as a pytest plugin, so the integration tests get the same fixtures.
+- [tests/integration/](tests/integration/) tests the integration side. [test_integration.py](tests/integration/test_integration.py) sets up a config entry on a real Home Assistant from [pytest-homeassistant-custom-component](https://github.com/MatthewFlamm/pytest-homeassistant-custom-component) (its `hass` fixture), against the mocked cloud: entities, the device registry, climate services and diagnostics.
 
 ```bash
-uv run pytest                                    # everything
-uv run pytest tests/test_fetch_data.py -k shape  # one file, tests matching a name
-uv run pytest --cov                              # with a coverage report (add --cov-report=html for htmlcov/)
+uv run pytest                                             # everything
+uv run pytest tests/cloud/test_fetch_data.py -k protocol  # one file, tests matching a name
+uv run pytest --cov                                       # with a coverage report (add --cov-report=html for htmlcov/)
 ```
 
 CI runs the suite with coverage and uploads it to [Codecov](https://codecov.io/gh/MatiasFernandez/aquatemp), which comments on pull requests with the coverage of the changed lines and any failing tests.
 
-Fixtures live in [tests/fixtures/](tests/fixtures/), one folder per API type, and are catalogued in its [README](tests/fixtures/README.md). List new fixtures there; a test fails otherwise.
+Fixtures live in [tests/cloud/fixtures/](tests/cloud/fixtures/), one folder per API type, and are catalogued in its [README](tests/cloud/fixtures/README.md). List new fixtures there; a test fails otherwise.
 
 - Top-level files are real responses recorded from a device, merged and sanitised (device code replaced, metadata dropped). The maintainer regenerates them from private probe recordings; don't edit them by hand.
 - Files under `synthetic/` are written by hand for endpoints that were never recorded.
@@ -71,7 +76,7 @@ Both scripts import `custom_components` and `utils` as top-level packages, so ru
 
 ### Call the cloud API from the CLI
 
-[utils/api-testing.py](utils/api-testing.py) logs in with the AquaTemp API type, fetches every device on the account and logs its data. It keeps running until stopped with Ctrl+C.
+[utils/api-testing.py](utils/api-testing.py) logs in with the AquaTemp API type, fetches every device on the account, logs its data and exits.
 
 ```bash
 USERNAME=you@example.com PASSWORD=secret DEBUG=true PYTHONPATH=. uv run python utils/api-testing.py
@@ -96,7 +101,7 @@ PYTHONPATH=. uv run python utils/parse-resources.py
 Limitations of the script as it stands:
 
 - File paths use Windows separators (`\\`), so it only finds the XML files on Windows.
-- Writing `custom_components/aqua_temp/parameters/entity_description.<device>.json` is commented out. Uncomment it to regenerate the files, or copy the logged output.
+- Writing `custom_components/aqua_temp/cloud/profiles/entity_description.<device>.json` is commented out. Uncomment it to regenerate the files, or copy the logged output.
 
 ## Changelog and releases
 

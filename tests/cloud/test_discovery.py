@@ -1,11 +1,9 @@
 """Device discovery: device-list requests, the unfiltered fallback, several devices."""
 
-from unittest.mock import call, patch
+from custom_components.aqua_temp.cloud.api_types import APIType
+from custom_components.aqua_temp.cloud.consts import PRODUCT_IDS
 
-from custom_components.aqua_temp.common.api_types import APIType
-from custom_components.aqua_temp.common.consts import PRODUCT_IDS
-
-from .conftest import DEVICE_CODE, cloud_with, load_fixture
+from .mock_cloud import DEVICE_CODE, cloud_with, load_fixture
 
 # Literal on purpose: the expected values must not come from the config under test
 REGISTERED = "app/device/deviceList"
@@ -14,7 +12,6 @@ SHARED_APPECT = "app/device/getMyAppectDeviceShareDataList"
 DEVICE_LISTS = [REGISTERED, SHARED_TOBE, SHARED_APPECT]
 
 SHARED_DEVICE_CODE = "000000000002"
-DEVICE_NEW = "signal_aqua_temp_device_new"
 
 
 def listed_device(name: str) -> dict:
@@ -97,14 +94,8 @@ async def test_each_discovered_device_is_read(api, wire):
         "app/device/getDataByCode": "get_data_by_code.idle",
     }
 )
-async def test_each_device_is_announced_once(api, config_manager):
-    with patch(
-        "custom_components.aqua_temp.managers.aqua_temp_api.async_dispatcher_send"
-    ) as dispatcher_send:
-        await api.update()
-        await api.update()
+async def test_each_device_is_announced_once(api, announced):
+    await api.update()
+    await api.update()
 
-    assert dispatcher_send.call_args_list == [
-        call(None, DEVICE_NEW, config_manager.entry_id, DEVICE_CODE),
-        call(None, DEVICE_NEW, config_manager.entry_id, SHARED_DEVICE_CODE),
-    ]
+    assert announced == [DEVICE_CODE, SHARED_DEVICE_CODE]
