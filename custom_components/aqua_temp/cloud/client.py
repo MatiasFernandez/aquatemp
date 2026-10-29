@@ -437,7 +437,12 @@ class AquaTempAPI:
                 raise error
 
     async def _fetch_data(self, device_code: str):
-        codes = self._get_device_profile(device_code).poll_codes
+        unknown_codes = self.get_unknown_codes(device_code)
+        codes = [
+            code
+            for code in self._get_device_profile(device_code).poll_codes
+            if code not in unknown_codes
+        ]
 
         param_device_code = self._api_profile.get(APIParam.DeviceCode)
         param_protocal_codes = self._api_profile.get(APIParam.ProtocalCodes)

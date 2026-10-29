@@ -260,3 +260,24 @@ async def test_unknown_codes_survive_logging_in_again(
 
     assert len(requests_to(cloud, api_profile, Endpoints.Login)) == 2
     assert api.get_unknown_codes(DEVICE_CODE) == UNKNOWN_CODES
+
+
+async def test_unknown_codes_are_no_longer_requested(api, cloud, api_type, api_profile):
+    register_data(
+        cloud,
+        api_type,
+        api_profile,
+        "get_data_by_code.idle",
+        "get_data_by_code.idle",
+    )
+
+    await api.update()
+    await api.update()
+
+    first, second = cloud.requests.get(("POST", URL(DATA_URL)))
+
+    assert first.kwargs["json"]["protocalCodes"] == default_profile_codes()
+    assert second.kwargs["json"]["protocalCodes"] == [
+        code for code in default_profile_codes() if code not in UNKNOWN_CODES
+    ]
+    assert second.kwargs["json"]["protocalCodes"].count("Mode") == 2
