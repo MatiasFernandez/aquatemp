@@ -4,6 +4,7 @@
 [![Coverage](https://codecov.io/gh/MatiasFernandez/aquatemp/branch/main/graph/badge.svg)](https://codecov.io/gh/MatiasFernandez/aquatemp)
 [![Release](https://img.shields.io/github/v/release/MatiasFernandez/aquatemp)](https://github.com/MatiasFernandez/aquatemp/releases)
 [![HACS Custom](https://img.shields.io/badge/HACS-Custom-41BDF5.svg)](https://hacs.xyz/docs/faq/custom_repositories/)
+[![Home Assistant](https://img.shields.io/badge/dynamic/json?url=https%3A%2F%2Fraw.githubusercontent.com%2FMatiasFernandez%2Faquatemp%2Fmain%2Fhacs.json&query=%24.homeassistant&prefix=%E2%89%A5%20&label=Home%20Assistant&logo=homeassistant&color=41BDF5)](https://www.home-assistant.io/)
 
 > **This is a fork** of [tkejzlar/aquatemp](https://github.com/tkejzlar/aquatemp), itself a fork of [radical-squared/aquatemp](https://github.com/radical-squared/aquatemp). It evolves independently and has its own releases; upstream changes are merged in occasionally. What this fork changes is listed in the [changelog](CHANGELOG.md), starting with 3.1.0, its first release.
 
@@ -30,11 +31,15 @@ Following a recommendation from [@dodg3r](https://github.com/@dodg3r) & [@kopier
 
 Requires complete deletion of integration and reinstall after restart HA
 
-#### Installations via HACS [![hacs_badge](https://img.shields.io/badge/HACS-Custom-41BDF5.svg)](https://github.com/hacs/integration)
+#### Installations via HACS
 
-- In HACS, add custom repository `MatiasFernandez/aquatemp` as integration
+[![Open your Home Assistant instance and open this repository inside HACS.](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?owner=MatiasFernandez&repository=aquatemp&category=integration)
+
+- Click the button above, or in HACS add custom repository `MatiasFernandez/aquatemp` as integration
 - Look for "Aqua Temp", install it and restart Home Assistant
-- In Settings --> Devices & Services - (Lower Right) "Add Integration"
+- In Settings --> Devices & Services - (Lower Right) "Add Integration", or:
+
+[![Open your Home Assistant instance and start setting up Aqua Temp.](https://my.home-assistant.io/badges/config_flow_start.svg)](https://my.home-assistant.io/redirect/config_flow_start/?domain=aqua_temp)
 
 This fork uses the same integration domain (`aqua_temp`) as upstream and its other forks, so only one of them can be installed at a time. To switch, remove the other repository's download in HACS, then download this one and restart; existing configuration entries are kept.
 
