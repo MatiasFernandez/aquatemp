@@ -42,6 +42,10 @@ async def test_device_list_requests(client, wire):
     assert list(client.devices) == [DEVICE_CODE]
 
 
+def test_allow_list_lists_each_product_once():
+    assert len(PRODUCT_IDS) == len(set(PRODUCT_IDS))
+
+
 @cloud_with({REGISTERED: ["synthetic/device_list_empty", "synthetic/device_list"]})
 async def test_no_device_found_retries_without_product_filter(client, wire):
     await client.initialize(throw_error=True)
