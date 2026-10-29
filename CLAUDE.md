@@ -12,7 +12,8 @@ There is no build step.
 uv sync                                            # set up or refresh .venv from uv.lock
 uv run pre-commit run --all-files                  # full lint/format pass
 uv run pre-commit run ruff-check --files <path>    # single hook on specific files
-uv run pytest                                      # offline test suite
+uv run pytest                                      # offline test suite, latest Home Assistant
+uv run --project tests/floor --locked pytest       # oldest supported Home Assistant, from tests/floor/uv.lock
 ```
 
 ## Layout
