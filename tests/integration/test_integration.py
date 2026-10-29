@@ -217,6 +217,16 @@ async def test_every_code_unknown_skips_no_entity(hass, entry):
     assert entry_unique_ids(hass, entry) == expected_unique_ids("default")
 
 
+async def test_water_delta_t_is_created(hass, entry):
+    assert sensor_unique_id("water_delta_t") in entry_unique_ids(hass, entry)
+
+
+# T03 is the default mapping's outlet water temperature
+@cloud_with(RESPONSES | {DATA: data_untyped("T03")})
+async def test_water_delta_t_is_skipped_when_an_input_is_unknown(hass, entry):
+    assert sensor_unique_id("water_delta_t") not in entry_unique_ids(hass, entry)
+
+
 async def test_entity_registered_for_an_unknown_code_is_kept(hass, config_entry):
     registry = er.async_get(hass)
     registry.async_get_or_create(

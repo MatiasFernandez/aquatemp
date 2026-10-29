@@ -131,6 +131,7 @@ def get_derived_entity_descriptions(
                     water_delta_t, inlet_code=inlet_code, outlet_code=outlet_code
                 ),
                 translation_key="water_delta_t",
+                source_codes=(inlet_code, outlet_code),
             )
         )
 
