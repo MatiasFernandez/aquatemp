@@ -55,6 +55,20 @@ def data_with(**values) -> dict:
     return data
 
 
+def data_untyped(*codes) -> dict:
+    """The recorded idle getDataByCode response, with some codes answered the way
+    the cloud answers a code the device doesn't know; all of them if none given."""
+    data = load_fixture(APIType.AquaTemp, "get_data_by_code.idle")
+    items = {item["code"]: item for item in data["objectResult"]}
+
+    for code in codes or items:
+        assert code in items, f"{code} is not in the recording"
+
+        items[code] |= {"value": "", "dataType": ""}
+
+    return data
+
+
 def cloud_with(responses: dict):
     """Serve responses on top of BASE_RESPONSES for one test.
 
