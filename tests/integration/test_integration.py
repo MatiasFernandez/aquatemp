@@ -348,3 +348,19 @@ async def test_diagnostics_redact_the_account_email(hass, entry):
     for data in (entry_data, device_data):
         assert data["configuration"][CONF_USERNAME] == "**REDACTED**"
         assert "test@example.com" not in json.dumps(data, default=str)
+
+
+async def test_entry_diagnostics_list_each_device_unknown_codes(hass, entry):
+    diagnostics = await async_get_config_entry_diagnostics(hass, entry)
+
+    assert [device["device"]["unknown_codes"] for device in diagnostics["devices"]] == [
+        sorted(UNKNOWN_CODES)
+    ]
+
+
+async def test_device_diagnostics_list_its_unknown_codes(hass, entry):
+    device = async_get_ha_device(hass, entry.entry_id, DEVICE_ID)
+
+    diagnostics = await async_get_device_diagnostics(hass, entry, device)
+
+    assert diagnostics["device"]["unknown_codes"] == sorted(UNKNOWN_CODES)

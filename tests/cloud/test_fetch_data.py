@@ -169,6 +169,29 @@ async def test_nothing_is_unknown_before_the_first_read(api):
     assert api.get_unknown_codes(DEVICE_CODE) == frozenset()
 
 
+async def test_unknown_codes_are_logged(api, cloud, api_type, api_profile, caplog):
+    register_data(cloud, api_type, api_profile, "get_data_by_code.idle")
+
+    with caplog.at_level(logging.DEBUG):
+        await api.update()
+
+    assert (
+        f"Device {DEVICE_CODE} doesn't know codes, skipping them: "
+        f"{sorted(UNKNOWN_CODES)}"
+    ) in caplog.text
+
+
+async def test_all_codes_untyped_is_logged(api, cloud, api_type, api_profile, caplog):
+    register_data(cloud, api_type, api_profile, data_untyped())
+
+    with caplog.at_level(logging.DEBUG):
+        await api.update()
+
+    assert (
+        f"Device {DEVICE_CODE} answered every code as unknown, skipping none"
+    ) in caplog.text
+
+
 async def test_all_codes_untyped_leaves_nothing_unknown(
     api, cloud, api_type, api_profile
 ):

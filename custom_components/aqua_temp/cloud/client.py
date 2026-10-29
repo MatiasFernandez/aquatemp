@@ -500,7 +500,17 @@ class AquaTempAPI:
         # Every code unknown looks like a backend hiccup rather than codes
         # this device lacks
         if len(unknown_codes) == len({item["code"] for item in coded_items}):
+            _LOGGER.debug(
+                f"Device {device_code} answered every code as unknown, skipping none"
+            )
+
             unknown_codes = frozenset()
+
+        else:
+            _LOGGER.debug(
+                f"Device {device_code} doesn't know codes, skipping them: "
+                f"{sorted(unknown_codes)}"
+            )
 
         self._unknown_codes[device_code] = unknown_codes
 

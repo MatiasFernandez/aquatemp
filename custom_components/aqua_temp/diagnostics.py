@@ -74,7 +74,11 @@ def _async_get_diagnostics(
             device_details = devices[device_code]
             if coordinator.get_device_meta(device_code).device_id == device_id:
                 data |= _async_device_as_dict(
-                    hass, entry.entry_id, device_id, device_details
+                    hass,
+                    entry.entry_id,
+                    device_id,
+                    device_details,
+                    coordinator.get_unknown_codes(device_code),
                 )
 
     else:
@@ -87,6 +91,7 @@ def _async_get_diagnostics(
                     entry.entry_id,
                     coordinator.get_device_meta(device_code).device_id,
                     devices[device_code],
+                    coordinator.get_unknown_codes(device_code),
                 )
                 for device_code in devices
             ]
@@ -97,7 +102,11 @@ def _async_get_diagnostics(
 
 @callback
 def _async_device_as_dict(
-    hass: HomeAssistant, config_entry_id: str, device_id: str, device_data: dict
+    hass: HomeAssistant,
+    config_entry_id: str,
+    device_id: str,
+    device_data: dict,
+    unknown_codes: frozenset[str],
 ) -> dict[str, Any]:
     """Represent a Shinobi monitor as a dictionary."""
     entity_registry = er.async_get(hass)
@@ -112,6 +121,7 @@ def _async_device_as_dict(
             "disabled": ha_device.disabled,
             "disabled_by": ha_device.disabled_by,
             "data": device_data,
+            "unknown_codes": sorted(unknown_codes),
             "entities": [],
         }
 
