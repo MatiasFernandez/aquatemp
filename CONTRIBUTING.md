@@ -1,5 +1,16 @@
 # Contributing
 
+Bug reports are as valuable as code: the maintainer has a single heat pump, so they're how problems with other models come to light. Use the [issue forms](https://github.com/MatiasFernandez/aquatemp/issues/new/choose), and [discussions](https://github.com/MatiasFernandez/aquatemp/discussions) for ideas, questions and which heat pumps work.
+
+## Pull requests
+
+Pull requests are welcome. Before opening one:
+
+- Add or update tests for the change wherever possible. The suite runs offline against a mocked cloud (see [Tests](#tests)), so a new profile or a fix for a model usually needs only a fixture and a test. If something can't be tested, say why in the PR.
+- Run the [quality checks](#quality-checks) and both test runs; CI runs the same.
+- Add user-facing changes to [CHANGELOG.md](CHANGELOG.md) (see [Changelog and releases](#changelog-and-releases)).
+- Keep each PR to one change, and explain what it fixes and how you checked it, ideally on a real device.
+
 ## Development setup
 
 Requires [uv](https://docs.astral.sh/uv/). It installs the Python in [.python-version](.python-version), the one the latest stable Home Assistant release needs, and the exact dependency versions in [uv.lock](uv.lock). The development environment runs that latest release; the oldest supported one (see `homeassistant` in [hacs.json](hacs.json)) is covered by the [floor tests](#tests).
