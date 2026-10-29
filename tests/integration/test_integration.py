@@ -24,7 +24,13 @@ from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.util import slugify
-from tests.cloud.mock_cloud import DEVICE_CODE, cloud_with, data_with, load_fixture
+from tests.cloud.mock_cloud import (
+    DEVICE_CODE,
+    cloud_with,
+    data_untyped,
+    data_with,
+    load_fixture,
+)
 
 CONTROL = "app/device/control"
 DATA = "app/device/getDataByCode"
@@ -80,8 +86,8 @@ def cloud_responses() -> dict:
 
 
 @pytest.fixture
-async def entry(hass: HomeAssistant, api_type, cloud) -> MockConfigEntry:
-    """A config entry set up and polled once, its password encrypted as the
+async def config_entry(hass: HomeAssistant, api_type, cloud) -> MockConfigEntry:
+    """A config entry added but not set up, its password encrypted as the
     config flow stores it."""
     data = {
         CONF_USERNAME: "test@example.com",
@@ -94,10 +100,20 @@ async def entry(hass: HomeAssistant, api_type, cloud) -> MockConfigEntry:
     entry = MockConfigEntry(domain=DOMAIN, title="Aqua Temp", data=data)
     entry.add_to_hass(hass)
 
+    return entry
+
+
+async def set_up(hass: HomeAssistant, entry: MockConfigEntry) -> MockConfigEntry:
     assert await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
 
     return entry
+
+
+@pytest.fixture
+async def entry(hass: HomeAssistant, config_entry) -> MockConfigEntry:
+    """The config entry set up and polled once."""
+    return await set_up(hass, config_entry)
 
 
 def climate_entity_id(hass: HomeAssistant) -> str:
@@ -106,8 +122,26 @@ def climate_entity_id(hass: HomeAssistant) -> str:
     return er.async_get(hass).async_get_entity_id("climate", DOMAIN, unique_id)
 
 
-def expected_unique_ids(catalog_id: str) -> set[str]:
-    """Built-in entities, the catalog's sensors and binary sensors, Water ΔT."""
+# Answered with an empty value and dataType in the idle recording
+UNKNOWN_CODES = {
+    "F10",
+    "O01",
+    "O02",
+    "O03",
+    "O04",
+    "O05",
+    "S01",
+    "S02",
+    "S03",
+    "S04",
+    "S05",
+    "S06",
+}
+
+
+def expected_unique_ids(catalog_id: str, skipped: set[str] = frozenset()) -> set[str]:
+    """Built-in entities, the catalog's sensors and binary sensors but those
+    for skipped codes, and Water ΔT."""
     catalog = json.loads(
         (PROFILES / f"entity_description.{catalog_id}.json").read_text()
     )
@@ -124,6 +158,7 @@ def expected_unique_ids(catalog_id: str) -> set[str]:
         (item["platform"], item["key"])
         for item in catalog
         if item.get("platform") in ("sensor", "binary_sensor")
+        and item["key"] not in skipped
     )
 
     return {
@@ -147,15 +182,54 @@ async def test_device_lookup_ignores_other_entries_devices(hass, entry):
     assert async_get_ha_device(hass, other_entry.entry_id, DEVICE_ID) is None
 
 
-async def test_device_gets_its_catalog_entities(hass, entry):
+def entry_unique_ids(hass: HomeAssistant, entry: MockConfigEntry) -> set[str]:
     registry = er.async_get(hass)
-    unique_ids = {
+
+    return {
         entity.unique_id
         for entity in er.async_entries_for_config_entry(registry, entry.entry_id)
     }
 
+
+def sensor_unique_id(code: str) -> str:
+    return slugify(f"{DOMAIN}_sensor_{code}_{DEVICE_CODE}")
+
+
+async def test_device_gets_its_catalog_entities(hass, entry):
     # The device's product, 1132174963097280512, has no catalog of its own
-    assert unique_ids == expected_unique_ids("default")
+    assert entry_unique_ids(hass, entry) == expected_unique_ids(
+        "default", skipped=UNKNOWN_CODES
+    )
+
+
+async def test_codes_the_device_does_not_know_get_no_entity(hass, entry):
+    unique_ids = entry_unique_ids(hass, entry)
+
+    for code in ("F10", "O01", "S01"):
+        assert sensor_unique_id(code) not in unique_ids
+
+    assert sensor_unique_id("T02") in unique_ids
+    assert climate_entity_id(hass) is not None
+
+
+@cloud_with(RESPONSES | {DATA: data_untyped()})
+async def test_every_code_unknown_skips_no_entity(hass, entry):
+    assert entry_unique_ids(hass, entry) == expected_unique_ids("default")
+
+
+async def test_entity_registered_for_an_unknown_code_is_kept(hass, config_entry):
+    registry = er.async_get(hass)
+    registry.async_get_or_create(
+        "sensor", DOMAIN, sensor_unique_id("F10"), config_entry=config_entry
+    )
+
+    await set_up(hass, config_entry)
+
+    entity_id = registry.async_get_entity_id("sensor", DOMAIN, sensor_unique_id("F10"))
+
+    assert entity_id is not None
+    # No entity provides it, so it has no state
+    assert hass.states.get(entity_id) is None
 
 
 async def test_device_entities_are_added_once(hass, entry):

@@ -29,6 +29,8 @@ from .consts import API_STATUS
 @dataclass(frozen=True, kw_only=True)
 class AquaTempEntityDescription(EntityDescription):
     platform: Platform | None = None
+    # Codes the entity reads; it is skipped on a device that doesn't know one
+    source_codes: tuple[str, ...] = ()
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -160,6 +162,7 @@ def build_entity_descriptions(
                     None if state_class is None else SensorStateClass(state_class)
                 ),
                 translation_key=translation_key,
+                source_codes=(key,),
             )
 
             entities.append(sensor_entity)
@@ -172,12 +175,15 @@ def build_entity_descriptions(
                 on_value=data_item.get("on_value"),
                 entity_category=_get_entity_category(data_item),
                 translation_key=translation_key,
+                source_codes=(key,),
             )
 
             entities.append(binary_sensor_entity)
 
         else:
-            entity = AquaTempEntityDescription(key=key, name=data_item.get("name"))
+            entity = AquaTempEntityDescription(
+                key=key, name=data_item.get("name"), source_codes=(key,)
+            )
 
             entities.append(entity)
 
