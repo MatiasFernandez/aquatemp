@@ -6,105 +6,84 @@
 [![HACS Custom](https://img.shields.io/badge/HACS-Custom-41BDF5.svg)](https://hacs.xyz/docs/faq/custom_repositories/)
 [![Home Assistant](https://img.shields.io/badge/dynamic/json?url=https%3A%2F%2Fraw.githubusercontent.com%2FMatiasFernandez%2Faquatemp%2Fmain%2Fhacs.json&query=%24.homeassistant&prefix=%E2%89%A5%20&label=Home%20Assistant&logo=homeassistant&color=41BDF5)](https://www.home-assistant.io/)
 
+Home Assistant integration for PHNIX heat pumps controlled through the Aqua Temp or HiTemp cloud. It adds a thermostat for each heat pump (target temperature, HVAC mode and fan mode) and sensors for the parameters the device reports.
+
 > **This is a fork** of [tkejzlar/aquatemp](https://github.com/tkejzlar/aquatemp), itself a fork of [radical-squared/aquatemp](https://github.com/radical-squared/aquatemp). It evolves independently and has its own releases; upstream changes are merged in occasionally. What this fork changes is listed in the [changelog](CHANGELOG.md), starting with 3.1.0, its first release.
 
-This is Home Assistant's an integration for PHINX Aqua Temp / HiTemp compatible heat pumps.
-It allows controlling temperature, HVAC mode (heat, cool, auto, off) and fan mode (low, auto).
-It also reports all parameters available in sensors and sensors.
-
-AquaTemp's cloud protocol is based on [aquatemp](https://github.com/dst6se/aquatemp) project with additional functionality.
+Using a heat pump model other than the maintainer's? [Tell us how it works](#help-improve-support-for-your-model).
 
 [Changelog](CHANGELOG.md) · [Contributing](CONTRIBUTING.md)
 
-## How to
+## Before you install
 
-#### Requirements
+You need an account in the Aqua Temp or HiTemp app with your heat pump on it.
 
-Account for AquaTemp / HiTemp
+The cloud allows **one login per account at a time**: when Home Assistant logs in, the app on your phone is logged out, and the other way around. To use both, create a second account in the app, share the heat pump with it from your main account, and give Home Assistant one of the two accounts.
 
-##### Shared device to avoid token expiration when using the App parallel to Integration
-
-Aqua Temp / Hi Temp introduced in v1.5.9 single login "feature" by default, meaning, only one device can be logged in,
-Following a recommendation from [@dodg3r](https://github.com/@dodg3r) & [@kopierschnitte](https://github.com/@kopierschnitte), you can avoid it by creating additional account and sharing the device with that new account.
-
-#### Switching from 1.x/2.x to 3.x
-
-Requires complete deletion of integration and reinstall after restart HA
-
-#### Installations via HACS
+## Installation
 
 [![Open your Home Assistant instance and open this repository inside HACS.](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?owner=MatiasFernandez&repository=aquatemp&category=integration)
 
-- Click the button above, or in HACS add custom repository `MatiasFernandez/aquatemp` as integration
-- Look for "Aqua Temp", install it and restart Home Assistant
-- In Settings --> Devices & Services - (Lower Right) "Add Integration", or:
+1. Click the button above, or in HACS add the custom repository `MatiasFernandez/aquatemp` as an integration.
+2. Download "Aqua Temp" and restart Home Assistant.
+3. Go to Settings → Devices & Services → Add Integration and pick "Aqua Temp", or click:
 
 [![Open your Home Assistant instance and start setting up Aqua Temp.](https://my.home-assistant.io/badges/config_flow_start.svg)](https://my.home-assistant.io/redirect/config_flow_start/?domain=aqua_temp)
 
 This fork uses the same integration domain (`aqua_temp`) as upstream and its other forks, so only one of them can be installed at a time. To switch, remove the other repository's download in HACS, then download this one and restart; existing configuration entries are kept.
 
-#### Setup
+## Configuration
 
-To add integration use Configuration -> Integrations -> Add `Aqua Temp`
-Integration supports **multiple** accounts and devices
+| Field    | Description                                                                               |
+| -------- | ----------------------------------------------------------------------------------------- |
+| Title    | Name of the config entry. Defaults to "Aqua Temp".                                        |
+| Username | The email address you log in to the app with, exactly as registered (no trailing spaces). |
+| Password | The app password.                                                                         |
+| API type | Which backend the account is on, by the app you use (below).                              |
 
-| Fields name | Type     | Required | Default             | Description                                                                                        |
-| ----------- | -------- | -------- | ------------------- | -------------------------------------------------------------------------------------------------- |
-| Username    | Textbox  | +        | -                   | Username of account                                                                                |
-| Password    | Textbox  | +        | -                   | Password of account                                                                                |
-| API Type    | Dropdown | +        | Aqua Temp (=<1.5.8) | API type (where the account was created), available values: Aqua Temp, HiTemp, Aqua Temp (=<1.5.8) |
+| API type            | Use it for                                                                                                                                                                         |
+| ------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Aqua Temp           | The current Aqua Temp app.                                                                                                                                                         |
+| HiTemp              | The HiTemp app. Today it reaches the same backend as Aqua Temp.                                                                                                                    |
+| Aqua Temp (<=1.5.8) | Accounts on the legacy backend used by Aqua Temp app versions up to 1.5.8. The server still responds, but this option hasn't been tested recently; only try it if the others fail. |
 
-###### Validation errors
+You can add several config entries, one per account, and each account can have several heat pumps. To change the credentials or API type later, open the integration's **Configure** dialog.
 
-| Errors                    |
-| ------------------------- |
-| Invalid credentials (403) |
+The integration polls the cloud every 5 minutes, and right after each change made from Home Assistant.
 
-> **Password longer than 16 characters?** As of 2026-09-01, the official app/backend silently
-> truncates passwords to 16 characters at registration and login, but this integration hashes the
-> full password — so a longer password will always fail with "Invalid credentials" here even
-> though it works in the app. **Workaround:** change your account password to 16 characters or
-> fewer.
+> [!NOTE]
+> **Password longer than 16 characters?** The Aqua Temp app (seen in version 2.1.5) silently keeps only the first 16 characters of the password, both when the account is created and at every login, so the account's real password may be shorter than the one you type. This integration uses the full password as entered and hashes it for login, since that behavior could change. If a longer password fails with "Invalid credentials" but works in the app, enter only its first 16 characters.
 
-## HA Device
+The **Configure** dialog also has **Log session token**, for debugging the cloud API by hand: it writes the API session token to the Home Assistant log once per login. The token is a credential (anyone holding it can control your heat pump until the next login), so turn it off before sharing logs.
 
-Device scheme is according to data from the API
+## What you get
 
-```json
-{
-  "identifiers": ["aqua_temp", "{DEVICE ID}"],
-  "name": "{DEVICE NICK NAME or DEVICE CODE}",
-  "device_type": "{DEVICE TYPE}"
-}
-```
+Each heat pump becomes a Home Assistant device, named after its nickname in the app, with its model as reported by the cloud. It gets:
 
-## HA Components
+| Entity           | Platform      | Description                                                                                                        |
+| ---------------- | ------------- | ------------------------------------------------------------------------------------------------------------------ |
+| (device name)    | climate       | Target temperature, HVAC mode and fan mode. The modes depend on the model (see below).                             |
+| Fault            | binary_sensor | On when the cloud reports a fault; the `fault` attribute holds its description.                                    |
+| Status           | binary_sensor | Whether the device is online. It may not update on the current Aqua Temp backend.                                  |
+| API Status       | binary_sensor | Whether the integration is logged in to the cloud.                                                                 |
+| Temperature Unit | select        | The unit Home Assistant reads the heat pump's values in. Set it to match the device; it doesn't change the device. |
+| Water ΔT         | sensor        | Outlet minus inlet water temperature, on models whose profile maps both.                                           |
 
-Per device the following components will be generated by default:
+Plus one sensor per parameter in the model's profile: temperatures, pressures, frequencies, valve positions and so on. Which profile a heat pump gets depends on its product ID:
 
-| Entity Name                       | Parameter        | Platform      | Protocol Code? |
-| --------------------------------- | ---------------- | ------------- | -------------- |
-| {HA Device Name} Temperature Unit | temperature_unit | select        | False          |
-| {HA Device Name} Fault            | is_fault         | binary_sensor | False          |
-| {HA Device Name} Status           | device_status    | binary_sensor | False          |
-| {HA Device Name} API Status       | api_status       | binary_sensor | False          |
+| Product ID          | Profile                                                                                                          | HVAC modes            | Fan modes      |
+| ------------------- | ---------------------------------------------------------------------------------------------------------------- | --------------------- | -------------- |
+| 1245226668902080512 | Hitemp ([parameters](custom_components/aqua_temp/cloud/profiles/entity_description.1245226668902080512.json))    | off, heat             | off, low, high |
+| 1442284873216843776 | Aqua Temp ([parameters](custom_components/aqua_temp/cloud/profiles/entity_description.1442284873216843776.json)) | off, cool, heat, auto | auto, low      |
+| Any other           | Default ([parameters](custom_components/aqua_temp/cloud/profiles/entity_description.default.json))               | off, cool, heat, auto | auto, low      |
 
-### Per product ID
-
-Additional components are according to following mapping:
-
-| Device's Product ID          | Parameter                                                                                      |
-| ---------------------------- | ---------------------------------------------------------------------------------------------- |
-| Default                      | [JSON](custom_components/aqua_temp/cloud/profiles/entity_description.default.json)             |
-| Hitemp 1245226668902080512   | [JSON](custom_components/aqua_temp/cloud/profiles/entity_description.1245226668902080512.json) |
-| AquaTemp 1442284873216843776 | [JSON](custom_components/aqua_temp/cloud/profiles/entity_description.1442284873216843776.json) |
+The integration picks up the heat pumps on the account whose product ID is on its list of known heat pumps ([`PRODUCT_IDS`](custom_components/aqua_temp/cloud/consts.py)). If none of them matches, it takes every device on the account. New heat pumps on the account show up without reloading the integration.
 
 ## Troubleshooting
 
-### Logs
+### Logs and diagnostics
 
-Before opening an issue, please provide logs related to the issue,
-For debug log level, please add the following to your config.yaml
+For debug logs, go to Settings → Devices & Services → Aqua Temp → ⋮ → **Enable debug logging**, reproduce the problem, then **Disable debug logging**: the browser downloads the log. Or add this to `configuration.yaml`:
 
 ```yaml
 logger:
@@ -113,13 +92,32 @@ logger:
     custom_components.aqua_temp: debug
 ```
 
-Or use the HA capability in device page:
-Settings -> Devices & Services -> Aqua Temp -> 3 dots menu -> Enable debug logging
-When done and would like to extract the log:
-Settings -> Devices & Services -> Aqua Temp -> 3 dots menu -> Disable debug logging
+The **diagnostics** file (Settings → Devices & Services → Aqua Temp → ⋮ → **Download diagnostics**) holds the device's raw data and the entities created from it, which is often the quickest way to diagnose a problem. Before attaching it to a public issue, open it and check it holds nothing you don't want to share.
 
-Please attach also diagnostic details of the integration, available in:
-Settings -> Devices & Services -> Aqua Temp -> 3 dots menu -> Download diagnostics
+### Invalid credentials
+
+- Use the email address as the username, exactly as registered.
+- Check the API type matches your app.
+- Password longer than 16 characters? Try its first 16 characters: see the [note above](#configuration).
+
+### Invalid token
+
+The form shows "Corrupted encryption key" when the integration can't decrypt the stored password. The encryption key lives in `.storage/aqua_temp.config.json`, under `data.key`. To recover:
+
+1. Remove the integration.
+2. Delete `.storage/aqua_temp.config.json`.
+3. Restart Home Assistant.
+4. Add the integration again.
+
+If it still happens, [open an issue](https://github.com/MatiasFernandez/aquatemp/issues/new/choose).
+
+## Help improve support for your model
+
+The integration builds on one used by hundreds of installations, and its changes are checked against the official app, so it should work across the heat pumps the app supports. The maintainer can only test on one unit, though, so reports from other models are what tell us it does.
+
+- **It works on your model?** Say so in the pinned ["Which heat pumps work?"](https://github.com/MatiasFernandez/aquatemp/discussions/18) discussion. One line with the brand, model and app is enough.
+- **Something is wrong or missing?** Open a [bug report](https://github.com/MatiasFernandez/aquatemp/issues/new?template=bug_report.yml), ideally with the diagnostics file. A sensor that reports nothing or a wrong value, or a mode that does nothing on your model, is worth reporting even if you can't dig into it. If the values are mapped wrong, the steps below help.
+- **Have an idea or a question?** Start a [discussion](https://github.com/MatiasFernandez/aquatemp/discussions).
 
 ### Data from mobile app
 
@@ -143,68 +141,10 @@ Attach the following details to issue:
 - Attach screenshots and logs as zip file or link for download
 - Attach diagnostic details from HA integration
 
-### Invalid Token
+Pull requests are welcome too: see [CONTRIBUTING.md](CONTRIBUTING.md). They should come with tests where possible; the suite runs offline against a mocked cloud.
 
-In case you have referenced to that section, something went wrong with the encryption key,
-Encryption key should be located in `.storage/aqua_temp.config.json` file under `data.key` property,
-below are the steps to solve that issue.
+## Acknowledgements
 
-#### File not exists or File exists, data.key is not
+Originally written by [radical-squared](https://github.com/radical-squared/aquatemp), then rewritten by [Elad Bar](https://github.com/elad-bar) and maintained by [tkejzlar](https://github.com/tkejzlar/aquatemp). The cloud protocol was first worked out by [dst6se/aquatemp](https://github.com/dst6se/aquatemp).
 
-Please report as issue
-
-#### File exists, data.key is available
-
-Example:
-
-```json
-{
-  "version": 1,
-  "minor_version": 1,
-  "key": "aqua_temp.config.json",
-  "data": {
-    "key": "ox-qQsAiHb67Kz3ypxY19uU2_YwVcSjvdbaBVHZJQFY="
-  }
-}
-```
-
-OR
-
-```json
-{
-  "version": 1,
-  "minor_version": 1,
-  "key": "aqua_temp.config.json",
-  "data": {
-    "key": "ox-qQsAiHb67Kz3ypxY19uU2_YwVcSjvdbaBVHZJQFY="
-  }
-}
-```
-
-1. Remove the integration
-2. Delete the file
-3. Restart HA
-4. Try to re-add the integration
-5. If still happens - report as issue
-
-#### File exists, key is available under one of the entry configurations
-
-Example:
-
-```json
-{
-  "version": 1,
-  "minor_version": 1,
-  "key": "aqua_temp.config.json",
-  "data": {
-    "b8fa11c50331d2647b8aa7e37935efeb": {
-      "key": "ox-qQsAiHb67Kz3ypxY19uU2_YwVcSjvdbaBVHZJQFY="
-    }
-  }
-}
-```
-
-1. Move the `key` to the root of the JSON
-2. Restart HA
-3. Try to re-add the integration
-4. If still happens - follow instructions of section #1 (_i._)
+Thanks to [@dodg3r](https://github.com/dodg3r) and [@kopierschnitte](https://github.com/kopierschnitte) for the [second-account workaround](https://github.com/radical-squared/aquatemp/issues/53) to the one-login limit.
