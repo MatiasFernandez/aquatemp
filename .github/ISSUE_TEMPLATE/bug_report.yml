@@ -1,0 +1,67 @@
+name: Bug report
+description: Something doesn't work, including wrong or missing values and modes that do nothing on your model.
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for reporting. The maintainer only has one heat pump, so the details below are often the only way to reproduce a problem.
+  - type: textarea
+    id: description
+    attributes:
+      label: What happened
+      description: What you did, what you expected, and what happened instead. For a wrong value, include the value the app shows.
+    validations:
+      required: true
+  - type: input
+    id: model
+    attributes:
+      label: Heat pump brand and model
+      placeholder: PEISA CPBC 9 Inverter
+  - type: input
+    id: integration_version
+    attributes:
+      label: Integration version
+      description: In HACS, or Settings → Devices & Services → Aqua Temp.
+      placeholder: 3.3.0
+    validations:
+      required: true
+  - type: input
+    id: ha_version
+    attributes:
+      label: Home Assistant version
+      description: Settings → About.
+      placeholder: 2026.10.1
+    validations:
+      required: true
+  - type: dropdown
+    id: api_type
+    attributes:
+      label: API type
+      options:
+        - Aqua Temp
+        - HiTemp
+        - Aqua Temp (<=1.5.8)
+    validations:
+      required: true
+  - type: input
+    id: app
+    attributes:
+      label: Mobile app and version
+      placeholder: Aqua Temp 2.1.5 (Android)
+  - type: textarea
+    id: diagnostics
+    attributes:
+      label: Diagnostics
+      description: |
+        Optional, but it shows what your heat pump reports, which is often the quickest way to a fix.
+        Settings → Devices & Services → Aqua Temp → ⋮ → Download diagnostics, then drag the file here.
+        Anything you upload here is public: open the file first and check it holds nothing you don't want to share.
+  - type: textarea
+    id: logs
+    attributes:
+      label: Logs
+      description: |
+        Debug logs from around the problem; the README's Troubleshooting section explains how to enable them.
+        Anything you paste here is public: check the logs hold nothing you don't want to share. If "Log session token" is or was turned on, remove the lines starting with `[session-token]`, since that token gives control of your heat pump.
+      render: text
