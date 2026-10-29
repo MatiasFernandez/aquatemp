@@ -3,12 +3,17 @@
     "step": {
       "user": {
         "title": "Set up Aqua Temp integration",
-        "description": "Set up your Aqua Temp credentials",
+        "description": "Log in with your Aqua Temp or HiTemp app account.\n\nThe cloud allows one login per account: when Home Assistant logs in, the app is logged out. To keep using the app, share the heat pump with a second account and use that one here.",
         "data": {
           "title": "Title",
           "username": "Username",
           "password": "Password",
           "api_type": "API type"
+        },
+        "data_description": {
+          "username": "The email address you log in to the app with, exactly as registered.",
+          "password": "If a password longer than 16 characters fails here but works in the app, enter only its first 16 characters: the app may have kept only those when the account was created.",
+          "api_type": "Aqua Temp for the current Aqua Temp app, HiTemp for the HiTemp app. Aqua Temp (<=1.5.8) is the legacy backend of app versions up to 1.5.8; only try it if the others fail."
         }
       }
     },
@@ -21,7 +26,7 @@
     "step": {
       "init": {
         "title": "Set up Aqua Temp integration",
-        "description": "Set up your Aqua Temp credentials",
+        "description": "Log in with your Aqua Temp or HiTemp app account.\n\nThe cloud allows one login per account: when Home Assistant logs in, the app is logged out. To keep using the app, share the heat pump with a second account and use that one here.",
         "data": {
           "title": "Title",
           "username": "Username",
@@ -30,6 +35,9 @@
           "log_session_token": "Log session token (for debugging)"
         },
         "data_description": {
+          "username": "The email address you log in to the app with, exactly as registered.",
+          "password": "If a password longer than 16 characters fails here but works in the app, enter only its first 16 characters: the app may have kept only those when the account was created.",
+          "api_type": "Aqua Temp for the current Aqua Temp app, HiTemp for the HiTemp app. Aqua Temp (<=1.5.8) is the legacy backend of app versions up to 1.5.8; only try it if the others fail.",
           "log_session_token": "Writes the API session token to the Home Assistant log once per login, at WARNING. It is a credential: anyone holding it can control your heat pump until the next login. Turn off before sharing logs."
         }
       }
