@@ -10,6 +10,11 @@ predate this fork and keep their original format.
 ### Added
 
 - Support for 15 more Aqua Temp heat pump product IDs, the ones the official app lists as heat pumps and the allow-list missed. They use the default profile. Until now such a unit was only found when no other device on the account matched the allow-list, and was missing otherwise
+- A warning in the log when the cloud answers a device read with no values
+
+### Changed
+
+- Aqua Temp accounts read device data from the cloud's versioned endpoint (`v5/getDataByCode`), the one the official app uses; Hitemp and old Aqua Temp accounts are unchanged
 
 ### Security
 

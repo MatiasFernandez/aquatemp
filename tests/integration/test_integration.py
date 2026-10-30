@@ -24,10 +24,16 @@ from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.util import slugify
-from tests.cloud.mock_cloud import DEVICE_CODE, cloud_with, data_with, load_fixture
+from tests.cloud.mock_cloud import (
+    DATA,
+    DATA_IDLE,
+    DEVICE_CODE,
+    cloud_with,
+    data_with,
+    load_fixture,
+)
 
 CONTROL = "app/device/control"
-DATA = "app/device/getDataByCode"
 DEVICE_LIST = "app/device/deviceList"
 
 PROFILES = Path(__file__).parents[2] / "custom_components/aqua_temp/cloud/profiles"
@@ -61,7 +67,7 @@ def two_device_list() -> dict:
 
 RESPONSES = {
     DEVICE_LIST: device_list(),
-    DATA: "get_data_by_code.idle",
+    DATA: DATA_IDLE,
     CONTROL: "synthetic/control_success",
 }
 

@@ -8,11 +8,10 @@ from custom_components.aqua_temp.cloud.api_types import APIType
 from custom_components.aqua_temp.cloud.client import AquaTempAPI, Credentials
 from custom_components.aqua_temp.cloud.exceptions import LoginError
 
-from .mock_cloud import DEVICE_CODE, cloud_with, load_fixture
+from .mock_cloud import DATA, DATA_IDLE, DEVICE_CODE, cloud_with, load_fixture
 
 # Literal on purpose: the expected values must not come from the config under test
 LOGIN = "app/user/login"
-DATA = "app/device/getDataByCode"
 LOGIN_URL = URL(f"https://cloud.linked-go.com:449/crmservice/api/{LOGIN}")
 
 # MD5 of test-password
@@ -21,7 +20,7 @@ PASSWORD_HASH = "dfb450efddbb5387197c84460623675b"
 
 @pytest.fixture
 def cloud_responses() -> dict:
-    return {DATA: "get_data_by_code.idle"}
+    return {DATA: DATA_IDLE}
 
 
 def login_with_token(token: str) -> dict:
@@ -90,7 +89,7 @@ async def test_rejected_login_with_null_result_raises(client, wire):
     assert [endpoint for endpoint, _ in wire] == [LOGIN]
 
 
-@cloud_with({DATA: [401, "get_data_by_code.idle"]})
+@cloud_with({DATA: [401, DATA_IDLE]})
 async def test_unauthorized_read_logs_in_again_and_retries(api, wire):
     """HTTP 401 on a read is treated as an invalid token."""
     wire.clear()
@@ -107,12 +106,12 @@ async def test_unauthorized_read_logs_in_again_and_retries(api, wire):
         DATA,
         "app/device/getDeviceStatus",
     ]
-    assert api.get_device_data(DEVICE_CODE)["T02"] == "13.0"
+    assert api.get_device_data(DEVICE_CODE)["T02"] == "12.5"
 
 
 @cloud_with(
     {
-        DATA: "get_data_by_code.idle",
+        DATA: DATA_IDLE,
         LOGIN: [login_with_token("token-a"), login_with_token("token-b")],
     }
 )

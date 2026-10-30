@@ -11,11 +11,10 @@ import pytest
 
 from custom_components.aqua_temp.cloud.exceptions import OperationFailedException
 
-from .mock_cloud import DEVICE_CODE, cloud_with, data_with
+from .mock_cloud import DATA, DATA_IDLE, DEVICE_CODE, cloud_with, data_with
 
 # Literal on purpose: the expected values must not come from the config under test
 CONTROL = "app/device/control"
-DATA = "app/device/getDataByCode"
 STATUS = "app/device/getDeviceStatus"
 SHARED_APPECT = "app/device/getMyAppectDeviceShareDataList"
 
@@ -37,7 +36,7 @@ def assert_sent(body: dict | None, expected: dict):
 
 
 RESPONSES = {
-    DATA: "get_data_by_code.idle",
+    DATA: DATA_IDLE,
     CONTROL: "synthetic/control_success",
 }
 
