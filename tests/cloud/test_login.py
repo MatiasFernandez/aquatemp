@@ -1,4 +1,7 @@
-"""Login: request shape, the token on later requests, rejection and re-login."""
+"""Login: request shape, the token on later requests, rejection, re-login and
+the opt-in session token log."""
+
+import logging
 
 from aiohttp import ClientSession
 import pytest
@@ -140,3 +143,41 @@ async def test_each_client_sends_its_own_token(
         await other.update()
 
         assert tokens_sent(cloud) == {"token-b"}
+
+
+async def test_session_token_is_not_logged_by_default(client, caplog):
+    with caplog.at_level(logging.INFO):
+        await client.initialize(throw_error=True)
+
+    assert "test-token" not in caplog.text
+
+
+async def test_debug_log_shows_the_session_token(client, caplog):
+    with caplog.at_level(logging.DEBUG):
+        await client.initialize(throw_error=True)
+
+    # Possible bug: the login response is logged whole, token included,
+    # without the opt-in
+    assert "'x-token': 'test-token'" in caplog.text
+
+
+async def test_session_token_is_logged_when_opted_in(
+    api_profile, device_profiles, cloud, caplog
+):
+    async with ClientSession() as session:
+        client = AquaTempAPI(
+            session,
+            Credentials(username="test@example.com", password="test-password"),
+            api_profile,
+            device_profiles,
+            log_session_token=True,
+            log_label="Pool",
+        )
+
+        with caplog.at_level(logging.WARNING):
+            await client.initialize(throw_error=True)
+
+    assert [record.getMessage() for record in caplog.records] == [
+        "[session-token] Pool: CREDENTIAL, do not share. "
+        "Valid until the next login. export AQUATEMP_X_TOKEN='test-token'"
+    ]
