@@ -4,12 +4,16 @@ Bug reports are as valuable as code: the maintainer has a single heat pump, so t
 
 ## Pull requests
 
-Pull requests are welcome. Before opening one:
+Pull requests are welcome, also from heat pump owners who don't usually write code: a change you have run on your own heat pump is worth a lot here, even if an AI tool helped you write it. Before opening one:
 
 - Add or update tests for the change wherever possible. The suite runs offline against a mocked cloud (see [Tests](#tests)), so a new profile or a fix for a model usually needs only a fixture and a test. If something can't be tested, say why in the PR.
 - Run the [quality checks](#quality-checks) and both test runs; CI runs the same.
 - Add user-facing changes to [CHANGELOG.md](CHANGELOG.md) (see [Changelog and releases](#changelog-and-releases)).
-- Keep each PR to one change, and explain what it fixes and how you checked it, ideally on a real device.
+- Keep each PR to one change.
+
+Fill in the [pull request template](.github/pull_request_template.md): why the change is needed, what you tested by hand and on which setup (ideally in your own Home Assistant, on your heat pump), and anything a reviewer can't get from the diff, such as decisions you took and why.
+
+AI tools are welcome. Say in the PR what they did and what you did yourself; a tool name or a `Co-Authored-By` line alone doesn't tell a reviewer much. Make sure you have run the change and understand it, and answer review questions in your own words.
 
 ## Development setup
 

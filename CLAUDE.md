@@ -22,3 +22,11 @@ uv run --project tests/floor --locked pytest       # oldest supported Home Assis
 - The integration keeps everything HA-specific: entity descriptions and platforms (`build_entity_descriptions` in `common/entity_descriptions.py`, from `DeviceProfile.parameters`), translations, the `Store`, config entries, the `HVACMode` conversion and the new-device dispatcher signal (both in the coordinator, which passes `on_new_device` to the client).
 - Profiles live in `cloud/profiles/`. `api.<type>.json` holds the field names per API type (`ApiProfile`). `mapping.<product id>.json` gives the protocol code behind each role and the mode and fan values. `entity_description.<product id>.json` is the parameter catalog; it also carries HA presentation fields (`platform`, `device_class`, ...), which the library passes through untouched. `DeviceProfiles.for_product` falls back to `default` for the mapping and the catalog independently.
 - Each client gets its own aiohttp session and headers, so config entries don't share a token.
+
+## Pull requests
+
+Open one only when the person you work with asks. Fill in [.github/pull_request_template.md](.github/pull_request_template.md) and keep it short:
+
+- **Manual testing** is what someone actually checked by hand: in Home Assistant, the app, or against the cloud. Don't describe the automated tests or restate the diff. If nobody ran the change in Home Assistant, say so; never fill in "Tested on" with a setup that wasn't used.
+- **Notes for reviewers** holds what the diff doesn't show: decisions and why, context from the app or the device. Describe what the change does; don't list what was left as it was or options that came up while working on it. Mention a ruled-out alternative only when a reviewer would likely suggest it. Leave it out if there is none.
+- **AI use** says what the AI did and what the person did, in a sentence or two. Attribution trailers or a "Generated with" footer don't count as that.
