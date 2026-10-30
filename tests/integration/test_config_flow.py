@@ -1,10 +1,12 @@
-"""Config flow credential check on a real Home Assistant: its session is released."""
+"""Config flow on a real Home Assistant: the form, the entry it creates, and the
+credential check's session, which is released."""
 
 from unittest.mock import MagicMock, patch
 
 import pytest
 
 from custom_components.aqua_temp.common.consts import CONF_API_TYPE, DOMAIN
+from custom_components.aqua_temp.managers.password_manager import PasswordManager
 from homeassistant import config_entries
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.data_entry_flow import FlowResultType
@@ -87,3 +89,36 @@ async def test_rejected_credentials_release_the_session(
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": "invalid_credentials"}
     assert_released(*flow_sessions)
+
+
+async def test_form_starts_with_the_default_title(hass):
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+    assert {str(key): key.default() for key in result["data_schema"].schema} == {
+        "title": "Aqua Temp",
+        "username": None,
+        "password": None,
+        "api_type": None,
+    }
+
+
+async def test_valid_credentials_create_an_entry_with_the_password_encrypted(
+    hass, api_type, cloud
+):
+    result = await submit(hass, api_type)
+    await hass.async_block_till_done()
+
+    data = dict(result["data"])
+    await PasswordManager.decrypt(hass, data)
+
+    assert result["title"] == "Aqua Temp"
+    assert result["data"][CONF_PASSWORD] != "test-password"
+    assert data == {
+        CONF_USERNAME: "test@example.com",
+        CONF_PASSWORD: "test-password",
+        CONF_API_TYPE: api_type,
+    }
