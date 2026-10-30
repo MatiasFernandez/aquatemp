@@ -7,7 +7,9 @@
   "totalPage": null,
   "nextPage": null,
   "objectResult": {
-    "isFault": false
+    "is_fault": false,
+    "isFault": false,
+    "status": "ONLINE"
   },
   "isReusltSuc": true
 }

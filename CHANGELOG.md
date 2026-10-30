@@ -12,6 +12,10 @@ predate this fork and keep their original format.
 - Support for 15 more Aqua Temp heat pump product IDs, the ones the official app lists as heat pumps and the allow-list missed. They use the default profile. Until now such a unit was only found when no other device on the account matched the allow-list, and was missing otherwise
 - The setup and options forms explain that the cloud allows one login per account, that the username is the email address, that the app may have cut a password longer than 16 characters to its first 16, and which API type to pick
 
+### Fixed
+
+- The Status binary sensor always showed disconnected. It now reads the online state from the cloud: on when the unit is online, off when it is offline, and unavailable when the cloud reports neither
+
 ### Security
 
 - Redact the account's email address in the downloaded diagnostics, where it showed in the configuration section

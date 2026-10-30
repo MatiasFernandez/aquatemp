@@ -39,6 +39,12 @@ class AquaTempBinarySensorEntity(BaseEntity, BinarySensorEntity):
         self._attr_device_class = entity_description.device_class
         self._entity_attributes = entity_description.attributes
         self._entity_on_value = entity_description.on_value
+        self._entity_off_value = entity_description.off_value
+        self._state_known = True
+
+    @property
+    def available(self) -> bool:
+        return super().available and self._state_known
 
     def _handle_coordinator_update(self) -> None:
         """Fetch new state parameters for the sensor."""
@@ -51,6 +57,10 @@ class AquaTempBinarySensorEntity(BaseEntity, BinarySensorEntity):
             state = device_data.get(self.entity_description.key)
 
         is_on = str(state).lower() == str(self._entity_on_value).lower()
+
+        if self._entity_off_value is not None:
+            is_off = str(state).lower() == str(self._entity_off_value).lower()
+            self._state_known = is_on or is_off
 
         attributes = {}
         if self._entity_attributes is not None:

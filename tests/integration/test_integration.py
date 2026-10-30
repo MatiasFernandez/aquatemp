@@ -364,3 +364,72 @@ async def test_device_diagnostics_list_its_unknown_codes(hass, entry):
     diagnostics = await async_get_device_diagnostics(hass, entry, device)
 
     assert diagnostics["device"]["unknown_codes"] == sorted(UNKNOWN_CODES)
+
+
+def status_entity_id(hass: HomeAssistant) -> str:
+    unique_id = slugify(f"{DOMAIN}_binary_sensor_device_status_{DEVICE_CODE}")
+
+    return er.async_get(hass).async_get_entity_id("binary_sensor", DOMAIN, unique_id)
+
+
+@pytest.mark.parametrize(
+    ("cloud_responses", "state"),
+    [
+        pytest.param(
+            RESPONSES | {"app/device/getDeviceStatus": "device_status.online"},
+            "on",
+            id="online",
+        ),
+        pytest.param(
+            RESPONSES | {"app/device/getDeviceStatus": "device_status.offline"},
+            "off",
+            id="offline",
+        ),
+        pytest.param(
+            RESPONSES
+            | {
+                "app/device/getDeviceStatus": {
+                    "error_code": "0",
+                    "error_msg": "Success",
+                    "objectResult": {"isFault": False},
+                }
+            },
+            "unavailable",
+            id="missing",
+        ),
+        pytest.param(
+            RESPONSES
+            | {
+                "app/device/getDeviceStatus": {
+                    "error_code": "0",
+                    "error_msg": "Success",
+                    "objectResult": {"isFault": False, "status": "UPDATING"},
+                }
+            },
+            "unavailable",
+            id="unknown",
+        ),
+    ],
+)
+async def test_status_sensor_follows_the_online_state(hass, entry, state):
+    assert hass.states.get(status_entity_id(hass)).state == state
+
+
+@cloud_with(
+    RESPONSES
+    | {
+        "app/device/getDeviceStatus": [
+            {
+                "error_code": "0",
+                "error_msg": "Success",
+                "objectResult": {"isFault": False, "status": "UPDATING"},
+            },
+            "device_status.online",
+        ]
+    }
+)
+async def test_status_sensor_recovers_from_an_unknown_state(hass, entry):
+    await hass.data[DOMAIN][entry.entry_id].async_refresh()
+    await hass.async_block_till_done()
+
+    assert hass.states.get(status_entity_id(hass)).state == "on"

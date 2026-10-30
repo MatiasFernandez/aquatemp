@@ -20,6 +20,7 @@ class APIParam(StrEnum):
     ProtocalCodes = "protocal_codes"
     ProtocolCode = "protocol_code"
     IsFault = "is_fault"
+    Status = "status"
     ErrorMessage = "error_msg"
     ErrorCode = "error_code"
     Nickname = "device_nick_name"

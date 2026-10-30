@@ -30,7 +30,7 @@ async def test_fault_description_becomes_device_data(api, wire):
 @cloud_with(
     RESPONSES
     | {
-        STATUS: ["synthetic/device_status_fault", "synthetic/device_status"],
+        STATUS: ["synthetic/device_status_fault", "device_status.online"],
         FAULT: "synthetic/device_fault",
     }
 )

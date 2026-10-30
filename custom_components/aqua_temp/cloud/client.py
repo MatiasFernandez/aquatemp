@@ -531,12 +531,14 @@ class AquaTempAPI:
         param_device_code = self._api_profile.get(APIParam.DeviceCode)
         param_object_result = self._api_profile.get(APIParam.ObjectResult)
         param_is_fault = self._api_profile.get(APIParam.IsFault)
+        param_status = self._api_profile.get(APIParam.Status)
 
         data = {param_device_code: device_code}
 
         device_status_response = await self._post_request(Endpoints.DeviceStatus, data)
         object_result = device_status_response.get(param_object_result, {})
 
+        device_status = object_result.get(param_status)
         is_fault = object_result.get(param_is_fault, str(False))
         fault_description = None
 
@@ -551,6 +553,8 @@ class AquaTempAPI:
                 fault_description = object_result.get("description")
 
         device_data = self._devices[device_code]
+
+        device_data["device_status"] = device_status
 
         if fault_description is None:
             if "fault" in device_data:
