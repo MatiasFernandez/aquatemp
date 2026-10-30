@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: My heat pump works
+    url: https://github.com/MatiasFernandez/aquatemp/discussions/18
+    about: Add your model to the pinned "Which heat pumps work?" discussion. One line is enough.
+  - name: Ideas and questions
+    url: https://github.com/MatiasFernandez/aquatemp/discussions
+    about: Open-ended ideas, questions about your setup, or anything that isn't a bug or a concrete feature request.

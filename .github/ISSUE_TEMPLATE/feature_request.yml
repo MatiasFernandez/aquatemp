@@ -1,0 +1,23 @@
+name: Feature request
+description: A concrete change you'd like. For open-ended ideas, start a discussion instead.
+labels: [enhancement]
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: What you're trying to do
+      description: The problem or use case, not only the solution.
+    validations:
+      required: true
+  - type: textarea
+    id: solution
+    attributes:
+      label: What you'd like
+      description: How the integration could support it. If the app already does it, say where.
+    validations:
+      required: true
+  - type: textarea
+    id: context
+    attributes:
+      label: Anything else
+      description: Your model and app, screenshots, or alternatives you've considered.
