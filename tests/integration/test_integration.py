@@ -2,16 +2,21 @@
 
 Covers the HA side of the cloud library boundary: the client's new-device
 callback turning into entities, the device list into the device registry and
-diagnostics, and modes crossing between HVACMode and the library's Mode.
+diagnostics, modes crossing between HVACMode and the library's Mode, the
+climate's temperatures and writes, and the temperature unit select.
 Expected values are literal or read from the profile files, never from the
 code under test.
 """
 
+from datetime import timedelta
 import json
 from pathlib import Path
 
 import pytest
-from pytest_homeassistant_custom_component.common import MockConfigEntry
+from pytest_homeassistant_custom_component.common import (
+    MockConfigEntry,
+    async_fire_time_changed,
+)
 
 from custom_components.aqua_temp.common.consts import CONF_API_TYPE, DOMAIN
 from custom_components.aqua_temp.common.device_lookup import async_get_ha_device
@@ -23,6 +28,7 @@ from custom_components.aqua_temp.managers.password_manager import PasswordManage
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers.update_coordinator import REQUEST_REFRESH_DEFAULT_COOLDOWN
 from homeassistant.util import slugify
 from tests.cloud.mock_cloud import (
     DEVICE_CODE,
@@ -35,6 +41,7 @@ from tests.cloud.mock_cloud import (
 CONTROL = "app/device/control"
 DATA = "app/device/getDataByCode"
 DEVICE_LIST = "app/device/deviceList"
+STATUS = "app/device/getDeviceStatus"
 
 PROFILES = Path(__file__).parents[2] / "custom_components/aqua_temp/cloud/profiles"
 
@@ -272,6 +279,130 @@ async def test_climate_reports_the_device_mode(hass, entry):
     assert state.attributes["fan_mode"] == "auto"
 
 
+def temperatures(state) -> dict:
+    return {
+        attribute: state.attributes[attribute]
+        for attribute in ("current_temperature", "temperature", "min_temp", "max_temp")
+    }
+
+
+def powered_on_in(mode: str) -> dict:
+    return RESPONSES | {DATA: data_with(Power="1", Mode=mode)}
+
+
+# Recorded: T02 13.0, R01 27.0, R02 28.0, R03 27.0, R08 8.0, R09 35.0, R10 15.0,
+# R11 35.0. Each mode reads its own target, minimum and maximum codes
+@pytest.mark.parametrize(
+    ("cloud_responses", "expected"),
+    [
+        pytest.param(
+            powered_on_in("0"),
+            {
+                "current_temperature": 13.0,
+                "temperature": 27.0,
+                "min_temp": 8.0,
+                "max_temp": 35.0,
+            },
+            id="cool",
+        ),
+        pytest.param(
+            powered_on_in("1"),
+            {
+                "current_temperature": 13.0,
+                "temperature": 28.0,
+                "min_temp": 15.0,
+                "max_temp": 35.0,
+            },
+            id="heat",
+        ),
+        pytest.param(
+            powered_on_in("2"),
+            {
+                "current_temperature": 13.0,
+                "temperature": 27.0,
+                "min_temp": 8.0,
+                "max_temp": 35.0,
+            },
+            id="auto",
+        ),
+    ],
+)
+async def test_climate_reports_the_mode_temperatures(hass, entry, expected):
+    state = hass.states.get(climate_entity_id(hass))
+
+    assert temperatures(state) == expected
+
+
+async def test_climate_reports_temperatures_while_powered_off(hass, entry):
+    # The recorded Mode, heat, still picks the codes
+    state = hass.states.get(climate_entity_id(hass))
+
+    assert temperatures(state) == {
+        "current_temperature": 13.0,
+        "temperature": 28.0,
+        "min_temp": 15.0,
+        "max_temp": 35.0,
+    }
+
+
+@cloud_with(RESPONSES | {DATA: data_with(Power="1", T02="", R02="", R10="", R11="")})
+async def test_climate_temperatures_the_device_does_not_know_are_empty(hass, entry):
+    state = hass.states.get(climate_entity_id(hass))
+
+    assert temperatures(state) == {
+        "current_temperature": None,
+        "temperature": None,
+        "min_temp": None,
+        "max_temp": None,
+    }
+
+
+@cloud_with(POWERED_ON)
+async def test_setting_temperature_writes_the_mode_target(hass, entry, wire):
+    wire.clear()
+
+    await hass.services.async_call(
+        "climate",
+        "set_temperature",
+        {"entity_id": climate_entity_id(hass), "temperature": 26.5},
+        blocking=True,
+    )
+
+    assert wire == [
+        (
+            CONTROL,
+            {
+                "param": [
+                    {"deviceCode": DEVICE_CODE, "protocolCode": "R02", "value": 26.5},
+                    {
+                        "deviceCode": DEVICE_CODE,
+                        "protocolCode": "Set_Temp",
+                        "value": 26.5,
+                    },
+                ]
+            },
+        )
+    ]
+
+
+@cloud_with(POWERED_ON)
+async def test_device_is_read_again_after_a_write(hass, entry, wire, freezer):
+    wire.clear()
+
+    await hass.services.async_call(
+        "climate",
+        "set_temperature",
+        {"entity_id": climate_entity_id(hass), "temperature": 26.5},
+        blocking=True,
+    )
+    # The refresh a write requests waits out the coordinator's debounce
+    freezer.tick(timedelta(seconds=REQUEST_REFRESH_DEFAULT_COOLDOWN))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert [endpoint for endpoint, _ in wire] == [CONTROL, DATA, STATUS]
+
+
 @cloud_with(POWERED_ON)
 async def test_setting_hvac_mode_writes_the_profile_value(hass, entry, wire):
     wire.clear()
@@ -308,6 +439,79 @@ async def test_setting_fan_mode_writes_manual_mute(hass, entry, wire):
     assert writes[0]["param"] == [
         {"deviceCode": DEVICE_CODE, "protocolCode": "Manual-mute", "value": "1"}
     ]
+
+
+def unit_entity_id(hass: HomeAssistant) -> str:
+    unique_id = slugify(f"{DOMAIN}_select_temperature_unit_{DEVICE_CODE}")
+
+    return er.async_get(hass).async_get_entity_id("select", DOMAIN, unique_id)
+
+
+async def select_unit(hass: HomeAssistant, unit: str) -> None:
+    await hass.services.async_call(
+        "select",
+        "select_option",
+        {"entity_id": unit_entity_id(hass), "option": unit},
+        blocking=True,
+    )
+
+
+async def test_temperature_unit_defaults_to_celsius(hass, entry):
+    assert hass.states.get(unit_entity_id(hass)).state == "°C"
+
+
+async def test_selected_temperature_unit_shows_after_the_next_refresh(
+    hass, entry, freezer
+):
+    await select_unit(hass, "°F")
+    shown_at_once = hass.states.get(unit_entity_id(hass)).state
+
+    freezer.tick(timedelta(seconds=REQUEST_REFRESH_DEFAULT_COOLDOWN))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert shown_at_once == "°C"
+    assert hass.states.get(unit_entity_id(hass)).state == "°F"
+
+
+async def test_selecting_a_temperature_unit_writes_nothing_to_the_device(
+    hass, entry, wire, freezer
+):
+    wire.clear()
+
+    await select_unit(hass, "°F")
+    freezer.tick(timedelta(seconds=REQUEST_REFRESH_DEFAULT_COOLDOWN))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert [endpoint for endpoint, _ in wire] == [DATA, STATUS]
+
+
+async def test_reload_resets_the_temperature_unit(hass, entry, freezer):
+    await select_unit(hass, "°F")
+    freezer.tick(timedelta(seconds=REQUEST_REFRESH_DEFAULT_COOLDOWN))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert await hass.config_entries.async_reload(entry.entry_id)
+    await hass.async_block_till_done()
+
+    # Possible bug: unloading removes the entry's stored configuration, so the
+    # unit picked is lost on every reload, including after an options change
+    assert hass.states.get(unit_entity_id(hass)).state == "°C"
+
+
+async def test_climate_keeps_its_temperature_unit_when_another_is_selected(
+    hass, entry, freezer
+):
+    await select_unit(hass, "°F")
+    freezer.tick(timedelta(seconds=REQUEST_REFRESH_DEFAULT_COOLDOWN))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    # Possible bug: the climate reads the unit once, when it is created, and a
+    # reload resets the unit, so a unit other than Celsius never reaches it
+    assert temperatures(hass.states.get(climate_entity_id(hass)))["temperature"] == 28.0
 
 
 @cloud_with(RESPONSES | {DEVICE_LIST: two_device_list()})
