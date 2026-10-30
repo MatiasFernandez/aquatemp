@@ -87,7 +87,8 @@ def endpoint_url(api_profile: ApiProfile, endpoint: str) -> str:
 
 @pytest.fixture(params=[APIType.AquaTemp], ids=str)
 def api_type(request) -> str:
-    """Each test runs once per API type in params; only AquaTemp has fixtures."""
+    """Each test runs once per API type in params. AquaTempOld has its own,
+    smaller set of fixtures, used by test_legacy_api.py."""
     return str(request.param)
 
 

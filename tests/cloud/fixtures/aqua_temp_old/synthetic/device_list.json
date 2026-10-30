@@ -1,0 +1,11 @@
+{
+  "error_code": "0",
+  "error_msg": "Success",
+  "object_result": [
+    {
+      "device_code": "000000000001",
+      "product_id": "1132174963097280512",
+      "device_nick_name": "Heat pump"
+    }
+  ]
+}
