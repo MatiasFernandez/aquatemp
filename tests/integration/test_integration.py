@@ -253,3 +253,14 @@ async def test_entry_diagnostics_list_each_device(hass, entry):
     assert [device["device"]["name"] for device in diagnostics["devices"]] == [
         "Heat pump"
     ]
+
+
+async def test_diagnostics_redact_the_account_email(hass, entry):
+    device = async_get_ha_device(hass, entry.entry_id, DEVICE_ID)
+
+    entry_data = await async_get_config_entry_diagnostics(hass, entry)
+    device_data = await async_get_device_diagnostics(hass, entry, device)
+
+    for data in (entry_data, device_data):
+        assert data["configuration"][CONF_USERNAME] == "**REDACTED**"
+        assert "test@example.com" not in json.dumps(data, default=str)
