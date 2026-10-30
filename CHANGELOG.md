@@ -247,7 +247,7 @@ As result of that process, you need to re-setup the integration.
 
 ## v3.0.13
 
-- Add API Type drop-down to configuration (Aqua Temp, Hitemp, Aqua Temp [=<1.5.8])
+- Add API Type drop-down to configuration (Aqua Temp, Hitemp, Aqua Temp [<=1.5.8])
 - Update authentication process
 
 ## v3.0.12

@@ -52,7 +52,7 @@
       "options": {
         "aqua_temp": "Aqua Temp",
         "hi_temp": "HiTemp",
-        "aqua_temp_old": "Aqua Temp (=<1.5.8)"
+        "aqua_temp_old": "Aqua Temp (<=1.5.8)"
       }
     }
   },
