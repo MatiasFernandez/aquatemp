@@ -83,6 +83,24 @@ async def test_rejected_login_raises_and_leaves_no_token(client, wire):
     assert [endpoint for endpoint, _ in wire] == [LOGIN]
 
 
+@cloud_with({LOGIN: "synthetic/login_rejected"})
+async def test_rejected_login_without_throw_error_is_logged(client, caplog):
+    with caplog.at_level(logging.ERROR):
+        await client.initialize()
+
+    assert not client.is_connected
+    assert "Failed to login, Please update credentials and try again" in caplog.text
+
+
+@cloud_with({LOGIN: 500})
+async def test_cloud_error_on_login_without_throw_error_is_logged(client, caplog):
+    with caplog.at_level(logging.WARNING):
+        await client.initialize()
+
+    assert not client.is_connected
+    assert "Failed to initialize session" in caplog.text
+
+
 @cloud_with({LOGIN: "synthetic/login_rejected_null"})
 async def test_rejected_login_with_null_result_raises(client, wire):
     """A null objectResult, as in the cloud's other error responses."""
