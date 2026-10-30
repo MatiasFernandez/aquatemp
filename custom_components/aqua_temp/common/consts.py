@@ -1,5 +1,7 @@
 from datetime import timedelta
 
+from homeassistant.const import CONF_USERNAME
+
 from ..cloud.consts import HTTP_HEADER_X_TOKEN
 
 DOMAIN = "aqua_temp"
@@ -34,5 +36,6 @@ TO_REDACT = [
     "userName",
     "user_name",
     "accessKey",
+    CONF_USERNAME,
     HTTP_HEADER_X_TOKEN,
 ]
