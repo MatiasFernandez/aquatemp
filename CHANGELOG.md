@@ -23,6 +23,7 @@ predate this fork and keep their original format.
 
 ### Changed
 
+- Requests to the cloud give up after 30 seconds, the same as the official app, and fail with a message saying so. Before, a request that got no answer kept the service call waiting for minutes, as Home Assistant's default allows 5 minutes per attempt and a control request makes up to 3
 - Entities for values the heat pump doesn't report are no longer created, and those values are no longer polled. The integration tells them apart from the heat pump's first answer after setup or reload. Entities created for them before stay in the entity registry, shown as no longer provided, and can be deleted
 - Entities are named after the device as named in Home Assistant, instead of its nickname in the Aqua Temp app. New entities of a device renamed in Home Assistant no longer repeat the device in their entity ID (`sensor.pool_water_dt`, not `sensor.pool_heat_pump_water_dt`), and friendly names follow later renames. Friendly names change for devices already renamed in Home Assistant. Existing entity IDs are kept; to fix doubled ones, use "Recreate entity IDs" on the device page
 

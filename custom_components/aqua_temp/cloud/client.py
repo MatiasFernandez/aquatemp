@@ -10,12 +10,13 @@ import logging
 import sys
 import unicodedata
 
-from aiohttp import ClientResponseError, ClientSession
+from aiohttp import ClientResponseError, ClientSession, ClientTimeout
 
 from .api_profile import ApiProfile
 from .api_types import DEVICE_LISTS, DEVICE_REQUEST_PARAMETERS, APIParam
 from .consts import (
     API_MAX_ATTEMPTS,
+    API_REQUEST_TIMEOUT,
     CONFIG_HVAC_MAXIMUM,
     CONFIG_HVAC_MINIMUM,
     CONFIG_HVAC_SET,
@@ -730,13 +731,25 @@ class AquaTempAPI:
         if endpoint == Endpoints.DeviceControl:
             _LOGGER.info(f"Sending request to control device, Data: {data}")
 
-        async with self._session.post(
-            url, headers=self._headers, json=data, ssl=False
-        ) as response:
-            response.raise_for_status()
+        try:
+            async with self._session.post(
+                url,
+                headers=self._headers,
+                json=data,
+                ssl=False,
+                timeout=ClientTimeout(total=API_REQUEST_TIMEOUT),
+            ) as response:
+                response.raise_for_status()
 
-            result = await response.json()
-            _LOGGER.debug(f"Request to {url}, Body: {data}, Result: {result}")
+                result = await response.json()
+                _LOGGER.debug(f"Request to {url}, Body: {data}, Result: {result}")
+
+        except TimeoutError:
+            # The bare exception has an empty message, which would reach the
+            # logs and Home Assistant's errors as nothing at all
+            raise TimeoutError(
+                f"Request to {endpoint} timed out after {API_REQUEST_TIMEOUT} s"
+            ) from None
 
         return result
 
