@@ -18,14 +18,13 @@ from pytest_homeassistant_custom_component.common import (
     async_fire_time_changed,
 )
 
-from custom_components.aqua_temp.common.consts import CONF_API_TYPE, DOMAIN
+from custom_components.aqua_temp.common.consts import DOMAIN
 from custom_components.aqua_temp.common.device_lookup import async_get_ha_device
 from custom_components.aqua_temp.diagnostics import (
     async_get_config_entry_diagnostics,
     async_get_device_diagnostics,
 )
-from custom_components.aqua_temp.managers.password_manager import PasswordManager
-from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
+from homeassistant.const import CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.update_coordinator import REQUEST_REFRESH_DEFAULT_COOLDOWN
@@ -92,35 +91,11 @@ def cloud_responses() -> dict:
     return RESPONSES
 
 
-@pytest.fixture
-async def config_entry(hass: HomeAssistant, api_type, cloud) -> MockConfigEntry:
-    """A config entry added but not set up, its password encrypted as the
-    config flow stores it."""
-    data = {
-        CONF_USERNAME: "test@example.com",
-        CONF_PASSWORD: "test-password",
-        CONF_API_TYPE: api_type,
-    }
-
-    await PasswordManager.encrypt(hass, data)
-
-    entry = MockConfigEntry(domain=DOMAIN, title="Aqua Temp", data=data)
-    entry.add_to_hass(hass)
-
-    return entry
-
-
 async def set_up(hass: HomeAssistant, entry: MockConfigEntry) -> MockConfigEntry:
     assert await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
 
     return entry
-
-
-@pytest.fixture
-async def entry(hass: HomeAssistant, config_entry) -> MockConfigEntry:
-    """The config entry set up and polled once."""
-    return await set_up(hass, config_entry)
 
 
 def climate_entity_id(hass: HomeAssistant) -> str:
