@@ -22,6 +22,7 @@ predate this fork and keep their original format.
 
 ### Changed
 
+- Requests to the cloud give up after 30 seconds, the same as the official app, and fail with a message saying so. Before, a request that got no answer kept the service call waiting for minutes, as Home Assistant's default allows 5 minutes per attempt and a control request makes up to 3
 - Entities for values the heat pump doesn't report are no longer created, and those values are no longer polled. The integration tells them apart from the heat pump's first answer after setup or reload. Entities created for them before stay in the entity registry, shown as no longer provided, and can be deleted
 
 ### Removed

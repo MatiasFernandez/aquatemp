@@ -49,6 +49,10 @@ HEADERS = {"Content-Type": "application/json; charset=utf-8"}
 
 API_MAX_ATTEMPTS = 3
 
+# Seconds a single request to the cloud may take in total. The official app's
+# HTTP client also uses 30 s
+API_REQUEST_TIMEOUT = 30
+
 CONFIG_SET_MODE = "mode"
 CONFIG_SET_POWER = "power"
 CONFIG_SET_TEMPERATURE = "temperature"
