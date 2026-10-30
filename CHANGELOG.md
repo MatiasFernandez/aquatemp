@@ -16,6 +16,10 @@ predate this fork and keep their original format.
 
 - Redact the account's email address in the downloaded diagnostics, where it showed in the configuration section
 
+### Changed
+
+- Entities for values the heat pump doesn't report are no longer created, and those values are no longer polled. The integration tells them apart from the heat pump's first answer after setup or reload. Entities created for them before stay in the entity registry, shown as no longer provided, and can be deleted
+
 ### Removed
 
 - Product ID 1664085465655808000 from the allow-list: the official app treats it as a dehumidifier, which got heat pump sensors and a thermostat that reported nothing. If it is the only device on the account, it is still found through the unfiltered fallback

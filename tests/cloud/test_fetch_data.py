@@ -10,7 +10,7 @@ from yarl import URL
 
 from custom_components.aqua_temp.cloud.endpoints import Endpoints
 
-from .mock_cloud import DEVICE_CODE, endpoint_url, load_fixture
+from .mock_cloud import DEVICE_CODE, data_untyped, endpoint_url, load_fixture
 
 # Literal on purpose: the expected values must not come from the config under test
 DATA_URL = "https://cloud.linked-go.com:449/crmservice/api/app/device/getDataByCode"
@@ -28,12 +28,36 @@ def default_profile_codes() -> list[str]:
     return ["Mode", *profile]
 
 
+# Answered with an empty value and dataType in the idle recording
+UNKNOWN_CODES = {
+    "F10",
+    "O01",
+    "O02",
+    "O03",
+    "O04",
+    "O05",
+    "S01",
+    "S02",
+    "S03",
+    "S04",
+    "S05",
+    "S06",
+}
+
+
 def register_data(cloud, api_type, api_profile, *fixtures):
-    """Queue getDataByCode responses; each is served once, in the order given."""
+    """Queue getDataByCode responses; each is served once, in the order given.
+
+    A fixture is a name or a payload dict.
+    """
     url = endpoint_url(api_profile, Endpoints.DeviceData)
 
     for fixture in fixtures:
-        cloud.post(url, payload=load_fixture(api_type, fixture))
+        payload = (
+            load_fixture(api_type, fixture) if isinstance(fixture, str) else fixture
+        )
+
+        cloud.post(url, payload=payload)
 
 
 def requests_to(cloud, api_profile, endpoint):
@@ -131,3 +155,152 @@ async def test_error_response_keeps_device_list_data(
 
     assert api.get_device_data(DEVICE_CODE) == device
     assert "Failed to fetch parameters, Error: Failed" in caplog.text
+
+
+async def test_untyped_codes_are_unknown(api, cloud, api_type, api_profile):
+    register_data(cloud, api_type, api_profile, "get_data_by_code.idle")
+
+    await api.update()
+
+    assert api.get_unknown_codes(DEVICE_CODE) == UNKNOWN_CODES
+
+
+async def test_nothing_is_unknown_before_the_first_read(api):
+    assert api.get_unknown_codes(DEVICE_CODE) == frozenset()
+
+
+async def test_unknown_codes_are_logged(api, cloud, api_type, api_profile, caplog):
+    register_data(cloud, api_type, api_profile, "get_data_by_code.idle")
+
+    with caplog.at_level(logging.DEBUG):
+        await api.update()
+
+    assert (
+        f"Device {DEVICE_CODE} doesn't know codes, skipping them: "
+        f"{sorted(UNKNOWN_CODES)}"
+    ) in caplog.text
+
+
+async def test_all_codes_untyped_is_logged(api, cloud, api_type, api_profile, caplog):
+    register_data(cloud, api_type, api_profile, data_untyped())
+
+    with caplog.at_level(logging.DEBUG):
+        await api.update()
+
+    assert (
+        f"Device {DEVICE_CODE} answered every code as unknown, skipping none"
+    ) in caplog.text
+
+
+async def test_all_codes_untyped_leaves_nothing_unknown(
+    api, cloud, api_type, api_profile
+):
+    register_data(cloud, api_type, api_profile, data_untyped())
+
+    await api.update()
+
+    assert api.get_unknown_codes(DEVICE_CODE) == frozenset()
+
+
+async def test_null_or_missing_data_type_is_not_unknown(
+    api, cloud, api_type, api_profile
+):
+    data = load_fixture(api_type, "get_data_by_code.idle")
+    items = {item["code"]: item for item in data["objectResult"]}
+    items["T02"]["dataType"] = None
+    del items["T03"]["dataType"]
+
+    register_data(cloud, api_type, api_profile, data)
+
+    await api.update()
+
+    assert api.get_unknown_codes(DEVICE_CODE) == UNKNOWN_CODES
+
+
+async def test_untyped_item_without_code_is_ignored(api, cloud, api_type, api_profile):
+    data = load_fixture(api_type, "get_data_by_code.idle")
+    data["objectResult"].append({"value": "", "dataType": ""})
+
+    register_data(cloud, api_type, api_profile, data)
+
+    await api.update()
+
+    assert api.get_unknown_codes(DEVICE_CODE) == UNKNOWN_CODES
+
+
+async def test_first_answered_read_decides_unknown_codes(
+    api, cloud, api_type, api_profile
+):
+    register_data(
+        cloud,
+        api_type,
+        api_profile,
+        "synthetic/error_generic",
+        "get_data_by_code.idle",
+    )
+
+    await api.update()
+
+    assert api.get_unknown_codes(DEVICE_CODE) == frozenset()
+
+    await api.update()
+
+    assert api.get_unknown_codes(DEVICE_CODE) == UNKNOWN_CODES
+
+
+async def test_unknown_codes_are_kept_after_later_reads(
+    api, cloud, api_type, api_profile
+):
+    register_data(
+        cloud,
+        api_type,
+        api_profile,
+        "get_data_by_code.idle",
+        data_untyped("T02"),
+    )
+
+    await api.update()
+    await api.update()
+
+    assert api.get_unknown_codes(DEVICE_CODE) == UNKNOWN_CODES
+
+
+async def test_unknown_codes_survive_logging_in_again(
+    api, cloud, api_type, api_profile
+):
+    """Logging in again rediscovers devices, replacing their data."""
+    register_data(
+        cloud,
+        api_type,
+        api_profile,
+        "get_data_by_code.idle",
+        "synthetic/error_token_expired",
+        data_untyped("T02"),
+    )
+
+    await api.update()
+    await api.update()
+
+    assert len(requests_to(cloud, api_profile, Endpoints.Login)) == 2
+    assert api.get_unknown_codes(DEVICE_CODE) == UNKNOWN_CODES
+
+
+async def test_unknown_codes_are_no_longer_requested(api, cloud, api_type, api_profile):
+    register_data(
+        cloud,
+        api_type,
+        api_profile,
+        "get_data_by_code.idle",
+        "get_data_by_code.idle",
+    )
+
+    await api.update()
+    await api.update()
+
+    first, second = cloud.requests.get(("POST", URL(DATA_URL)))
+
+    assert first.kwargs["json"]["protocalCodes"] == default_profile_codes()
+    assert second.kwargs["json"]["protocalCodes"] == [
+        code for code in default_profile_codes() if code not in UNKNOWN_CODES
+    ]
+    assert second.kwargs["json"]["protocalCodes"].count("Mode") == 2

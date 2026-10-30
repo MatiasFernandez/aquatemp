@@ -69,6 +69,7 @@ class AquaTempAPI:
 
     _devices: dict
     _device_profiles_by_code: dict[str, DeviceProfile]
+    _unknown_codes: dict[str, frozenset[str]]
     _login_details: dict | None
 
     _session: ClientSession
@@ -94,6 +95,7 @@ class AquaTempAPI:
 
         self._devices = {}
         self._device_profiles_by_code = {}
+        self._unknown_codes = {}
         self._login_details = None
 
         self._session = session
@@ -435,7 +437,12 @@ class AquaTempAPI:
                 raise error
 
     async def _fetch_data(self, device_code: str):
-        codes = self._get_device_profile(device_code).poll_codes
+        unknown_codes = self.get_unknown_codes(device_code)
+        codes = [
+            code
+            for code in self._get_device_profile(device_code).poll_codes
+            if code not in unknown_codes
+        ]
 
         param_device_code = self._api_profile.get(APIParam.DeviceCode)
         param_protocal_codes = self._api_profile.get(APIParam.ProtocalCodes)
@@ -454,6 +461,8 @@ class AquaTempAPI:
         object_result_items = data_response.get(param_object_result, [])
 
         if error_msg == "Success":
+            self._record_unknown_codes(device_code, object_result_items)
+
             for object_result_item in object_result_items:
                 code = object_result_item.get("code")
                 value = object_result_item.get("value")
@@ -470,6 +479,40 @@ class AquaTempAPI:
 
             else:
                 _LOGGER.error(f"Failed to fetch parameters, Error: {error_msg}")
+
+    def _record_unknown_codes(self, device_code: str, object_result_items: list):
+        """Note the codes the device doesn't know, once, from its first answer.
+
+        The cloud echoes such a code with an empty value and an empty
+        dataType; only the empty dataType tells it apart from a known code
+        without a value. A missing or null dataType is not that signal.
+        """
+        if device_code in self._unknown_codes or not object_result_items:
+            return
+
+        coded_items = [
+            item for item in object_result_items if item.get("code") is not None
+        ]
+        unknown_codes = frozenset(
+            item["code"] for item in coded_items if item.get("dataType") == ""
+        )
+
+        # Every code unknown looks like a backend hiccup rather than codes
+        # this device lacks
+        if len(unknown_codes) == len({item["code"] for item in coded_items}):
+            _LOGGER.debug(
+                f"Device {device_code} answered every code as unknown, skipping none"
+            )
+
+            unknown_codes = frozenset()
+
+        else:
+            _LOGGER.debug(
+                f"Device {device_code} doesn't know codes, skipping them: "
+                f"{sorted(unknown_codes)}"
+            )
+
+        self._unknown_codes[device_code] = unknown_codes
 
     async def _send_passthrough_instruction(self, device_code: str):
         param_device_code = self._api_profile.get(APIParam.DeviceCode)
@@ -817,6 +860,15 @@ class AquaTempAPI:
         device_profile = self._get_device_profile(device_code)
 
         return device_profile
+
+    def get_unknown_codes(self, device_code: str) -> frozenset[str]:
+        """Codes the device doesn't know, decided on its first answered read.
+
+        Empty until then, and when every code came back unknown.
+        """
+        unknown_codes = self._unknown_codes.get(device_code, frozenset())
+
+        return unknown_codes
 
     def _set_device_profile(self, device_code: str, product_id: str):
         device_profile = self._device_profiles.for_product(product_id)
