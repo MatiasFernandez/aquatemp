@@ -10,7 +10,12 @@ import logging
 import sys
 import unicodedata
 
-from aiohttp import ClientResponseError, ClientSession, ClientTimeout
+from aiohttp import (
+    ClientConnectionError,
+    ClientResponseError,
+    ClientSession,
+    ClientTimeout,
+)
 
 from .api_profile import ApiProfile
 from .api_types import DEVICE_LISTS, DEVICE_REQUEST_PARAMETERS, APIParam
@@ -40,6 +45,15 @@ from .exceptions import InvalidTokenError, LoginError, OperationFailedException
 from .modes import FanMode, Mode
 
 _LOGGER = logging.getLogger(__name__)
+
+
+def _is_transient(error: ClientConnectionError | ClientResponseError) -> bool:
+    """Whether the request may succeed if sent again: it didn't reach the cloud,
+    or the cloud failed on its side."""
+    if isinstance(error, ClientResponseError):
+        return error.status >= 500
+
+    return True
 
 
 @dataclass(frozen=True)
@@ -392,50 +406,61 @@ class AquaTempAPI:
 
         await self._perform_action(request_data, fan_pc_key)
 
-    async def _perform_action(
-        self, request_data: dict, operation: str, attempt: int = 1
-    ):
-        error = None
+    async def _perform_action(self, request_data: dict, operation: str):
+        """Send a control, retrying only what another attempt can fix.
 
-        try:
-            param_error_msg = self._api_profile.get(APIParam.ErrorMessage)
-            param_error_code = self._api_profile.get(APIParam.ErrorCode)
+        A connection error or a 5xx is retried, up to API_MAX_ATTEMPTS
+        attempts, and an expired token once, after logging in again. Anything
+        else raises at once, a timeout included: the cloud waits for the
+        device to acknowledge, so sending it again only keeps the caller
+        waiting longer.
+        """
+        param_error_msg = self._api_profile.get(APIParam.ErrorMessage)
+        param_error_code = self._api_profile.get(APIParam.ErrorCode)
 
-            operation_response = await self._post_request(
-                Endpoints.DeviceControl, request_data
-            )
+        logged_in_again = False
+
+        for attempt in range(1, API_MAX_ATTEMPTS + 1):
+            is_last_attempt = attempt == API_MAX_ATTEMPTS
+
+            try:
+                operation_response = await self._post_request(
+                    Endpoints.DeviceControl, request_data
+                )
+
+            except (ClientConnectionError, ClientResponseError) as ex:
+                if is_last_attempt or not _is_transient(ex):
+                    raise
+
+                await sleep(1)
+
+                continue
 
             error_msg = operation_response.get(param_error_msg)
 
-            if error_msg != "Success":
-                error_code = operation_response.get(param_error_code)
-                if error_code == "-100":
-                    self.set_token()
+            if error_msg == "Success":
+                return
 
-                    error = InvalidTokenError(
-                        f"Perform operation {operation}, "
-                        f"Data: {json.dumps(request_data)}, "
-                        f"Attempt: {attempt}"
-                    )
+            error_code = operation_response.get(param_error_code)
 
-                else:
-                    error = OperationFailedException(
-                        operation, request_data, f"{error_code}: {error_msg}"
-                    )
+            if error_code != "-100":
+                raise OperationFailedException(
+                    operation, request_data, f"{error_code}: {error_msg}"
+                )
 
-        except Exception as ex:
-            error = ex
+            if is_last_attempt or logged_in_again:
+                raise InvalidTokenError(
+                    f"Perform operation {operation}, "
+                    f"Data: {json.dumps(request_data)}, "
+                    f"Attempt: {attempt}"
+                )
 
-        if error is not None:
-            if attempt < API_MAX_ATTEMPTS:
-                await sleep(1)
+            self.set_token()
+            logged_in_again = True
 
-                await self._connect()
+            await sleep(1)
 
-                await self._perform_action(request_data, operation, attempt + 1)
-
-            else:
-                raise error
+            await self._connect()
 
     async def _fetch_data(self, device_code: str):
         unknown_codes = self.get_unknown_codes(device_code)
