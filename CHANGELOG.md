@@ -11,6 +11,7 @@ predate this fork and keep their original format.
 
 - Support for 15 more Aqua Temp heat pump product IDs, the ones the official app lists as heat pumps and the allow-list missed. They use the default profile. Until now such a unit was only found when no other device on the account matched the allow-list, and was missing otherwise
 - The setup and options forms explain that the cloud allows one login per account, that the username is the email address, that the app may have cut a password longer than 16 characters to its first 16, and which API type to pick
+- Refresh Data button on each device, in its Diagnostic section, to poll the cloud on demand instead of waiting for the next scheduled update. It stays available after a failed update, so it can be used to retry
 
 ### Fixed
 
@@ -23,6 +24,7 @@ predate this fork and keep their original format.
 ### Changed
 
 - Entities for values the heat pump doesn't report are no longer created, and those values are no longer polled. The integration tells them apart from the heat pump's first answer after setup or reload. Entities created for them before stay in the entity registry, shown as no longer provided, and can be deleted
+- Entities are named after the device as named in Home Assistant, instead of its nickname in the Aqua Temp app. New entities of a device renamed in Home Assistant no longer repeat the device in their entity ID (`sensor.pool_water_dt`, not `sensor.pool_heat_pump_water_dt`), and friendly names follow later renames. Friendly names change for devices already renamed in Home Assistant. Existing entity IDs are kept; to fix doubled ones, use "Recreate entity IDs" on the device page
 
 ### Removed
 

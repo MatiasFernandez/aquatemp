@@ -11,6 +11,7 @@ code under test.
 from datetime import timedelta
 import json
 from pathlib import Path
+from unittest.mock import patch
 
 import pytest
 from pytest_homeassistant_custom_component.common import (
@@ -26,7 +27,7 @@ from custom_components.aqua_temp.diagnostics import (
 )
 from homeassistant.const import CONF_USERNAME
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.update_coordinator import REQUEST_REFRESH_DEFAULT_COOLDOWN
 from homeassistant.util import slugify
 from tests.cloud.mock_cloud import (
@@ -98,10 +99,18 @@ async def set_up(hass: HomeAssistant, entry: MockConfigEntry) -> MockConfigEntry
     return entry
 
 
-def climate_entity_id(hass: HomeAssistant) -> str:
-    unique_id = slugify(f"{DOMAIN}_climate_Mode_{DEVICE_CODE}")
+def entity_id(hass: HomeAssistant, platform: str, key: str) -> str | None:
+    unique_id = slugify(f"{DOMAIN}_{platform}_{key}_{DEVICE_CODE}")
 
-    return er.async_get(hass).async_get_entity_id("climate", DOMAIN, unique_id)
+    return er.async_get(hass).async_get_entity_id(platform, DOMAIN, unique_id)
+
+
+def climate_entity_id(hass: HomeAssistant) -> str:
+    return entity_id(hass, "climate", "Mode")
+
+
+def refresh_button_entity_id(hass: HomeAssistant) -> str:
+    return entity_id(hass, "button", "refresh_data")
 
 
 # Answered with an empty value and dataType in the idle recording
@@ -134,6 +143,7 @@ def expected_unique_ids(catalog_id: str, skipped: set[str] = frozenset()) -> set
         ("binary_sensor", "is_fault"),
         ("binary_sensor", "device_status"),
         ("climate", "Mode"),
+        ("button", "refresh_data"),
         ("sensor", "water_delta_t"),
     ]
     entities.extend(
@@ -224,6 +234,56 @@ async def test_entity_registered_for_an_unknown_code_is_kept(hass, config_entry)
     assert hass.states.get(entity_id) is None
 
 
+async def test_entity_ids_name_the_device_once(hass, entry):
+    assert entity_id(hass, "sensor", "water_delta_t") == "sensor.heat_pump_water_dt"
+    assert climate_entity_id(hass) == "climate.heat_pump"
+
+
+async def test_entity_ids_use_the_device_name_given_in_home_assistant(
+    hass, config_entry
+):
+    # The device renamed before its entities were registered
+    device = dr.async_get(hass).async_get_or_create(
+        config_entry_id=config_entry.entry_id, identifiers={(DOMAIN, DEVICE_ID)}
+    )
+    dr.async_get(hass).async_update_device(device.id, name_by_user="Pool")
+
+    await set_up(hass, config_entry)
+
+    assert entity_id(hass, "sensor", "water_delta_t") == "sensor.pool_water_dt"
+    assert climate_entity_id(hass) == "climate.pool"
+
+
+async def test_entity_names_follow_the_device_name(hass, entry):
+    device = async_get_ha_device(hass, entry.entry_id, DEVICE_ID)
+
+    dr.async_get(hass).async_update_device(device.id, name_by_user="Pool")
+    await hass.async_block_till_done()
+
+    water_delta_t = hass.states.get(entity_id(hass, "sensor", "water_delta_t"))
+    climate = hass.states.get(climate_entity_id(hass))
+
+    assert water_delta_t.attributes["friendly_name"] == "Pool Water ΔT"
+    assert climate.attributes["friendly_name"] == "Pool"
+
+
+async def test_registered_entities_keep_their_entity_id(hass, config_entry):
+    # As registered while the integration named entities itself, for a
+    # device renamed in Home Assistant
+    registered = er.async_get(hass).async_get_or_create(
+        "sensor",
+        DOMAIN,
+        slugify(f"{DOMAIN}_sensor_water_delta_t_{DEVICE_CODE}"),
+        suggested_object_id="pool_heat_pump_water_dt",
+        config_entry=config_entry,
+    )
+
+    await set_up(hass, config_entry)
+
+    assert entity_id(hass, "sensor", "water_delta_t") == registered.entity_id
+    assert hass.states.get(registered.entity_id) is not None
+
+
 async def test_device_entities_are_added_once(hass, entry):
     registry = er.async_get(hass)
     before = len(er.async_entries_for_config_entry(registry, entry.entry_id))
@@ -232,6 +292,44 @@ async def test_device_entities_are_added_once(hass, entry):
     await hass.async_block_till_done()
 
     assert len(er.async_entries_for_config_entry(registry, entry.entry_id)) == before
+
+
+async def test_pressing_refresh_data_polls_the_cloud(hass, entry, wire, freezer):
+    # Setup leaves a refresh waiting out the debounce; let it poll first
+    freezer.tick(timedelta(seconds=REQUEST_REFRESH_DEFAULT_COOLDOWN))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    wire.clear()
+
+    await hass.services.async_call(
+        "button",
+        "press",
+        {"entity_id": refresh_button_entity_id(hass)},
+        blocking=True,
+    )
+    # The refresh a press requests waits out the coordinator's debounce
+    freezer.tick(timedelta(seconds=REQUEST_REFRESH_DEFAULT_COOLDOWN))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert [endpoint for endpoint, _ in wire] == [DATA, STATUS]
+
+
+@cloud_with(RESPONSES | {DATA: ["get_data_by_code.idle", 500, 500, 500]})
+async def test_refresh_data_stays_available_after_a_failed_update(hass, entry, freezer):
+    with patch("custom_components.aqua_temp.cloud.client.sleep"):
+        await hass.services.async_call(
+            "button",
+            "press",
+            {"entity_id": refresh_button_entity_id(hass)},
+            blocking=True,
+        )
+        freezer.tick(timedelta(seconds=REQUEST_REFRESH_DEFAULT_COOLDOWN))
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done()
+
+    assert hass.states.get(climate_entity_id(hass)).state == "unavailable"
+    assert hass.states.get(refresh_button_entity_id(hass)).state != "unavailable"
 
 
 async def test_climate_offers_the_profile_modes(hass, entry):

@@ -7,6 +7,7 @@ from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
     BinarySensorEntityDescription,
 )
+from homeassistant.components.button import ButtonEntityDescription
 from homeassistant.components.climate import ClimateEntityDescription, HVACMode
 from homeassistant.components.select import SelectEntityDescription
 from homeassistant.components.sensor import (
@@ -68,6 +69,13 @@ class AquaTempSelectEntityDescription(
     platform: Platform | None = Platform.SELECT
 
 
+@dataclass(frozen=True, kw_only=True)
+class AquaTempButtonEntityDescription(
+    ButtonEntityDescription, AquaTempEntityDescription
+):
+    platform: Platform | None = Platform.BUTTON
+
+
 DEFAULT_ENTITY_DESCRIPTIONS: list[AquaTempEntityDescription] = [
     AquaTempBinarySensorEntityDescription(
         key=API_STATUS,
@@ -100,7 +108,15 @@ DEFAULT_ENTITY_DESCRIPTIONS: list[AquaTempEntityDescription] = [
         device_class=BinarySensorDeviceClass.CONNECTIVITY,
         translation_key="device_status",
     ),
-    AquaTempClimateEntityDescription(key="Mode", name=None, translation_key="mode"),
+    # Named after the device
+    AquaTempClimateEntityDescription(key="Mode", name=None),
+    AquaTempButtonEntityDescription(
+        key="refresh_data",
+        name="Refresh Data",
+        icon="mdi:refresh",
+        entity_category=EntityCategory.DIAGNOSTIC,
+        translation_key="refresh_data",
+    ),
 ]
 
 

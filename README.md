@@ -68,6 +68,7 @@ Each heat pump becomes a Home Assistant device, named after its nickname in the 
 | API Status       | binary_sensor | Whether the integration is logged in to the cloud.                                                                 |
 | Temperature Unit | select        | The unit Home Assistant reads the heat pump's values in. Set it to match the device; it doesn't change the device. |
 | Water ΔT         | sensor        | Outlet minus inlet water temperature, on models whose profile maps both.                                           |
+| Refresh Data     | button        | Polls the cloud now instead of waiting for the next update. Stays available after a failed update, to retry.       |
 
 Plus one sensor per parameter in the model's profile: temperatures, pressures, frequencies, valve positions and so on. Which profile a heat pump gets depends on its product ID:
 
