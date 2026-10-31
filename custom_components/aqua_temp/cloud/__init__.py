@@ -6,7 +6,12 @@ from .client import AquaTempAPI, Credentials, DeviceMeta
 from .consts import PRODUCT_IDS
 from .device_profiles import DeviceProfile, DeviceProfiles
 from .endpoints import Endpoints
-from .exceptions import InvalidTokenError, LoginError, OperationFailedException
+from .exceptions import (
+    DeviceNotRespondingError,
+    InvalidTokenError,
+    LoginError,
+    OperationFailedException,
+)
 from .modes import FanMode, Mode
 
 __all__ = [
@@ -19,6 +24,7 @@ __all__ = [
     "AquaTempAPI",
     "Credentials",
     "DeviceMeta",
+    "DeviceNotRespondingError",
     "DeviceProfile",
     "DeviceProfiles",
     "Endpoints",

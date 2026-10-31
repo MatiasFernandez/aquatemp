@@ -41,7 +41,12 @@ from .consts import (
 )
 from .device_profiles import DeviceProfile, DeviceProfiles
 from .endpoints import Endpoints
-from .exceptions import InvalidTokenError, LoginError, OperationFailedException
+from .exceptions import (
+    DeviceNotRespondingError,
+    InvalidTokenError,
+    LoginError,
+    OperationFailedException,
+)
 from .modes import FanMode, Mode
 
 _LOGGER = logging.getLogger(__name__)
@@ -413,7 +418,8 @@ class AquaTempAPI:
         attempts, and an expired token once, after logging in again. Anything
         else raises at once, a timeout included: the cloud waits for the
         device to acknowledge, so sending it again only keeps the caller
-        waiting longer.
+        waiting longer. The cloud giving up on the device, or the request
+        timing out while it waits, raises DeviceNotRespondingError.
         """
         param_error_msg = self._api_profile.get(APIParam.ErrorMessage)
         param_error_code = self._api_profile.get(APIParam.ErrorCode)
@@ -427,6 +433,9 @@ class AquaTempAPI:
                 operation_response = await self._post_request(
                     Endpoints.DeviceControl, request_data
                 )
+
+            except TimeoutError as ex:
+                raise DeviceNotRespondingError(operation) from ex
 
             except (ClientConnectionError, ClientResponseError) as ex:
                 if is_last_attempt or not _is_transient(ex):
@@ -442,6 +451,10 @@ class AquaTempAPI:
                 return
 
             error_code = operation_response.get(param_error_code)
+
+            # The cloud's own limit, about 50 s, on waiting for the device
+            if error_code == "-1":
+                raise DeviceNotRespondingError(operation)
 
             if error_code != "-100":
                 raise OperationFailedException(
