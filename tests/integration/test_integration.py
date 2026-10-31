@@ -19,6 +19,7 @@ from pytest_homeassistant_custom_component.common import (
     async_fire_time_changed,
 )
 
+from custom_components.aqua_temp.cloud.exceptions import OperationFailedException
 from custom_components.aqua_temp.common.consts import DOMAIN
 from custom_components.aqua_temp.common.device_lookup import async_get_ha_device
 from custom_components.aqua_temp.diagnostics import (
@@ -27,9 +28,10 @@ from custom_components.aqua_temp.diagnostics import (
 )
 from homeassistant.const import CONF_USERNAME
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.update_coordinator import REQUEST_REFRESH_DEFAULT_COOLDOWN
-from homeassistant.util import slugify
+from homeassistant.util import dt as dt_util, slugify
 from tests.cloud.mock_cloud import (
     DEVICE_CODE,
     cloud_with,
@@ -585,6 +587,48 @@ async def test_climate_keeps_its_temperature_unit_when_another_is_selected(
     # Possible bug: the climate reads the unit once, when it is created, and a
     # reload resets the unit, so a unit other than Celsius never reaches it
     assert temperatures(hass.states.get(climate_entity_id(hass)))["temperature"] == 28.0
+
+
+async def set_temperature(hass: HomeAssistant, temperature: float):
+    await hass.services.async_call(
+        "climate",
+        "set_temperature",
+        {"entity_id": climate_entity_id(hass), "temperature": temperature},
+        blocking=True,
+    )
+
+
+async def past_refresh_cooldowns(hass: HomeAssistant):
+    """Move past the coordinator's 10 s refresh cooldown twice, so a refresh
+    requested during one runs, and the cooldown it starts ends too.
+
+    Setup requests a refresh while one is cooling down, so one is still
+    waiting to run after setup."""
+    for seconds in (11, 22):
+        async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=seconds))
+        await hass.async_block_till_done()
+
+
+@cloud_with(POWERED_ON | {CONTROL: "control.device_timeout"})
+async def test_control_the_device_did_not_acknowledge_fails_with_a_clear_error(
+    hass, entry
+):
+    with pytest.raises(HomeAssistantError) as failure:
+        await set_temperature(hass, 26.5)
+
+    assert failure.value.translation_key == "device_not_responding"
+
+
+@cloud_with(POWERED_ON | {CONTROL: "synthetic/error_generic"})
+async def test_failed_control_polls_the_device_again(hass, entry, wire):
+    await past_refresh_cooldowns(hass)
+    wire.clear()
+
+    with pytest.raises(OperationFailedException):
+        await set_temperature(hass, 26.5)
+    await hass.async_block_till_done()
+
+    assert DATA in [endpoint for endpoint, _ in wire]
 
 
 @cloud_with(RESPONSES | {DEVICE_LIST: two_device_list()})
