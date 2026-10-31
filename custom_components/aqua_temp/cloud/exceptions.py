@@ -34,3 +34,20 @@ class InvalidTokenError(Exception):
         result = f"Invalid token, Flow: {self.flow}"
 
         return result
+
+
+class DeviceNotRespondingError(Exception):
+    """The device didn't acknowledge a control in time; it may still apply it."""
+
+    operation: str
+
+    def __init__(self, operation: str):
+        self.operation = operation
+
+    def __str__(self):
+        result = (
+            f"The device didn't respond to {self.operation}, "
+            "the change may or may not have been applied"
+        )
+
+        return result

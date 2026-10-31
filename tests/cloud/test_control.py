@@ -11,6 +11,7 @@ from aiohttp import ClientConnectionError, ClientResponseError
 import pytest
 
 from custom_components.aqua_temp.cloud.exceptions import (
+    DeviceNotRespondingError,
     InvalidTokenError,
     OperationFailedException,
 )
@@ -196,11 +197,29 @@ async def test_write_the_cloud_rejects_raises_without_retrying(heat_pump, wire):
         pytest.param(
             RESPONSES | {CONTROL: 400}, ClientResponseError, id="client-error"
         ),
-        pytest.param(RESPONSES | {CONTROL: TimeoutError()}, TimeoutError, id="timeout"),
     ],
 )
 async def test_write_that_reached_the_cloud_is_not_retried(heat_pump, wire, error):
     with pytest.raises(error):
+        await heat_pump.set_temperature(DEVICE_CODE, 26.5)
+
+    assert [endpoint for endpoint, _ in wire] == [CONTROL]
+
+
+@pytest.mark.parametrize(
+    "cloud_responses",
+    [
+        pytest.param(
+            RESPONSES | {CONTROL: "control.device_timeout"}, id="cloud-gave-up"
+        ),
+        pytest.param(RESPONSES | {CONTROL: TimeoutError()}, id="request-timed-out"),
+    ],
+)
+async def test_write_the_device_did_not_acknowledge_fails_once(heat_pump, wire):
+    with pytest.raises(
+        DeviceNotRespondingError,
+        match="didn't respond to Set_Temp, the change may or may not have been applied",
+    ):
         await heat_pump.set_temperature(DEVICE_CODE, 26.5)
 
     assert [endpoint for endpoint, _ in wire] == [CONTROL]
