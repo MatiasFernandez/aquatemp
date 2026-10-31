@@ -80,7 +80,7 @@
     },
     "sensor": {
       "water_delta_t": {
-        "name": "Water ΔT"
+        "name": "Water \u0394T"
       },
       "default_power": {
         "name": "Power"
@@ -1378,6 +1378,11 @@
       "1442284873216843776_t28": {
         "name": "Target frequency [T28]"
       }
+    }
+  },
+  "exceptions": {
+    "device_not_responding": {
+      "message": "The heat pump didn't respond. The change may or may not have been applied."
     }
   }
 }

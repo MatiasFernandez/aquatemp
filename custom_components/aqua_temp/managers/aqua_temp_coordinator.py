@@ -1,7 +1,9 @@
+from collections.abc import Awaitable
 import logging
 
 from homeassistant.components.climate import HVACMode
 from homeassistant.core import Event
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.aiohttp_client import async_create_clientsession
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.entity import DeviceInfo
@@ -9,7 +11,7 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, Upda
 
 from ..cloud.client import AquaTempAPI, DeviceMeta
 from ..cloud.device_profiles import DeviceProfile
-from ..cloud.exceptions import LoginError
+from ..cloud.exceptions import DeviceNotRespondingError, LoginError
 from ..common.consts import (
     DATA_ITEM_CONFIG,
     DATA_ITEM_DEVICES,
@@ -173,19 +175,28 @@ class AquaTempCoordinator(DataUpdateCoordinator):
         return self._config_manager.get_temperature_unit(device_code)
 
     async def set_hvac_mode(self, device_code: str, hvac_mode: HVACMode):
-        await self._api.set_hvac_mode(device_code, hvac_mode)
-
-        await self.async_request_refresh()
+        await self._control(self._api.set_hvac_mode(device_code, hvac_mode))
 
     async def set_temperature(self, device_code: str, temperature: float):
-        await self._api.set_temperature(device_code, temperature)
-
-        await self.async_request_refresh()
+        await self._control(self._api.set_temperature(device_code, temperature))
 
     async def set_fan_mode(self, device_code: str, fan_mode):
-        await self._api.set_fan_mode(device_code, fan_mode)
+        await self._control(self._api.set_fan_mode(device_code, fan_mode))
 
-        await self.async_request_refresh()
+    async def _control(self, control: Awaitable[None]):
+        """Send a control, then poll so entities show what the device did,
+        whether the control succeeded or not."""
+        try:
+            await control
+
+        except DeviceNotRespondingError as ex:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="device_not_responding",
+            ) from ex
+
+        finally:
+            await self.async_request_refresh()
 
     async def set_temperature_unit(self, device_code: str, option: str):
         await self._config_manager.update_temperature_unit(device_code, option)
