@@ -146,7 +146,7 @@ async def test_entry_option_logs_the_session_token(hass, api_type, cloud, caplog
     ) in [record.getMessage() for record in caplog.records]
 
 
-async def test_session_token_is_not_logged_without_the_option(
+async def test_session_token_is_not_logged_at_info_without_the_option(
     hass, api_type, cloud, caplog
 ):
     entry = await add_entry(hass, api_type)
@@ -155,6 +155,23 @@ async def test_session_token_is_not_logged_without_the_option(
         await set_up(hass, entry)
 
     assert "test-token" not in caplog.text
+
+
+async def test_session_token_is_logged_at_debug_without_the_option(
+    hass, api_type, cloud, caplog
+):
+    entry = await add_entry(hass, api_type)
+
+    with caplog.at_level(logging.DEBUG):
+        await set_up(hass, entry)
+
+    # Possible bug: every response body is logged at DEBUG, the login one
+    # with its token, so debug logs attached to an issue leak a live session
+    assert [
+        record.levelno
+        for record in caplog.records
+        if "test-token" in record.getMessage()
+    ] == [logging.DEBUG]
 
 
 @pytest.mark.parametrize("legacy_api_type", ["1", "2"])
