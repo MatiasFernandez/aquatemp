@@ -62,9 +62,10 @@ async def async_setup_base_entry(
 
 
 class BaseEntity(CoordinatorEntity):
+    _attr_has_entity_name = True
+
     _device_code: str
     _entity_description: AquaTempEntityDescription
-    _translations: dict
 
     def __init__(
         self,
@@ -79,10 +80,6 @@ class BaseEntity(CoordinatorEntity):
 
         device_info = coordinator.get_device(device_code)
 
-        entity_name = coordinator.config_manager.get_entity_name(
-            entity_description, device_info
-        )
-
         unique_id_parts = [
             DOMAIN,
             entity_description.platform,
@@ -93,7 +90,6 @@ class BaseEntity(CoordinatorEntity):
         unique_id = slugify("_".join(unique_id_parts))
 
         self._attr_device_info = device_info
-        self._attr_name = entity_name
         self._attr_unique_id = unique_id
 
         self._data = {}
