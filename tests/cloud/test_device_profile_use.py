@@ -119,10 +119,18 @@ async def test_each_device_polls_its_catalog_codes(api, wire):
 
 
 @cloud_with(RESPONSES | {DATA: "get_data_by_code.idle"})
-async def test_hitemp_mode_is_never_polled(heat_pumps):
+async def test_hitemp_mode_is_never_polled(api, wire):
+    await api.update()
+
+    [hitemp_request] = [
+        body
+        for endpoint, body in wire
+        if endpoint == DATA and body["deviceCode"] == HITEMP_DEVICE_CODE
+    ]
     # Possible bug: mode_real, MO6 and M17 are not in the Hitemp catalog, so
     # they are never requested. A missing mode matches off's null wire value
-    assert state(heat_pumps, HITEMP_DEVICE_CODE) == {
+    assert not {"mode_real", "MO6", "M17"} & set(hitemp_request["protocalCodes"])
+    assert state(api, HITEMP_DEVICE_CODE) == {
         "power": False,
         "hvac_mode": "off",
         "fan_mode": None,

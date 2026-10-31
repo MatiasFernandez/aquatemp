@@ -1,7 +1,9 @@
 """The legacy Aqua Temp API type: its own host and .json suffix, snake_case
 field names, and a keep-alive instruction before each read."""
 
+import json
 import logging
+from pathlib import Path
 
 import pytest
 from yarl import URL
@@ -21,6 +23,11 @@ DATA = "app/device/getDataByCode"
 STATUS = "app/device/getDeviceStatus"
 KEEP_ALIVE = "device/sendDevicePassthroughInstruction"
 LOGIN_URL = URL(f"https://cloud.linked-go.com/cloudservice/api/{LOGIN}.json")
+
+DEFAULT_PROFILE = (
+    Path(__file__).parents[2]
+    / "custom_components/aqua_temp/cloud/profiles/entity_description.default.json"
+)
 
 # MD5 of test-password
 PASSWORD_HASH = "dfb450efddbb5387197c84460623675b"
@@ -86,7 +93,19 @@ async def test_each_read_follows_a_keep_alive(api, wire):
         "device_code": DEVICE_CODE,
         "query_instruction": "630300040001CD89",
     }
-    assert wire[1][1]["device_code"] == DEVICE_CODE
+
+
+async def test_data_request_uses_snake_case_fields(api, wire):
+    wire.clear()
+
+    await api.update()
+
+    [data_request] = [body for endpoint, body in wire if endpoint == DATA]
+    profile = [item["key"] for item in json.loads(DEFAULT_PROFILE.read_text())]
+    assert data_request == {
+        "device_code": DEVICE_CODE,
+        "protocal_codes": ["Mode", *profile],
+    }
 
 
 @cloud_with(RESPONSES | {KEEP_ALIVE: "synthetic/error_generic"})
