@@ -16,7 +16,7 @@ TRANSLATIONS = (
 HITEMP = "1245226668902080512"
 AQUA_TEMP = "1442284873216843776"
 
-PLATFORMS = {"binary_sensor", "climate", "select", "sensor"}
+PLATFORMS = {"binary_sensor", "button", "climate", "select", "sensor"}
 
 PRODUCTS = pytest.mark.parametrize(
     "product_id", ["default", HITEMP, AQUA_TEMP], ids=["default", "hitemp", "aqua_temp"]

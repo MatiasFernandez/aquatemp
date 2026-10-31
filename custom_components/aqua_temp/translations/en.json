@@ -77,6 +77,11 @@
         "name": "Power"
       }
     },
+    "button": {
+      "refresh_data": {
+        "name": "Refresh Data"
+      }
+    },
     "select": {
       "temperature_unit": {
         "name": "Temperature Unit"

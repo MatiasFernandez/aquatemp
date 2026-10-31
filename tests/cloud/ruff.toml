@@ -14,6 +14,7 @@ ban-relative-imports = "parents"
 [lint.flake8-tidy-imports.banned-api]
 "homeassistant".msg = "The cloud library's tests must not depend on Home Assistant"
 "custom_components.aqua_temp.binary_sensor".msg = "The cloud library's tests must not know the integration"
+"custom_components.aqua_temp.button".msg = "The cloud library's tests must not know the integration"
 "custom_components.aqua_temp.climate".msg = "The cloud library's tests must not know the integration"
 "custom_components.aqua_temp.common".msg = "The cloud library's tests must not know the integration"
 "custom_components.aqua_temp.config_flow".msg = "The cloud library's tests must not know the integration"

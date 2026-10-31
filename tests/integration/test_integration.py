@@ -108,6 +108,10 @@ def climate_entity_id(hass: HomeAssistant) -> str:
     return entity_id(hass, "climate", "Mode")
 
 
+def refresh_button_entity_id(hass: HomeAssistant) -> str:
+    return entity_id(hass, "button", "refresh_data")
+
+
 # Answered with an empty value and dataType in the idle recording
 UNKNOWN_CODES = {
     "F10",
@@ -138,6 +142,7 @@ def expected_unique_ids(catalog_id: str, skipped: set[str] = frozenset()) -> set
         ("binary_sensor", "is_fault"),
         ("binary_sensor", "device_status"),
         ("climate", "Mode"),
+        ("button", "refresh_data"),
         ("sensor", "water_delta_t"),
     ]
     entities.extend(
@@ -286,6 +291,33 @@ async def test_device_entities_are_added_once(hass, entry):
     await hass.async_block_till_done()
 
     assert len(er.async_entries_for_config_entry(registry, entry.entry_id)) == before
+
+
+async def test_pressing_refresh_data_polls_the_cloud(hass, entry, wire, freezer):
+    wire.clear()
+
+    await hass.services.async_call(
+        "button",
+        "press",
+        {"entity_id": refresh_button_entity_id(hass)},
+        blocking=True,
+    )
+    # The refresh a press requests waits out the coordinator's debounce
+    freezer.tick(timedelta(seconds=REQUEST_REFRESH_DEFAULT_COOLDOWN))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert [endpoint for endpoint, _ in wire] == [DATA, STATUS]
+
+
+async def test_refresh_data_stays_available_after_a_failed_update(hass, entry):
+    coordinator = hass.data[DOMAIN][entry.entry_id]
+
+    coordinator.async_set_update_error(Exception("cloud unreachable"))
+    await hass.async_block_till_done()
+
+    assert hass.states.get(climate_entity_id(hass)).state == "unavailable"
+    assert hass.states.get(refresh_button_entity_id(hass)).state != "unavailable"
 
 
 async def test_climate_offers_the_profile_modes(hass, entry):
