@@ -52,9 +52,11 @@ HEADERS = {"Content-Type": "application/json; charset=utf-8"}
 
 API_MAX_ATTEMPTS = 3
 
-# Seconds a single request to the cloud may take in total. The official app's
-# HTTP client also uses 30 s
-API_REQUEST_TIMEOUT = 30
+# Seconds a single request to the cloud may take in total, by default. The
+# official app's HTTP client uses 30 s, but a control to an online device is
+# answered in about 5 s and a read in under 2 s, so a longer wait only delays
+# the error
+API_REQUEST_TIMEOUT = 10
 
 CONFIG_SET_MODE = "mode"
 CONFIG_SET_POWER = "power"
