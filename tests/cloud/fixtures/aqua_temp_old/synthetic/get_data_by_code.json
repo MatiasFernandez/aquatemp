@@ -1,0 +1,34 @@
+{
+  "error_code": "0",
+  "error_msg": "Success",
+  "object_result": [
+    {
+      "code": "Mode",
+      "value": "1"
+    },
+    {
+      "code": "Power",
+      "value": "1"
+    },
+    {
+      "code": "Manual-mute",
+      "value": "0"
+    },
+    {
+      "code": "T02",
+      "value": "13.0"
+    },
+    {
+      "code": "R02",
+      "value": "28.0"
+    },
+    {
+      "code": "R10",
+      "value": "15.0"
+    },
+    {
+      "code": "R11",
+      "value": "35.0"
+    }
+  ]
+}

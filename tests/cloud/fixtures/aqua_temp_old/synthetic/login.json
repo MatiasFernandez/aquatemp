@@ -1,0 +1,7 @@
+{
+  "error_code": "0",
+  "error_msg": "Success",
+  "object_result": {
+    "x-token": "test-token"
+  }
+}

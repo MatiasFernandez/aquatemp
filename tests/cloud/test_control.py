@@ -145,3 +145,12 @@ async def test_write_failing_every_attempt_raises(heat_pump, wire):
     assert [endpoint for endpoint, _ in wire] == [CONTROL] * 3
     assert wire[0][1] == wire[1][1] == wire[2][1]
     assert failure.value.operation == "Set_Temp"
+
+
+@cloud_with(RESPONSES | {CONTROL: [500, "synthetic/control_success"]})
+async def test_write_failing_with_an_http_error_is_retried(heat_pump, wire):
+    await heat_pump.set_temperature(DEVICE_CODE, 26.5)
+
+    # Still logged in, so the retry goes straight to the write
+    assert [endpoint for endpoint, _ in wire] == [CONTROL, CONTROL]
+    assert_sent(wire[1][1], wire[0][1])
