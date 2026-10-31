@@ -74,8 +74,9 @@ show_missing = true
 skip_covered = true
 
 [tool.mutmut]
-# The cloud library, which the tests drive
-source_paths = ["custom_components/aqua_temp/cloud"]
+# The whole integration: the cloud tests drive the cloud library, the
+# integration tests the Home Assistant side
+source_paths = ["custom_components/aqua_temp"]
 also_copy = ["custom_components"]
 # Log calls, whole even when split over lines: their mutants only change the log
 # output, so most survive as noise. See CONTRIBUTING.md
