@@ -33,6 +33,7 @@ from .consts import (
     CONFIG_SET_TEMPERATURE,
     DEVICE_CONTROL_PARAM,
     DEVICE_CONTROL_VALUE,
+    DEVICE_STATUS_OFFLINE,
     HEADERS,
     HTTP_HEADER_X_TOKEN,
     POWER_MODE_OFF,
@@ -895,6 +896,17 @@ class AquaTempAPI:
         is_on = power == POWER_MODE_ON
 
         return is_on
+
+    def is_device_offline(self, device_code: str) -> bool:
+        """Whether the last poll found the device offline.
+
+        False when the cloud reported neither online nor offline. Lags: the
+        cloud takes 4 to 5 minutes to notice the device dropped.
+        """
+        device_data = self.get_device_data(device_code) or {}
+        is_offline = device_data.get("device_status") == DEVICE_STATUS_OFFLINE
+
+        return is_offline
 
     def get_device_meta(self, device_code: str) -> DeviceMeta:
         """Name, ids and model from the device lists, read with this API type's

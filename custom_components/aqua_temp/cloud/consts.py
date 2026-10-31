@@ -45,6 +45,9 @@ PRODUCT_IDS = [
 POWER_MODE_OFF = "0"
 POWER_MODE_ON = "1"
 
+# getDeviceStatus's status for a device the cloud can't reach
+DEVICE_STATUS_OFFLINE = "OFFLINE"
+
 HEADERS = {"Content-Type": "application/json; charset=utf-8"}
 
 API_MAX_ATTEMPTS = 3
