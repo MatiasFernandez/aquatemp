@@ -100,6 +100,17 @@ class BaseEntity(CoordinatorEntity):
         self._device_code = device_code
 
     @property
+    def available(self) -> bool:
+        """Unavailable while the device is offline, unless the entity doesn't
+        show its values: the cloud keeps answering with the last ones it got,
+        as if they were current."""
+        is_offline = self.local_coordinator.is_device_offline(self._device_code)
+
+        return super().available and (
+            self._entity_description.available_offline or not is_offline
+        )
+
+    @property
     def device_code(self):
         return self._device_code
 

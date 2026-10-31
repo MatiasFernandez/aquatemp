@@ -18,6 +18,7 @@ from pytest_homeassistant_custom_component.common import (
     async_fire_time_changed,
 )
 
+from custom_components.aqua_temp.cloud.exceptions import OperationFailedException
 from custom_components.aqua_temp.common.consts import DOMAIN
 from custom_components.aqua_temp.common.device_lookup import async_get_ha_device
 from custom_components.aqua_temp.diagnostics import (
@@ -26,9 +27,10 @@ from custom_components.aqua_temp.diagnostics import (
 )
 from homeassistant.const import CONF_USERNAME
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.update_coordinator import REQUEST_REFRESH_DEFAULT_COOLDOWN
-from homeassistant.util import slugify
+from homeassistant.util import dt as dt_util, slugify
 from tests.cloud.mock_cloud import (
     DEVICE_CODE,
     cloud_with,
@@ -489,6 +491,48 @@ async def test_climate_keeps_its_temperature_unit_when_another_is_selected(
     assert temperatures(hass.states.get(climate_entity_id(hass)))["temperature"] == 28.0
 
 
+async def set_temperature(hass: HomeAssistant, temperature: float):
+    await hass.services.async_call(
+        "climate",
+        "set_temperature",
+        {"entity_id": climate_entity_id(hass), "temperature": temperature},
+        blocking=True,
+    )
+
+
+async def past_refresh_cooldowns(hass: HomeAssistant):
+    """Move past the coordinator's 10 s refresh cooldown twice, so a refresh
+    requested during one runs, and the cooldown it starts ends too.
+
+    Setup requests a refresh while one is cooling down, so one is still
+    waiting to run after setup."""
+    for seconds in (11, 22):
+        async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=seconds))
+        await hass.async_block_till_done()
+
+
+@cloud_with(POWERED_ON | {CONTROL: "control.device_timeout"})
+async def test_control_the_device_did_not_acknowledge_fails_with_a_clear_error(
+    hass, entry
+):
+    with pytest.raises(HomeAssistantError) as failure:
+        await set_temperature(hass, 26.5)
+
+    assert failure.value.translation_key == "device_not_responding"
+
+
+@cloud_with(POWERED_ON | {CONTROL: "synthetic/error_generic"})
+async def test_failed_control_polls_the_device_again(hass, entry, wire):
+    await past_refresh_cooldowns(hass)
+    wire.clear()
+
+    with pytest.raises(OperationFailedException):
+        await set_temperature(hass, 26.5)
+    await hass.async_block_till_done()
+
+    assert DATA in [endpoint for endpoint, _ in wire]
+
+
 @cloud_with(RESPONSES | {DEVICE_LIST: two_device_list()})
 @pytest.mark.parametrize("device_id", [DEVICE_ID, OTHER_DEVICE_ID])
 async def test_device_diagnostics_match_its_entry_in_the_config_entry_ones(
@@ -612,3 +656,60 @@ async def test_status_sensor_recovers_from_an_unknown_state(hass, entry):
     await hass.async_block_till_done()
 
     assert hass.states.get(status_entity_id(hass)).state == "on"
+
+
+STATUS = "app/device/getDeviceStatus"
+
+
+def unique_id(platform: str, key: str) -> str:
+    return slugify(f"{DOMAIN}_{platform}_{key}_{DEVICE_CODE}")
+
+
+def available_states(hass: HomeAssistant, entry: MockConfigEntry) -> dict[str, str]:
+    """The state of each of the entry's enabled entities that is available,
+    by unique id."""
+    registry = er.async_get(hass)
+    states = {
+        registry_entry.unique_id: hass.states.get(registry_entry.entity_id).state
+        for registry_entry in er.async_entries_for_config_entry(
+            registry, entry.entry_id
+        )
+        if registry_entry.disabled_by is None
+    }
+
+    return {key: state for key, state in states.items() if state != "unavailable"}
+
+
+@cloud_with(RESPONSES | {STATUS: "device_status.offline"})
+async def test_offline_device_shows_only_what_is_not_its_values(hass, entry):
+    # Its values are the cloud's last cached ones
+    assert available_states(hass, entry) == {
+        unique_id("binary_sensor", "api_status"): "on",
+        unique_id("binary_sensor", "device_status"): "off",
+        unique_id("select", "temperature_unit"): "°C",
+    }
+
+
+@cloud_with(RESPONSES | {STATUS: ["device_status.offline", "device_status.online"]})
+async def test_device_values_are_available_again_once_online(hass, entry):
+    await hass.data[DOMAIN][entry.entry_id].async_refresh()
+    await hass.async_block_till_done()
+
+    assert hass.states.get(climate_entity_id(hass)).state == "off"
+
+
+@cloud_with(RESPONSES | {STATUS: ["device_status.online", "device_status.offline"]})
+async def test_control_to_a_device_that_went_offline_fails_with_a_clear_error(
+    hass, entry
+):
+    """Turning it on reads the device again before setting the mode, and finds
+    it offline."""
+    with pytest.raises(HomeAssistantError) as failure:
+        await hass.services.async_call(
+            "climate",
+            "set_hvac_mode",
+            {"entity_id": climate_entity_id(hass), "hvac_mode": "heat"},
+            blocking=True,
+        )
+
+    assert failure.value.translation_key == "device_offline"

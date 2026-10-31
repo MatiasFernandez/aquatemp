@@ -7,9 +7,15 @@ so value types count: 28.0 is not 28 and "1" is not 1.
 
 import json
 
+from aiohttp import ClientConnectionError, ClientResponseError
 import pytest
 
-from custom_components.aqua_temp.cloud.exceptions import OperationFailedException
+from custom_components.aqua_temp.cloud.exceptions import (
+    DeviceNotRespondingError,
+    DeviceOfflineError,
+    InvalidTokenError,
+    OperationFailedException,
+)
 
 from .mock_cloud import DEVICE_CODE, cloud_with, data_with
 
@@ -18,6 +24,14 @@ CONTROL = "app/device/control"
 DATA = "app/device/getDataByCode"
 STATUS = "app/device/getDeviceStatus"
 SHARED_APPECT = "app/device/getMyAppectDeviceShareDataList"
+# What logging in again sends: login, user info, then the three device lists
+LOGIN_AGAIN = [
+    "app/user/login",
+    "app/user/getUserInfo",
+    "app/device/deviceList",
+    "app/device/getMyTobeAppectDeviceShareDataList",
+    SHARED_APPECT,
+]
 
 HITEMP_DEVICE_CODE = "000000000002"
 
@@ -121,15 +135,7 @@ async def test_set_fan_mode_writes_the_profile_value(heat_pump, wire, fan_mode, 
 async def test_expired_token_on_write_logs_in_again_and_retries(heat_pump, wire):
     await heat_pump.set_temperature(DEVICE_CODE, 26.5)
 
-    assert [endpoint for endpoint, _ in wire] == [
-        CONTROL,
-        "app/user/login",
-        "app/user/getUserInfo",
-        "app/device/deviceList",
-        "app/device/getMyTobeAppectDeviceShareDataList",
-        "app/device/getMyAppectDeviceShareDataList",
-        CONTROL,
-    ]
+    assert [endpoint for endpoint, _ in wire] == [CONTROL, *LOGIN_AGAIN, CONTROL]
     assert_sent(wire[-1][1], wire[0][1])
 
     # Possible bug: rediscovery replaces the polled values with the
@@ -137,20 +143,101 @@ async def test_expired_token_on_write_logs_in_again_and_retries(heat_pump, wire)
     assert "T02" not in heat_pump.get_device_data(DEVICE_CODE)
 
 
-@cloud_with(RESPONSES | {CONTROL: ["synthetic/error_generic"] * 3})
-async def test_write_failing_every_attempt_raises(heat_pump, wire):
-    with pytest.raises(OperationFailedException) as failure:
+@cloud_with(
+    RESPONSES
+    | {CONTROL: ["synthetic/error_token_expired", "synthetic/error_token_expired"]}
+)
+async def test_write_logs_in_again_only_once(heat_pump, wire):
+    with pytest.raises(InvalidTokenError):
+        await heat_pump.set_temperature(DEVICE_CODE, 26.5)
+
+    assert [endpoint for endpoint, _ in wire] == [CONTROL, *LOGIN_AGAIN, CONTROL]
+
+
+@pytest.mark.parametrize(
+    "cloud_responses",
+    [
+        pytest.param(
+            RESPONSES
+            | {CONTROL: [ClientConnectionError(), "synthetic/control_success"]},
+            id="connection-error",
+        ),
+        pytest.param(
+            RESPONSES | {CONTROL: [502, "synthetic/control_success"]},
+            id="server-error",
+        ),
+    ],
+)
+async def test_write_that_failed_in_transit_is_retried(heat_pump, wire):
+    await heat_pump.set_temperature(DEVICE_CODE, 26.5)
+
+    assert [endpoint for endpoint, _ in wire] == [CONTROL, CONTROL]
+    assert_sent(wire[1][1], wire[0][1])
+
+
+@cloud_with(RESPONSES | {CONTROL: [ClientConnectionError()] * 3})
+async def test_write_failing_in_transit_every_attempt_raises(heat_pump, wire):
+    with pytest.raises(ClientConnectionError):
         await heat_pump.set_temperature(DEVICE_CODE, 26.5)
 
     assert [endpoint for endpoint, _ in wire] == [CONTROL] * 3
-    assert wire[0][1] == wire[1][1] == wire[2][1]
+
+
+@cloud_with(RESPONSES | {CONTROL: "synthetic/error_generic"})
+async def test_write_the_cloud_rejects_raises_without_retrying(heat_pump, wire):
+    with pytest.raises(OperationFailedException) as failure:
+        await heat_pump.set_temperature(DEVICE_CODE, 26.5)
+
+    assert [endpoint for endpoint, _ in wire] == [CONTROL]
     assert failure.value.operation == "Set_Temp"
 
 
-@cloud_with(RESPONSES | {CONTROL: [500, "synthetic/control_success"]})
-async def test_write_failing_with_an_http_error_is_retried(heat_pump, wire):
-    await heat_pump.set_temperature(DEVICE_CODE, 26.5)
+@pytest.mark.parametrize(
+    ("cloud_responses", "error"),
+    [
+        pytest.param(
+            RESPONSES | {CONTROL: 400}, ClientResponseError, id="client-error"
+        ),
+    ],
+)
+async def test_write_that_reached_the_cloud_is_not_retried(heat_pump, wire, error):
+    with pytest.raises(error):
+        await heat_pump.set_temperature(DEVICE_CODE, 26.5)
 
-    # Still logged in, so the retry goes straight to the write
-    assert [endpoint for endpoint, _ in wire] == [CONTROL, CONTROL]
-    assert_sent(wire[1][1], wire[0][1])
+    assert [endpoint for endpoint, _ in wire] == [CONTROL]
+
+
+@pytest.mark.parametrize(
+    "cloud_responses",
+    [
+        pytest.param(
+            RESPONSES | {CONTROL: "control.device_timeout"}, id="cloud-gave-up"
+        ),
+        pytest.param(RESPONSES | {CONTROL: TimeoutError()}, id="request-timed-out"),
+    ],
+)
+async def test_write_the_device_did_not_acknowledge_fails_once(heat_pump, wire):
+    with pytest.raises(
+        DeviceNotRespondingError,
+        match="didn't respond to Set_Temp, the change may or may not have been applied",
+    ):
+        await heat_pump.set_temperature(DEVICE_CODE, 26.5)
+
+    assert [endpoint for endpoint, _ in wire] == [CONTROL]
+
+
+@cloud_with(RESPONSES | {STATUS: "device_status.offline"})
+async def test_write_to_an_offline_device_is_not_sent(heat_pump, wire):
+    with pytest.raises(DeviceOfflineError, match="offline, so Set_Temp wasn't sent"):
+        await heat_pump.set_temperature(DEVICE_CODE, 26.5)
+
+    assert wire == []
+
+
+@cloud_with(RESPONSES | {STATUS: ["device_status.online", "device_status.offline"]})
+async def test_hvac_mode_is_not_sent_once_the_device_went_offline(heat_pump, wire):
+    """The device is read again after powering it on, before setting the mode."""
+    with pytest.raises(DeviceOfflineError):
+        await heat_pump.set_hvac_mode(DEVICE_CODE, "heat")
+
+    assert [endpoint for endpoint, _ in wire] == [CONTROL, DATA, STATUS]
