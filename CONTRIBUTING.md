@@ -95,7 +95,9 @@ uv run mutmut show <mutant>        # the diff of one
 uv run mutmut browse               # the same, interactively
 ```
 
-A surviving mutant is a change the tests don't notice. Some are harmless: log messages, or edits that don't change behaviour. The rest point at a missing assertion or test. Delete `mutants/` to start over after changing the configuration.
+A surviving mutant is a change the tests don't notice. Some are harmless edits that don't change behaviour; the rest point at a missing assertion or test. Delete `mutants/` to start over after changing the configuration.
+
+`_LOGGER` calls are not mutated, including calls split over several lines: `do_not_mutate_patterns` under `[tool.mutmut]` skips them. Their mutants only change the log output, which few tests read, so most survive and bury the useful ones. To skip other code, prefer adding a pattern there over a `# pragma: no mutate` on each line.
 
 ## Developer scripts
 
