@@ -1,17 +1,22 @@
 """Setting up a config entry on a real Home Assistant: failures, timing, the
 entry's options, and data stored by older versions."""
 
+from datetime import timedelta
 import logging
 
 from cryptography.fernet import Fernet
 import pytest
-from pytest_homeassistant_custom_component.common import MockConfigEntry
+from pytest_homeassistant_custom_component.common import (
+    MockConfigEntry,
+    async_fire_time_changed,
+)
 
 from custom_components.aqua_temp.common.consts import CONF_API_TYPE, DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, EVENT_HOMEASSISTANT_START
 from homeassistant.core import CoreState, HomeAssistant
 from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers.update_coordinator import REQUEST_REFRESH_DEFAULT_COOLDOWN
 from tests.cloud.mock_cloud import cloud_with
 
 from .conftest import add_entry
@@ -37,6 +42,12 @@ def cloud_responses() -> dict:
 
 async def set_up(hass: HomeAssistant, entry: MockConfigEntry) -> None:
     await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+
+async def tick(hass: HomeAssistant, freezer, seconds: float) -> None:
+    freezer.tick(timedelta(seconds=seconds))
+    async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
 
@@ -246,3 +257,36 @@ async def test_credentials_stored_by_older_versions_are_dropped(
         "key": key,
         entry.entry_id: {"temperature_unit": {"000000000001": "°F"}},
     }
+
+
+@pytest.mark.parametrize(
+    ("options", "interval"),
+    [
+        pytest.param({}, 300, id="default"),
+        pytest.param({"update_interval": 60}, 60, id="option"),
+    ],
+)
+async def test_device_is_polled_at_the_polling_interval(
+    hass, api_type, cloud, wire, freezer, options, interval
+):
+    entry = await add_entry(hass, api_type, options=options)
+    await set_up(hass, entry)
+    # Setup leaves a refresh waiting for the cooldown; the interval counts
+    # from that one
+    await tick(hass, freezer, REQUEST_REFRESH_DEFAULT_COOLDOWN)
+    wire.clear()
+
+    await tick(hass, freezer, interval - 5)
+    polled_early = DATA in [endpoint for endpoint, _ in wire]
+    await tick(hass, freezer, 10)
+
+    assert (polled_early, DATA in [endpoint for endpoint, _ in wire]) == (False, True)
+
+
+@cloud_with(RESPONSES | {DATA: TimeoutError()})
+async def test_entry_option_sets_the_request_timeout(hass, api_type, cloud, caplog):
+    entry = await add_entry(hass, api_type, options={"request_timeout": 15})
+
+    await set_up(hass, entry)
+
+    assert f"Request to {DATA} timed out after 15 s" in caplog.text

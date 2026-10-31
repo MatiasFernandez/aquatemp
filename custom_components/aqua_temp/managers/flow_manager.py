@@ -14,12 +14,16 @@ from homeassistant.data_entry_flow import FlowHandler
 from homeassistant.helpers.aiohttp_client import async_create_clientsession
 
 from ..cloud.client import AquaTempAPI
+from ..cloud.consts import API_REQUEST_TIMEOUT
 from ..cloud.exceptions import LoginError
 from ..common.consts import (
     CONF_API_TYPE,
     CONF_LOG_SESSION_TOKEN,
+    CONF_REQUEST_TIMEOUT,
     CONF_TITLE,
+    CONF_UPDATE_INTERVAL,
     DEFAULT_NAME,
+    DEFAULT_UPDATE_INTERVAL,
     INVALID_TOKEN_SECTION,
 )
 from ..models.config_data import DATA_KEYS, ConfigData
@@ -66,6 +70,12 @@ class IntegrationFlowManager:
                 user_input[CONF_LOG_SESSION_TOKEN] = self._entry.options.get(
                     CONF_LOG_SESSION_TOKEN, False
                 )
+                user_input[CONF_UPDATE_INTERVAL] = self._entry.options.get(
+                    CONF_UPDATE_INTERVAL, DEFAULT_UPDATE_INTERVAL
+                )
+                user_input[CONF_REQUEST_TIMEOUT] = self._entry.options.get(
+                    CONF_REQUEST_TIMEOUT, API_REQUEST_TIMEOUT
+                )
 
                 await PasswordManager.decrypt(
                     self._hass, user_input, self._entry.entry_id
@@ -75,6 +85,8 @@ class IntegrationFlowManager:
             _LOGGER.info(
                 "Config flow submitted, "
                 f"API Type: {user_input.get(CONF_API_TYPE)}, "
+                f"Update Interval: {user_input.get(CONF_UPDATE_INTERVAL)}, "
+                f"Request Timeout: {user_input.get(CONF_REQUEST_TIMEOUT)}, "
                 f"Log Session Token: {user_input.get(CONF_LOG_SESSION_TOKEN, False)}"
             )
 

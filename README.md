@@ -49,7 +49,14 @@ This fork uses the same integration domain (`aqua_temp`) as upstream and its oth
 
 You can add several config entries, one per account, and each account can have several heat pumps. To change the credentials or API type later, open the integration's **Configure** dialog.
 
-The integration polls the cloud every 5 minutes, and right after each change made from Home Assistant.
+The integration polls the cloud every 5 minutes by default, and right after each change made from Home Assistant.
+
+The **Configure** dialog also sets:
+
+| Option           | Default     | What it does                                                                                                                                                                                                    |
+| ---------------- | ----------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Polling interval | 300 seconds | How often the cloud is polled for the heat pump's values, from 30 to 3600 seconds. Each poll makes a few requests per heat pump.                                                                                |
+| Request timeout  | 10 seconds  | How long a request to the cloud may take before it fails, from 5 to 60 seconds. A change to an online heat pump is answered in about 5 seconds; a longer timeout only delays the error when it doesn't respond. |
 
 > [!NOTE]
 > **Password longer than 16 characters?** The Aqua Temp app (seen in version 2.1.5) silently keeps only the first 16 characters of the password, both when the account is created and at every login, so the account's real password may be shorter than the one you type. This integration uses the full password as entered and hashes it for login, since that behavior could change. If a longer password fails with "Invalid credentials" but works in the app, enter only its first 16 characters.

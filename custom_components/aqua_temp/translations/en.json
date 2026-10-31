@@ -32,12 +32,16 @@
           "username": "Username",
           "password": "Password",
           "api_type": "API type",
+          "update_interval": "Polling interval (seconds)",
+          "request_timeout": "Request timeout (seconds)",
           "log_session_token": "Log session token (for debugging)"
         },
         "data_description": {
           "username": "The email address you log in to the app with, exactly as registered.",
           "password": "If a password longer than 16 characters fails here but works in the app, enter only its first 16 characters: the app may have kept only those when the account was created.",
           "api_type": "Aqua Temp for the current Aqua Temp app, HiTemp for the HiTemp app. Aqua Temp (<=1.5.8) is the legacy backend of app versions up to 1.5.8; only try it if the others fail.",
+          "update_interval": "How often the cloud is polled for the heat pump's values, from 30 to 3600 seconds. Each poll makes a few requests per heat pump; a change made from Home Assistant is always followed by a poll.",
+          "request_timeout": "How long a request to the cloud may take before it fails, from 5 to 60 seconds. A change to an online heat pump is answered in about 5 seconds. A longer timeout only delays the error when the heat pump doesn't respond.",
           "log_session_token": "Writes the API session token to the Home Assistant log once per login, at WARNING. It is a credential: anyone holding it can control your heat pump until the next login. Turn off before sharing logs."
         }
       }
