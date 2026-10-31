@@ -109,10 +109,12 @@ class AquaTempAPI:
         on_new_device: Callable[[str], None] | None = None,
         log_session_token: bool = False,
         log_label: str = "Aqua Temp",
+        request_timeout: float = API_REQUEST_TIMEOUT,
     ):
         """Initialize the client; the caller owns the session and closes it.
 
         on_new_device is called with a device's code after its first fetch.
+        request_timeout is the seconds each request may take in total.
         """
 
         self._devices = {}
@@ -130,6 +132,7 @@ class AquaTempAPI:
         self._on_new_device = on_new_device
         self._log_session_token = log_session_token
         self._log_label = log_label
+        self._request_timeout = request_timeout
 
         self._dispatched_devices = []
         self._device_list_request_data = {}
@@ -786,7 +789,7 @@ class AquaTempAPI:
                 headers=self._headers,
                 json=data,
                 ssl=False,
-                timeout=ClientTimeout(total=API_REQUEST_TIMEOUT),
+                timeout=ClientTimeout(total=self._request_timeout),
             ) as response:
                 response.raise_for_status()
 
@@ -797,7 +800,7 @@ class AquaTempAPI:
             # The bare exception has an empty message, which would reach the
             # logs and Home Assistant's errors as nothing at all
             raise TimeoutError(
-                f"Request to {endpoint} timed out after {API_REQUEST_TIMEOUT} s"
+                f"Request to {endpoint} timed out after {self._request_timeout} s"
             ) from None
 
         return result

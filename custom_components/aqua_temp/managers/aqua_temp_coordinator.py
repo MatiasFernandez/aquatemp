@@ -22,7 +22,6 @@ from ..common.consts import (
     DATA_ITEM_LOGIN_DETAILS,
     DOMAIN,
     SIGNAL_AQUA_TEMP_DEVICE_NEW,
-    UPDATE_API_INTERVAL,
 )
 from .aqua_temp_config_manager import AquaTempConfigManager
 
@@ -42,7 +41,7 @@ class AquaTempCoordinator(DataUpdateCoordinator):
             hass,
             _LOGGER,
             name=config_manager.entry_title,
-            update_interval=UPDATE_API_INTERVAL,
+            update_interval=config_manager.update_interval,
             update_method=self._async_update_data,
         )
 
@@ -54,6 +53,7 @@ class AquaTempCoordinator(DataUpdateCoordinator):
             on_new_device=self._on_new_device,
             log_session_token=config_manager.log_session_token,
             log_label=config_manager.entry_title,
+            request_timeout=config_manager.request_timeout,
         )
         self._config_manager = config_manager
 
@@ -83,7 +83,7 @@ class AquaTempCoordinator(DataUpdateCoordinator):
         can mark the integration as failed and surface a re-auth prompt to the
         user. Any other exception (DNS timeout, transient network error, AquaTemp
         cloud blip) is caught and logged so platform setup still proceeds — the
-        coordinator's regular 5-min update tick will retry the login. Without
+        coordinator's next regular update will retry the login. Without
         this, a brief network hiccup at HA boot leaves the integration
         permanently broken until a manual reload.
         """

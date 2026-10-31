@@ -5,11 +5,19 @@ from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.helpers import selector
 
 from ..cloud.api_types import API_TYPE_LEGACY, API_TYPES, APIType
+from ..cloud.consts import API_REQUEST_TIMEOUT
 from ..common.consts import (
     CONF_API_TYPE,
     CONF_LOG_SESSION_TOKEN,
+    CONF_REQUEST_TIMEOUT,
     CONF_TITLE,
+    CONF_UPDATE_INTERVAL,
     DEFAULT_NAME,
+    DEFAULT_UPDATE_INTERVAL,
+    MAX_REQUEST_TIMEOUT,
+    MAX_UPDATE_INTERVAL,
+    MIN_REQUEST_TIMEOUT,
+    MIN_UPDATE_INTERVAL,
 )
 
 DATA_KEYS = [CONF_USERNAME, CONF_PASSWORD, CONF_API_TYPE]
@@ -88,6 +96,26 @@ class ConfigData:
         }
 
         if with_options:
+            new_user_input[
+                vol.Optional(
+                    CONF_UPDATE_INTERVAL,
+                    default=user_input.get(
+                        CONF_UPDATE_INTERVAL, DEFAULT_UPDATE_INTERVAL
+                    ),
+                )
+            ] = vol.All(
+                vol.Coerce(int),
+                vol.Range(min=MIN_UPDATE_INTERVAL, max=MAX_UPDATE_INTERVAL),
+            )
+            new_user_input[
+                vol.Optional(
+                    CONF_REQUEST_TIMEOUT,
+                    default=user_input.get(CONF_REQUEST_TIMEOUT, API_REQUEST_TIMEOUT),
+                )
+            ] = vol.All(
+                vol.Coerce(int),
+                vol.Range(min=MIN_REQUEST_TIMEOUT, max=MAX_REQUEST_TIMEOUT),
+            )
             new_user_input[
                 vol.Optional(
                     CONF_LOG_SESSION_TOKEN,
