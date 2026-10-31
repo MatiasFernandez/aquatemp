@@ -243,6 +243,11 @@ class AquaTempCoordinator(DataUpdateCoordinator):
 
         return power
 
+    def is_device_offline(self, device_code: str) -> bool:
+        is_offline = self._api.is_device_offline(device_code)
+
+        return is_offline
+
     def get_hvac_modes(self, device_code: str) -> list[HVACMode]:
         modes = self.get_device_profile(device_code).hvac_modes
 

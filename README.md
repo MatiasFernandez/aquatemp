@@ -49,7 +49,7 @@ This fork uses the same integration domain (`aqua_temp`) as upstream and its oth
 
 You can add several config entries, one per account, and each account can have several heat pumps. To change the credentials or API type later, open the integration's **Configure** dialog.
 
-The integration polls the cloud every 5 minutes, and right after each change made from Home Assistant.
+The integration polls the cloud every 5 minutes, and right after each change made from Home Assistant. The cloud takes 4 to 5 minutes to notice that a heat pump went offline, but shows it back online within seconds.
 
 > [!NOTE]
 > **Password longer than 16 characters?** The Aqua Temp app (seen in version 2.1.5) silently keeps only the first 16 characters of the password, both when the account is created and at every login, so the account's real password may be shorter than the one you type. This integration uses the full password as entered and hashes it for login, since that behavior could change. If a longer password fails with "Invalid credentials" but works in the app, enter only its first 16 characters.

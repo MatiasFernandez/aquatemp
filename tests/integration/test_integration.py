@@ -754,3 +754,51 @@ async def test_status_sensor_recovers_from_an_unknown_state(hass, entry):
     await hass.async_block_till_done()
 
     assert hass.states.get(status_entity_id(hass)).state == "on"
+
+
+STATUS = "app/device/getDeviceStatus"
+
+
+def unique_id(platform: str, key: str) -> str:
+    return slugify(f"{DOMAIN}_{platform}_{key}_{DEVICE_CODE}")
+
+
+def available_states(hass: HomeAssistant, entry: MockConfigEntry) -> dict[str, str]:
+    """The state of each of the entry's enabled entities that is available,
+    by unique id."""
+    registry = er.async_get(hass)
+    states = {
+        registry_entry.unique_id: hass.states.get(registry_entry.entity_id).state
+        for registry_entry in er.async_entries_for_config_entry(
+            registry, entry.entry_id
+        )
+        if registry_entry.disabled_by is None
+    }
+
+    return {key: state for key, state in states.items() if state != "unavailable"}
+
+
+@cloud_with(RESPONSES | {STATUS: "device_status.offline"})
+async def test_offline_device_shows_only_what_is_not_its_values(hass, entry):
+    # Its values are the cloud's last cached ones
+    assert available_states(hass, entry) == {
+        unique_id("binary_sensor", "api_status"): "on",
+        unique_id("binary_sensor", "device_status"): "off",
+        unique_id("select", "temperature_unit"): "°C",
+        unique_id("button", "refresh_data"): "unknown",
+    }
+
+
+@cloud_with(RESPONSES | {STATUS: ["device_status.offline", "device_status.online"]})
+async def test_device_values_are_available_again_once_online(hass, entry, freezer):
+    await hass.services.async_call(
+        "button",
+        "press",
+        {"entity_id": refresh_button_entity_id(hass)},
+        blocking=True,
+    )
+    freezer.tick(timedelta(seconds=REQUEST_REFRESH_DEFAULT_COOLDOWN))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert hass.states.get(climate_entity_id(hass)).state == "off"

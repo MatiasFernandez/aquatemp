@@ -32,6 +32,9 @@ class AquaTempEntityDescription(EntityDescription):
     platform: Platform | None = None
     # Codes the entity reads; it is skipped on a device that doesn't know one
     source_codes: tuple[str, ...] = ()
+    # Stays available while the device is offline, as it doesn't show the
+    # device's values
+    available_offline: bool = False
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -84,6 +87,7 @@ DEFAULT_ENTITY_DESCRIPTIONS: list[AquaTempEntityDescription] = [
         device_class=BinarySensorDeviceClass.CONNECTIVITY,
         on_value=True,
         translation_key=API_STATUS,
+        available_offline=True,
     ),
     AquaTempSelectEntityDescription(
         key="temperature_unit",
@@ -91,6 +95,7 @@ DEFAULT_ENTITY_DESCRIPTIONS: list[AquaTempEntityDescription] = [
         options=[UnitOfTemperature.CELSIUS, UnitOfTemperature.FAHRENHEIT],
         entity_category=EntityCategory.CONFIG,
         translation_key="temperature_unit",
+        available_offline=True,
     ),
     AquaTempBinarySensorEntityDescription(
         key="is_fault",
@@ -107,6 +112,7 @@ DEFAULT_ENTITY_DESCRIPTIONS: list[AquaTempEntityDescription] = [
         off_value="OFFLINE",
         device_class=BinarySensorDeviceClass.CONNECTIVITY,
         translation_key="device_status",
+        available_offline=True,
     ),
     # Named after the device
     AquaTempClimateEntityDescription(key="Mode", name=None),
