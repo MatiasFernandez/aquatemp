@@ -81,3 +81,6 @@ also_copy = ["custom_components"]
 # Log calls, whole even when split over lines: their mutants only change the log
 # output, so most survive as noise. See CONTRIBUTING.md
 do_not_mutate_patterns = ['_LOGGER\.(debug|info|warning|error|exception)\(']
+# Runs the tests only in child processes: a Home Assistant instance the
+# integration tests leave behind crashes mutmut's own process on exit otherwise
+process_isolation = "forkserver"
