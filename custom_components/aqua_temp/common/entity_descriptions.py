@@ -48,6 +48,8 @@ class AquaTempBinarySensorEntityDescription(
 ):
     platform: Platform | None = Platform.BINARY_SENSOR
     on_value: str | bool | None = None
+    # When set, any state other than on_value or off_value is unavailable
+    off_value: str | None = None
     attributes: list[str] | None = None
 
 
@@ -94,6 +96,7 @@ DEFAULT_ENTITY_DESCRIPTIONS: list[AquaTempEntityDescription] = [
         key="device_status",
         name="Status",
         on_value="ONLINE",
+        off_value="OFFLINE",
         device_class=BinarySensorDeviceClass.CONNECTIVITY,
         translation_key="device_status",
     ),

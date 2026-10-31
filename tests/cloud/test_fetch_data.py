@@ -153,7 +153,7 @@ async def test_error_response_keeps_device_list_data(
 
     device = load_fixture(api_type, "synthetic/device_list")["objectResult"][0]
 
-    assert api.get_device_data(DEVICE_CODE) == device
+    assert api.get_device_data(DEVICE_CODE) == device | {"device_status": "ONLINE"}
     assert "Failed to fetch parameters, Error: Failed" in caplog.text
 
 

@@ -31,7 +31,7 @@ BASE_RESPONSES = {
     Endpoints.ListRegisteredDevices: "synthetic/device_list",
     Endpoints.ListSharedTobeDevices: "synthetic/device_list_empty",
     Endpoints.ListSharedAppectDevices: "synthetic/device_list_empty",
-    Endpoints.DeviceStatus: "synthetic/device_status",
+    Endpoints.DeviceStatus: "device_status.online",
 }
 
 
