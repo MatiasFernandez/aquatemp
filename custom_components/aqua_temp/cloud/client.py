@@ -44,6 +44,7 @@ from .device_profiles import DeviceProfile, DeviceProfiles
 from .endpoints import Endpoints
 from .exceptions import (
     DeviceNotRespondingError,
+    DeviceOfflineError,
     InvalidTokenError,
     LoginError,
     OperationFailedException,
@@ -322,7 +323,7 @@ class AquaTempAPI:
             ]
         }
 
-        await self._perform_action(request_data, set_temp_pc_key)
+        await self._perform_action(device_code, request_data, set_temp_pc_key)
 
     async def _set_power_mode(self, device_code: str, value):
         """Set new target power mode."""
@@ -343,7 +344,7 @@ class AquaTempAPI:
             ]
         }
 
-        await self._perform_action(request_data, power_pc_key)
+        await self._perform_action(device_code, request_data, power_pc_key)
 
     async def _set_hvac_mode(self, device_code: str, hvac_mode: Mode):
         """Set new target hvac mode."""
@@ -388,7 +389,7 @@ class AquaTempAPI:
 
         request_data = {DEVICE_CONTROL_PARAM: control_params}
 
-        await self._perform_action(request_data, mode_pc_key)
+        await self._perform_action(device_code, request_data, mode_pc_key)
 
     async def set_fan_mode(self, device_code: str, fan_mode: FanMode):
         """Set the fan mode to its wire value in the device's profile."""
@@ -410,10 +411,16 @@ class AquaTempAPI:
             ]
         }
 
-        await self._perform_action(request_data, fan_pc_key)
+        await self._perform_action(device_code, request_data, fan_pc_key)
 
-    async def _perform_action(self, request_data: dict, operation: str):
+    async def _perform_action(
+        self, device_code: str, request_data: dict, operation: str
+    ):
         """Send a control, retrying only what another attempt can fix.
+
+        Refused with DeviceOfflineError, without a request, while the last
+        poll found the device offline: the cloud would only give up on it
+        after about 50 s.
 
         A connection error or a 5xx is retried, up to API_MAX_ATTEMPTS
         attempts, and an expired token once, after logging in again. Anything
@@ -422,6 +429,9 @@ class AquaTempAPI:
         waiting longer. The cloud giving up on the device, or the request
         timing out while it waits, raises DeviceNotRespondingError.
         """
+        if self.is_device_offline(device_code):
+            raise DeviceOfflineError(operation)
+
         param_error_msg = self._api_profile.get(APIParam.ErrorMessage)
         param_error_code = self._api_profile.get(APIParam.ErrorCode)
 

@@ -8,6 +8,7 @@ from .device_profiles import DeviceProfile, DeviceProfiles
 from .endpoints import Endpoints
 from .exceptions import (
     DeviceNotRespondingError,
+    DeviceOfflineError,
     InvalidTokenError,
     LoginError,
     OperationFailedException,
@@ -25,6 +26,7 @@ __all__ = [
     "Credentials",
     "DeviceMeta",
     "DeviceNotRespondingError",
+    "DeviceOfflineError",
     "DeviceProfile",
     "DeviceProfiles",
     "Endpoints",

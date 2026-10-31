@@ -1383,6 +1383,9 @@
   "exceptions": {
     "device_not_responding": {
       "message": "The heat pump didn't respond. The change may or may not have been applied."
+    },
+    "device_offline": {
+      "message": "The heat pump is offline, so it can't be controlled."
     }
   }
 }
