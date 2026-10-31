@@ -12,6 +12,7 @@ import pytest
 
 from custom_components.aqua_temp.cloud.exceptions import (
     DeviceNotRespondingError,
+    DeviceOfflineError,
     InvalidTokenError,
     OperationFailedException,
 )
@@ -223,3 +224,20 @@ async def test_write_the_device_did_not_acknowledge_fails_once(heat_pump, wire):
         await heat_pump.set_temperature(DEVICE_CODE, 26.5)
 
     assert [endpoint for endpoint, _ in wire] == [CONTROL]
+
+
+@cloud_with(RESPONSES | {STATUS: "device_status.offline"})
+async def test_write_to_an_offline_device_is_not_sent(heat_pump, wire):
+    with pytest.raises(DeviceOfflineError, match="offline, so Set_Temp wasn't sent"):
+        await heat_pump.set_temperature(DEVICE_CODE, 26.5)
+
+    assert wire == []
+
+
+@cloud_with(RESPONSES | {STATUS: ["device_status.online", "device_status.offline"]})
+async def test_hvac_mode_is_not_sent_once_the_device_went_offline(heat_pump, wire):
+    """The device is read again after powering it on, before setting the mode."""
+    with pytest.raises(DeviceOfflineError):
+        await heat_pump.set_hvac_mode(DEVICE_CODE, "heat")
+
+    assert [endpoint for endpoint, _ in wire] == [CONTROL, DATA, STATUS]

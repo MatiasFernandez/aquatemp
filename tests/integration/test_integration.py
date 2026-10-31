@@ -696,3 +696,20 @@ async def test_device_values_are_available_again_once_online(hass, entry):
     await hass.async_block_till_done()
 
     assert hass.states.get(climate_entity_id(hass)).state == "off"
+
+
+@cloud_with(RESPONSES | {STATUS: ["device_status.online", "device_status.offline"]})
+async def test_control_to_a_device_that_went_offline_fails_with_a_clear_error(
+    hass, entry
+):
+    """Turning it on reads the device again before setting the mode, and finds
+    it offline."""
+    with pytest.raises(HomeAssistantError) as failure:
+        await hass.services.async_call(
+            "climate",
+            "set_hvac_mode",
+            {"entity_id": climate_entity_id(hass), "hvac_mode": "heat"},
+            blocking=True,
+        )
+
+    assert failure.value.translation_key == "device_offline"

@@ -11,7 +11,11 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, Upda
 
 from ..cloud.client import AquaTempAPI, DeviceMeta
 from ..cloud.device_profiles import DeviceProfile
-from ..cloud.exceptions import DeviceNotRespondingError, LoginError
+from ..cloud.exceptions import (
+    DeviceNotRespondingError,
+    DeviceOfflineError,
+    LoginError,
+)
 from ..common.consts import (
     DATA_ITEM_CONFIG,
     DATA_ITEM_DEVICES,
@@ -188,6 +192,12 @@ class AquaTempCoordinator(DataUpdateCoordinator):
         whether the control succeeded or not."""
         try:
             await control
+
+        except DeviceOfflineError as ex:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="device_offline",
+            ) from ex
 
         except DeviceNotRespondingError as ex:
             raise HomeAssistantError(

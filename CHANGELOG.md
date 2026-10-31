@@ -27,6 +27,7 @@ predate this fork and keep their original format.
 - A control the heat pump doesn't acknowledge fails with an error saying it didn't respond and that the change may or may not have been applied. The cloud gives up on the heat pump after about 50 seconds, and the request after 30
 - After a control fails, the integration polls the heat pump again, so its entities show what it actually did
 - While the cloud reports the heat pump offline, the entities showing its values, the thermostat included, are unavailable. The cloud keeps answering with the last values it got, which showed as current. Status, API Status and Temperature Unit stay available. The cloud takes 4 to 5 minutes to notice the heat pump went offline
+- A control to a heat pump the cloud reports offline fails right away with an error saying so, instead of waiting for the cloud to give up on it
 - Entities for values the heat pump doesn't report are no longer created, and those values are no longer polled. The integration tells them apart from the heat pump's first answer after setup or reload. Entities created for them before stay in the entity registry, shown as no longer provided, and can be deleted
 
 ### Removed

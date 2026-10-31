@@ -51,3 +51,17 @@ class DeviceNotRespondingError(Exception):
         )
 
         return result
+
+
+class DeviceOfflineError(Exception):
+    """The last poll found the device offline, so the control wasn't sent."""
+
+    operation: str
+
+    def __init__(self, operation: str):
+        self.operation = operation
+
+    def __str__(self):
+        result = f"The device is offline, so {self.operation} wasn't sent"
+
+        return result
