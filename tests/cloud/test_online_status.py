@@ -1,5 +1,7 @@
 """Online state: getDeviceStatus reports it, and it lands in device data."""
 
+import pytest
+
 from .mock_cloud import DEVICE_CODE, cloud_with
 
 # Literal on purpose: the expected values must not come from the config under test
@@ -59,3 +61,28 @@ async def test_status_follows_each_poll(api):
     await api.update()
 
     assert api.get_device_data(DEVICE_CODE)["device_status"] == "ONLINE"
+
+
+@pytest.mark.parametrize(
+    ("cloud_responses", "is_offline"),
+    [
+        pytest.param(RESPONSES | {STATUS: "device_status.online"}, False, id="online"),
+        pytest.param(RESPONSES | {STATUS: "device_status.offline"}, True, id="offline"),
+        pytest.param(
+            RESPONSES
+            | {
+                STATUS: {
+                    "error_code": "0",
+                    "error_msg": "Success",
+                    "objectResult": {"isFault": False},
+                }
+            },
+            False,
+            id="missing",
+        ),
+    ],
+)
+async def test_device_is_offline_only_when_the_cloud_says_so(api, is_offline):
+    await api.update()
+
+    assert api.is_device_offline(DEVICE_CODE) is is_offline

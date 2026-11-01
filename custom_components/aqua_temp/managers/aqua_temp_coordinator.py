@@ -1,7 +1,9 @@
+from collections.abc import Awaitable
 import logging
 
 from homeassistant.components.climate import HVACMode
 from homeassistant.core import Event
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.aiohttp_client import async_create_clientsession
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.entity import DeviceInfo
@@ -9,14 +11,17 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, Upda
 
 from ..cloud.client import AquaTempAPI, DeviceMeta
 from ..cloud.device_profiles import DeviceProfile
-from ..cloud.exceptions import LoginError
+from ..cloud.exceptions import (
+    DeviceNotRespondingError,
+    DeviceOfflineError,
+    LoginError,
+)
 from ..common.consts import (
     DATA_ITEM_CONFIG,
     DATA_ITEM_DEVICES,
     DATA_ITEM_LOGIN_DETAILS,
     DOMAIN,
     SIGNAL_AQUA_TEMP_DEVICE_NEW,
-    UPDATE_API_INTERVAL,
 )
 from .aqua_temp_config_manager import AquaTempConfigManager
 
@@ -36,7 +41,7 @@ class AquaTempCoordinator(DataUpdateCoordinator):
             hass,
             _LOGGER,
             name=config_manager.entry_title,
-            update_interval=UPDATE_API_INTERVAL,
+            update_interval=config_manager.update_interval,
             update_method=self._async_update_data,
         )
 
@@ -48,6 +53,7 @@ class AquaTempCoordinator(DataUpdateCoordinator):
             on_new_device=self._on_new_device,
             log_session_token=config_manager.log_session_token,
             log_label=config_manager.entry_title,
+            request_timeout=config_manager.request_timeout,
         )
         self._config_manager = config_manager
 
@@ -77,7 +83,7 @@ class AquaTempCoordinator(DataUpdateCoordinator):
         can mark the integration as failed and surface a re-auth prompt to the
         user. Any other exception (DNS timeout, transient network error, AquaTemp
         cloud blip) is caught and logged so platform setup still proceeds — the
-        coordinator's regular 5-min update tick will retry the login. Without
+        coordinator's next regular update will retry the login. Without
         this, a brief network hiccup at HA boot leaves the integration
         permanently broken until a manual reload.
         """
@@ -173,19 +179,34 @@ class AquaTempCoordinator(DataUpdateCoordinator):
         return self._config_manager.get_temperature_unit(device_code)
 
     async def set_hvac_mode(self, device_code: str, hvac_mode: HVACMode):
-        await self._api.set_hvac_mode(device_code, hvac_mode)
-
-        await self.async_request_refresh()
+        await self._control(self._api.set_hvac_mode(device_code, hvac_mode))
 
     async def set_temperature(self, device_code: str, temperature: float):
-        await self._api.set_temperature(device_code, temperature)
-
-        await self.async_request_refresh()
+        await self._control(self._api.set_temperature(device_code, temperature))
 
     async def set_fan_mode(self, device_code: str, fan_mode):
-        await self._api.set_fan_mode(device_code, fan_mode)
+        await self._control(self._api.set_fan_mode(device_code, fan_mode))
 
-        await self.async_request_refresh()
+    async def _control(self, control: Awaitable[None]):
+        """Send a control, then poll so entities show what the device did,
+        whether the control succeeded or not."""
+        try:
+            await control
+
+        except DeviceOfflineError as ex:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="device_offline",
+            ) from ex
+
+        except DeviceNotRespondingError as ex:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="device_not_responding",
+            ) from ex
+
+        finally:
+            await self.async_request_refresh()
 
     async def set_temperature_unit(self, device_code: str, option: str):
         await self._config_manager.update_temperature_unit(device_code, option)
@@ -231,6 +252,11 @@ class AquaTempCoordinator(DataUpdateCoordinator):
         power = self._api.get_device_power(device_code)
 
         return power
+
+    def is_device_offline(self, device_code: str) -> bool:
+        is_offline = self._api.is_device_offline(device_code)
+
+        return is_offline
 
     def get_hvac_modes(self, device_code: str) -> list[HVACMode]:
         modes = self.get_device_profile(device_code).hvac_modes

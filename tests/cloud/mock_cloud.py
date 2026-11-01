@@ -137,7 +137,8 @@ async def api(client):
 def cloud_responses() -> dict:
     """Responses to serve on top of BASE_RESPONSES, by endpoint.
 
-    A value is a fixture name, a payload dict or an HTTP error status, served
+    A value is a fixture name, a payload dict, an HTTP error status or an
+    exception to raise, served
     every time; or a list of those, served once each, in order. Override in a
     module, or per test with cloud_with.
     """
@@ -167,7 +168,10 @@ def cloud(api_type, api_profile, cloud_responses, wire):
         url = endpoint_url(api_profile, endpoint)
         callback = record(endpoint)
 
-        if isinstance(response, int):
+        if isinstance(response, Exception):
+            mocked.post(url, exception=response, callback=callback, repeat=repeat)
+
+        elif isinstance(response, int):
             mocked.post(url, status=response, callback=callback, repeat=repeat)
 
         else:

@@ -45,9 +45,18 @@ PRODUCT_IDS = [
 POWER_MODE_OFF = "0"
 POWER_MODE_ON = "1"
 
+# getDeviceStatus's status for a device the cloud can't reach
+DEVICE_STATUS_OFFLINE = "OFFLINE"
+
 HEADERS = {"Content-Type": "application/json; charset=utf-8"}
 
 API_MAX_ATTEMPTS = 3
+
+# Seconds a single request to the cloud may take in total, by default. The
+# official app's HTTP client uses 30 s, but a control to an online device is
+# answered in about 5 s and a read in under 2 s, so a longer wait only delays
+# the error
+API_REQUEST_TIMEOUT = 10
 
 CONFIG_SET_MODE = "mode"
 CONFIG_SET_POWER = "power"

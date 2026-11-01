@@ -10,12 +10,18 @@ import logging
 import sys
 import unicodedata
 
-from aiohttp import ClientResponseError, ClientSession
+from aiohttp import (
+    ClientConnectionError,
+    ClientResponseError,
+    ClientSession,
+    ClientTimeout,
+)
 
 from .api_profile import ApiProfile
 from .api_types import DEVICE_LISTS, DEVICE_REQUEST_PARAMETERS, APIParam
 from .consts import (
     API_MAX_ATTEMPTS,
+    API_REQUEST_TIMEOUT,
     CONFIG_HVAC_MAXIMUM,
     CONFIG_HVAC_MINIMUM,
     CONFIG_HVAC_SET,
@@ -27,6 +33,7 @@ from .consts import (
     CONFIG_SET_TEMPERATURE,
     DEVICE_CONTROL_PARAM,
     DEVICE_CONTROL_VALUE,
+    DEVICE_STATUS_OFFLINE,
     HEADERS,
     HTTP_HEADER_X_TOKEN,
     POWER_MODE_OFF,
@@ -35,10 +42,25 @@ from .consts import (
 )
 from .device_profiles import DeviceProfile, DeviceProfiles
 from .endpoints import Endpoints
-from .exceptions import InvalidTokenError, LoginError, OperationFailedException
+from .exceptions import (
+    DeviceNotRespondingError,
+    DeviceOfflineError,
+    InvalidTokenError,
+    LoginError,
+    OperationFailedException,
+)
 from .modes import FanMode, Mode
 
 _LOGGER = logging.getLogger(__name__)
+
+
+def _is_transient(error: ClientConnectionError | ClientResponseError) -> bool:
+    """Whether the request may succeed if sent again: it didn't reach the cloud,
+    or the cloud failed on its side."""
+    if isinstance(error, ClientResponseError):
+        return error.status >= 500
+
+    return True
 
 
 @dataclass(frozen=True)
@@ -87,10 +109,12 @@ class AquaTempAPI:
         on_new_device: Callable[[str], None] | None = None,
         log_session_token: bool = False,
         log_label: str = "Aqua Temp",
+        request_timeout: float = API_REQUEST_TIMEOUT,
     ):
         """Initialize the client; the caller owns the session and closes it.
 
         on_new_device is called with a device's code after its first fetch.
+        request_timeout is the seconds each request may take in total.
         """
 
         self._devices = {}
@@ -108,6 +132,7 @@ class AquaTempAPI:
         self._on_new_device = on_new_device
         self._log_session_token = log_session_token
         self._log_label = log_label
+        self._request_timeout = request_timeout
 
         self._dispatched_devices = []
         self._device_list_request_data = {}
@@ -301,7 +326,7 @@ class AquaTempAPI:
             ]
         }
 
-        await self._perform_action(request_data, set_temp_pc_key)
+        await self._perform_action(device_code, request_data, set_temp_pc_key)
 
     async def _set_power_mode(self, device_code: str, value):
         """Set new target power mode."""
@@ -322,7 +347,7 @@ class AquaTempAPI:
             ]
         }
 
-        await self._perform_action(request_data, power_pc_key)
+        await self._perform_action(device_code, request_data, power_pc_key)
 
     async def _set_hvac_mode(self, device_code: str, hvac_mode: Mode):
         """Set new target hvac mode."""
@@ -367,7 +392,7 @@ class AquaTempAPI:
 
         request_data = {DEVICE_CONTROL_PARAM: control_params}
 
-        await self._perform_action(request_data, mode_pc_key)
+        await self._perform_action(device_code, request_data, mode_pc_key)
 
     async def set_fan_mode(self, device_code: str, fan_mode: FanMode):
         """Set the fan mode to its wire value in the device's profile."""
@@ -389,52 +414,80 @@ class AquaTempAPI:
             ]
         }
 
-        await self._perform_action(request_data, fan_pc_key)
+        await self._perform_action(device_code, request_data, fan_pc_key)
 
     async def _perform_action(
-        self, request_data: dict, operation: str, attempt: int = 1
+        self, device_code: str, request_data: dict, operation: str
     ):
-        error = None
+        """Send a control, retrying only what another attempt can fix.
 
-        try:
-            param_error_msg = self._api_profile.get(APIParam.ErrorMessage)
-            param_error_code = self._api_profile.get(APIParam.ErrorCode)
+        Refused with DeviceOfflineError, without a request, while the last
+        poll found the device offline: the cloud would only give up on it
+        after about 50 s.
 
-            operation_response = await self._post_request(
-                Endpoints.DeviceControl, request_data
-            )
+        A connection error or a 5xx is retried, up to API_MAX_ATTEMPTS
+        attempts, and an expired token once, after logging in again. Anything
+        else raises at once, a timeout included: the cloud waits for the
+        device to acknowledge, so sending it again only keeps the caller
+        waiting longer. The cloud giving up on the device, or the request
+        timing out while it waits, raises DeviceNotRespondingError.
+        """
+        if self.is_device_offline(device_code):
+            raise DeviceOfflineError(operation)
+
+        param_error_msg = self._api_profile.get(APIParam.ErrorMessage)
+        param_error_code = self._api_profile.get(APIParam.ErrorCode)
+
+        logged_in_again = False
+
+        for attempt in range(1, API_MAX_ATTEMPTS + 1):
+            is_last_attempt = attempt == API_MAX_ATTEMPTS
+
+            try:
+                operation_response = await self._post_request(
+                    Endpoints.DeviceControl, request_data
+                )
+
+            except TimeoutError as ex:
+                raise DeviceNotRespondingError(operation) from ex
+
+            except (ClientConnectionError, ClientResponseError) as ex:
+                if is_last_attempt or not _is_transient(ex):
+                    raise
+
+                await sleep(1)
+
+                continue
 
             error_msg = operation_response.get(param_error_msg)
 
-            if error_msg != "Success":
-                error_code = operation_response.get(param_error_code)
-                if error_code == "-100":
-                    self.set_token()
+            if error_msg == "Success":
+                return
 
-                    error = InvalidTokenError(
-                        f"Perform operation {operation}, "
-                        f"Data: {json.dumps(request_data)}, "
-                        f"Attempt: {attempt}"
-                    )
+            error_code = operation_response.get(param_error_code)
 
-                else:
-                    error = OperationFailedException(
-                        operation, request_data, f"{error_code}: {error_msg}"
-                    )
+            # The cloud's own limit, about 50 s, on waiting for the device
+            if error_code == "-1":
+                raise DeviceNotRespondingError(operation)
 
-        except Exception as ex:
-            error = ex
+            if error_code != "-100":
+                raise OperationFailedException(
+                    operation, request_data, f"{error_code}: {error_msg}"
+                )
 
-        if error is not None:
-            if attempt < API_MAX_ATTEMPTS:
-                await sleep(1)
+            if is_last_attempt or logged_in_again:
+                raise InvalidTokenError(
+                    f"Perform operation {operation}, "
+                    f"Data: {json.dumps(request_data)}, "
+                    f"Attempt: {attempt}"
+                )
 
-                await self._connect()
+            self.set_token()
+            logged_in_again = True
 
-                await self._perform_action(request_data, operation, attempt + 1)
+            await sleep(1)
 
-            else:
-                raise error
+            await self._connect()
 
     async def _fetch_data(self, device_code: str):
         unknown_codes = self.get_unknown_codes(device_code)
@@ -730,13 +783,25 @@ class AquaTempAPI:
         if endpoint == Endpoints.DeviceControl:
             _LOGGER.info(f"Sending request to control device, Data: {data}")
 
-        async with self._session.post(
-            url, headers=self._headers, json=data, ssl=False
-        ) as response:
-            response.raise_for_status()
+        try:
+            async with self._session.post(
+                url,
+                headers=self._headers,
+                json=data,
+                ssl=False,
+                timeout=ClientTimeout(total=self._request_timeout),
+            ) as response:
+                response.raise_for_status()
 
-            result = await response.json()
-            _LOGGER.debug(f"Request to {url}, Body: {data}, Result: {result}")
+                result = await response.json()
+                _LOGGER.debug(f"Request to {url}, Body: {data}, Result: {result}")
+
+        except TimeoutError:
+            # The bare exception has an empty message, which would reach the
+            # logs and Home Assistant's errors as nothing at all
+            raise TimeoutError(
+                f"Request to {endpoint} timed out after {self._request_timeout} s"
+            ) from None
 
         return result
 
@@ -844,6 +909,17 @@ class AquaTempAPI:
         is_on = power == POWER_MODE_ON
 
         return is_on
+
+    def is_device_offline(self, device_code: str) -> bool:
+        """Whether the last poll found the device offline.
+
+        False when the cloud reported neither online nor offline. Lags: the
+        cloud takes 4 to 5 minutes to notice the device dropped.
+        """
+        device_data = self.get_device_data(device_code) or {}
+        is_offline = device_data.get("device_status") == DEVICE_STATUS_OFFLINE
+
+        return is_offline
 
     def get_device_meta(self, device_code: str) -> DeviceMeta:
         """Name, ids and model from the device lists, read with this API type's

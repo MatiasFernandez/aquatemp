@@ -12,6 +12,7 @@ predate this fork and keep their original format.
 - Support for 15 more Aqua Temp heat pump product IDs, the ones the official app lists as heat pumps and the allow-list missed. They use the default profile. Until now such a unit was only found when no other device on the account matched the allow-list, and was missing otherwise
 - The setup and options forms explain that the cloud allows one login per account, that the username is the email address, that the app may have cut a password longer than 16 characters to its first 16, and which API type to pick
 - Refresh Data button on each device, in its Diagnostic section, to poll the cloud on demand instead of waiting for the next scheduled update. It stays available after a failed update, so it can be used to retry
+- **Polling interval** and **Request timeout** options in the integration's Configure dialog: how often the cloud is polled, from 30 to 3600 seconds (default 300, as before), and how long a request may take before it fails, from 5 to 60 seconds (default 10)
 
 ### Fixed
 
@@ -23,6 +24,12 @@ predate this fork and keep their original format.
 
 ### Changed
 
+- Requests to the cloud give up after 10 seconds by default, and fail with a message saying so. A control to an online heat pump is answered in about 5 seconds and a read in under 2. Before, a request that got no answer kept the service call waiting for minutes, as Home Assistant's default allows 5 minutes per attempt and a control request makes up to 3
+- A control is sent again only after a connection error or a server error, up to 3 attempts in all, or once after logging in again when the session expired. A control that times out or that the cloud rejects fails right away, instead of being sent 3 times and keeping the service call waiting
+- A control the heat pump doesn't acknowledge fails with an error saying it didn't respond and that the change may or may not have been applied. The cloud gives up on the heat pump after about 50 seconds, and the request after 10 by default
+- After a control fails, the integration polls the cloud again, so its entities show the values the cloud reports. A heat pump that is slow to acknowledge may still apply the change later, which shows on a later poll
+- While the cloud reports the heat pump offline, the entities showing its values, the thermostat included, are unavailable. The cloud keeps answering with the last values it got, which showed as current. Status, API Status and Temperature Unit stay available. The cloud takes 4 to 5 minutes to notice the heat pump went offline
+- A control to a heat pump the cloud reports offline fails right away with an error saying so, instead of waiting for the cloud to give up on it
 - Entities for values the heat pump doesn't report are no longer created, and those values are no longer polled. The integration tells them apart from the heat pump's first answer after setup or reload. Entities created for them before stay in the entity registry, shown as no longer provided, and can be deleted
 - Entities are named after the device as named in Home Assistant, instead of its nickname in the Aqua Temp app. New entities of a device renamed in Home Assistant no longer repeat the device in their entity ID (`sensor.pool_water_dt`, not `sensor.pool_heat_pump_water_dt`), and friendly names follow later renames. Friendly names change for devices already renamed in Home Assistant. Existing entity IDs are kept; to fix doubled ones, use "Recreate entity IDs" on the device page
 

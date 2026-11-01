@@ -1,3 +1,4 @@
+from datetime import timedelta
 import json
 import logging
 
@@ -14,13 +15,16 @@ from homeassistant.helpers.storage import Store
 
 from ..cloud.api_profile import ApiProfile
 from ..cloud.client import Credentials
-from ..cloud.consts import PRODUCT_ID_DEFAULT, PRODUCT_IDS
+from ..cloud.consts import API_REQUEST_TIMEOUT, PRODUCT_ID_DEFAULT, PRODUCT_IDS
 from ..cloud.device_profiles import DeviceProfile, DeviceProfiles
 from ..common.consts import (
     CONF_LOG_SESSION_TOKEN,
+    CONF_REQUEST_TIMEOUT,
+    CONF_UPDATE_INTERVAL,
     CONFIGURATION_FILE,
     DEFAULT_ENTRY_ID,
     DEFAULT_NAME,
+    DEFAULT_UPDATE_INTERVAL,
 )
 from ..common.entity_descriptions import (
     build_entity_descriptions,
@@ -110,12 +114,24 @@ class AquaTempConfigManager:
 
     @property
     def log_session_token(self) -> bool:
-        if self._entry is None:
-            return False
-
         log_session_token = self._entry.options.get(CONF_LOG_SESSION_TOKEN, False)
 
         return log_session_token
+
+    @property
+    def request_timeout(self) -> int:
+        """Seconds each request to the cloud may take."""
+        request_timeout = self._entry.options.get(
+            CONF_REQUEST_TIMEOUT, API_REQUEST_TIMEOUT
+        )
+
+        return request_timeout
+
+    @property
+    def update_interval(self) -> timedelta:
+        seconds = self._entry.options.get(CONF_UPDATE_INTERVAL, DEFAULT_UPDATE_INTERVAL)
+
+        return timedelta(seconds=seconds)
 
     async def initialize(self, entry_config: dict):
         await self._load()
