@@ -13,11 +13,10 @@ import pytest
 
 from custom_components.aqua_temp.cloud.client import DeviceMeta
 
-from .mock_cloud import DEVICE_CODE, cloud_with, data_with
+from .mock_cloud import DATA, DATA_IDLE, DEVICE_CODE, cloud_with, data_with
 
 # Literal on purpose: the expected values must not come from the config under test
 CONTROL = "app/device/control"
-DATA = "app/device/getDataByCode"
 SHARED_APPECT = "app/device/getMyAppectDeviceShareDataList"
 
 HITEMP_DEVICE_CODE = "000000000002"
@@ -82,12 +81,12 @@ async def test_each_device_reads_its_profile_codes(heat_pumps):
         device_code: state(heat_pumps, device_code)
         for device_code in (DEVICE_CODE, HITEMP_DEVICE_CODE)
     } == {
-        # Power 0, Mode 1, Manual-mute 0, T02 13.0, heat's R02, R10, R11
+        # Power 0, Mode 1, Manual-mute 0, T02 12.5, heat's R02, R10, R11
         DEVICE_CODE: {
             "power": False,
             "hvac_mode": "heat",
             "fan_mode": "auto",
-            "current": 13.0,
+            "current": 12.5,
             "target": 28.0,
             "minimum": 15.0,
             "maximum": 35.0,
@@ -99,8 +98,8 @@ async def test_each_device_reads_its_profile_codes(heat_pumps):
             "fan_mode": "high",
             "current": 21.5,
             "target": 27.0,
-            "minimum": 13.0,
-            "maximum": 14.5,
+            "minimum": 12.5,
+            "maximum": 14.0,
         },
     }
 
@@ -115,10 +114,10 @@ async def test_each_device_polls_its_catalog_codes(api, wire):
         if endpoint == DATA and body["deviceCode"] == HITEMP_DEVICE_CODE
     ]
 
-    assert hitemp_request["protocalCodes"] == ["Mode", *hitemp_codes]
+    assert hitemp_request["codes"] == ["Mode", *hitemp_codes]
 
 
-@cloud_with(RESPONSES | {DATA: "get_data_by_code.idle"})
+@cloud_with(RESPONSES | {DATA: DATA_IDLE})
 async def test_hitemp_mode_is_never_polled(api, wire):
     await api.update()
 
@@ -129,7 +128,7 @@ async def test_hitemp_mode_is_never_polled(api, wire):
     ]
     # Possible bug: mode_real, MO6 and M17 are not in the Hitemp catalog, so
     # they are never requested. A missing mode matches off's null wire value
-    assert not {"mode_real", "MO6", "M17"} & set(hitemp_request["protocalCodes"])
+    assert not {"mode_real", "MO6", "M17"} & set(hitemp_request["codes"])
     assert state(api, HITEMP_DEVICE_CODE) == {
         "power": False,
         "hvac_mode": "off",

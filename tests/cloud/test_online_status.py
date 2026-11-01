@@ -2,14 +2,13 @@
 
 import pytest
 
-from .mock_cloud import DEVICE_CODE, cloud_with
+from .mock_cloud import DATA, DATA_IDLE, DEVICE_CODE, cloud_with
 
 # Literal on purpose: the expected values must not come from the config under test
 STATUS = "app/device/getDeviceStatus"
 FAULT = "app/device/getFaultDataByDeviceCode"
-DATA = "app/device/getDataByCode"
 
-RESPONSES = {DATA: "get_data_by_code.idle"}
+RESPONSES = {DATA: DATA_IDLE}
 
 
 @cloud_with(RESPONSES | {STATUS: "device_status.online"})

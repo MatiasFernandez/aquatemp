@@ -3,7 +3,7 @@
 from custom_components.aqua_temp.cloud.api_types import APIType
 from custom_components.aqua_temp.cloud.consts import PRODUCT_IDS
 
-from .mock_cloud import DEVICE_CODE, cloud_with, load_fixture
+from .mock_cloud import DATA, DATA_IDLE, DEVICE_CODE, cloud_with, load_fixture
 
 # Literal on purpose: the expected values must not come from the config under test
 REGISTERED = "app/device/deviceList"
@@ -76,17 +76,13 @@ async def test_unfiltered_retry_skips_a_failing_list(client, wire):
 @cloud_with(
     {
         SHARED_APPECT: "synthetic/device_list_shared",
-        "app/device/getDataByCode": "get_data_by_code.idle",
+        DATA: DATA_IDLE,
     }
 )
 async def test_each_discovered_device_is_read(api, wire):
     await api.update()
 
-    data_requests = [
-        body["deviceCode"]
-        for endpoint, body in wire
-        if endpoint == "app/device/getDataByCode"
-    ]
+    data_requests = [body["deviceCode"] for endpoint, body in wire if endpoint == DATA]
 
     assert list(api.devices) == [DEVICE_CODE, SHARED_DEVICE_CODE]
     assert data_requests == [DEVICE_CODE, SHARED_DEVICE_CODE]
@@ -95,7 +91,7 @@ async def test_each_discovered_device_is_read(api, wire):
 @cloud_with(
     {
         SHARED_APPECT: "synthetic/device_list_shared",
-        "app/device/getDataByCode": "get_data_by_code.idle",
+        DATA: DATA_IDLE,
     }
 )
 async def test_each_device_is_announced_once(api, announced):

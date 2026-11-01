@@ -92,6 +92,7 @@ class AquaTempAPI:
     _devices: dict
     _device_profiles_by_code: dict[str, DeviceProfile]
     _unknown_codes: dict[str, frozenset[str]]
+    _devices_read_empty: set[str]
     _login_details: dict | None
 
     _session: ClientSession
@@ -120,6 +121,7 @@ class AquaTempAPI:
         self._devices = {}
         self._device_profiles_by_code = {}
         self._unknown_codes = {}
+        self._devices_read_empty = set()
         self._login_details = None
 
         self._session = session
@@ -497,24 +499,33 @@ class AquaTempAPI:
             if code not in unknown_codes
         ]
 
+        param_data_endpoint = self._api_profile.get(APIParam.DataEndpoint)
         param_device_code = self._api_profile.get(APIParam.DeviceCode)
-        param_protocal_codes = self._api_profile.get(APIParam.ProtocalCodes)
+        param_data_codes = self._api_profile.get(APIParam.DataCodes)
         param_object_result = self._api_profile.get(APIParam.ObjectResult)
         param_error_msg = self._api_profile.get(APIParam.ErrorMessage)
         param_error_code = self._api_profile.get(APIParam.ErrorCode)
 
         data = {
             param_device_code: device_code,
-            param_protocal_codes: codes,
+            param_data_codes: codes,
         }
 
-        data_response = await self._post_request(Endpoints.DeviceData, data)
+        data_response = await self._post_request(param_data_endpoint, data)
         error_msg = data_response.get(param_error_msg)
 
         object_result_items = data_response.get(param_object_result, [])
 
         if error_msg == "Success":
             self._record_unknown_codes(device_code, object_result_items)
+
+            if codes and not object_result_items:
+                self._warn_empty_read(
+                    device_code, param_data_endpoint, param_data_codes
+                )
+
+            else:
+                self._devices_read_empty.discard(device_code)
 
             for object_result_item in object_result_items:
                 code = object_result_item.get("code")
@@ -566,6 +577,23 @@ class AquaTempAPI:
             )
 
         self._unknown_codes[device_code] = unknown_codes
+
+    def _warn_empty_read(self, device_code: str, endpoint: str, codes_field: str):
+        """Warn once per device until a read returns values again."""
+        if device_code in self._devices_read_empty:
+            return
+
+        self._devices_read_empty.add(device_code)
+
+        # The cloud answers a request with the wrong field name with success
+        # and no values, so a wrong profile or a backend change looks like this
+        _LOGGER.warning(
+            "Device %s: %s returned no values for the requested codes; "
+            "the %s field may be wrong, or the cloud changed",
+            device_code,
+            endpoint,
+            codes_field,
+        )
 
     async def _send_passthrough_instruction(self, device_code: str):
         param_device_code = self._api_profile.get(APIParam.DeviceCode)
@@ -773,7 +801,7 @@ class AquaTempAPI:
                 self._devices[device_code] = device
 
     async def _post_request(
-        self, endpoint: Endpoints, data: dict | list | None = None
+        self, endpoint: str, data: dict | list | None = None
     ) -> dict | None:
         param_url = self._api_profile.get(APIParam.URL)
         param_suffix = self._api_profile.get(APIParam.Suffix)

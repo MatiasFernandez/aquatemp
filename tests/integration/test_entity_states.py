@@ -7,14 +7,13 @@ from custom_components.aqua_temp.common.consts import DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.util import slugify
-from tests.cloud.mock_cloud import DEVICE_CODE, cloud_with, data_with
+from tests.cloud.mock_cloud import DATA, DATA_IDLE, DEVICE_CODE, cloud_with, data_with
 
 # Literal on purpose: the expected values must not come from the config under test
-DATA = "app/device/getDataByCode"
 STATUS = "app/device/getDeviceStatus"
 FAULT = "app/device/getFaultDataByDeviceCode"
 
-RESPONSES = {DATA: "get_data_by_code.idle"}
+RESPONSES = {DATA: DATA_IDLE}
 
 
 @pytest.fixture(autouse=True)
@@ -37,12 +36,12 @@ def state_of(hass: HomeAssistant, platform: str, key: str):
 async def test_sensor_reports_the_device_value(hass, entry):
     state = state_of(hass, "sensor", "T02")
 
-    # Recorded T02: 13.0
-    assert (state.state, state.attributes["unit_of_measurement"]) == ("13.0", "°C")
+    # Recorded T02: 12.5
+    assert (state.state, state.attributes["unit_of_measurement"]) == ("12.5", "°C")
 
 
 async def test_water_delta_t_is_outlet_minus_inlet(hass, entry):
-    # Recorded T03 14.5 and T02 13.0
+    # Recorded T03 14.0 and T02 12.5
     assert state_of(hass, "sensor", "water_delta_t").state == "1.5"
 
 
