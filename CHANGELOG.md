@@ -7,6 +7,8 @@ predate this fork and keep their original format.
 
 ## [Unreleased]
 
+## [3.4.0] - 2026-11-01
+
 ### Added
 
 - Support for 15 more Aqua Temp heat pump product IDs, the ones the official app lists as heat pumps and the allow-list missed. They use the default profile. Until now such a unit was only found when no other device on the account matched the allow-list, and was missing otherwise
@@ -347,7 +349,8 @@ As result of that process, you need to re-setup the integration.
 - Simplified `climate` component to include just its functionality without additional attributes (moved to dedicated components)
 - Add mapping of more Protocol Codes (Parameters) for later support of more sensors/binary_sensors
 
-[Unreleased]: https://github.com/MatiasFernandez/aquatemp/compare/v3.3.0...HEAD
+[Unreleased]: https://github.com/MatiasFernandez/aquatemp/compare/v3.4.0...HEAD
+[3.4.0]: https://github.com/MatiasFernandez/aquatemp/compare/v3.3.0...v3.4.0
 [3.3.0]: https://github.com/MatiasFernandez/aquatemp/compare/v3.2.0...v3.3.0
 [3.2.0]: https://github.com/MatiasFernandez/aquatemp/compare/v3.1.0...v3.2.0
 [3.1.0]: https://github.com/MatiasFernandez/aquatemp/compare/b163b69...v3.1.0
