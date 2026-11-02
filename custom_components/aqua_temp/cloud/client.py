@@ -75,6 +75,7 @@ class Credentials:
 class DeviceMeta:
     """What the device lists say about a device, besides its data."""
 
+    # None when the cloud has no usable nickname: null, empty, blank or missing
     nickname: str | None
     device_id: str | None
     model: str | None
@@ -925,9 +926,10 @@ class AquaTempAPI:
         """Name, ids and model from the device lists, read with this API type's
         field names."""
         device_data = self.get_device_data(device_code)
+        nickname = device_data.get(self._api_profile.get(APIParam.Nickname))
 
         device_meta = DeviceMeta(
-            nickname=device_data.get(self._api_profile.get(APIParam.Nickname)),
+            nickname=nickname.strip() or None if isinstance(nickname, str) else None,
             device_id=device_data.get(self._api_profile.get(APIParam.DeviceId)),
             model=device_data.get(self._api_profile.get(APIParam.CustomModel)),
             product_id=self._get_device_product_id(device_data),

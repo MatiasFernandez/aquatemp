@@ -1,5 +1,7 @@
 """Device discovery: device-list requests, the unfiltered fallback, several devices."""
 
+import pytest
+
 from custom_components.aqua_temp.cloud.api_types import APIType
 from custom_components.aqua_temp.cloud.consts import PRODUCT_IDS
 
@@ -12,6 +14,7 @@ SHARED_APPECT = "app/device/getMyAppectDeviceShareDataList"
 DEVICE_LISTS = [REGISTERED, SHARED_TOBE, SHARED_APPECT]
 
 SHARED_DEVICE_CODE = "000000000002"
+MISSING = object()
 
 
 def listed_device(name: str) -> dict:
@@ -103,3 +106,30 @@ async def test_each_device_is_announced_once(api, announced):
     await api.update()
 
     assert announced == [DEVICE_CODE, SHARED_DEVICE_CODE]
+
+
+def nickname_list(nickname) -> dict:
+    """The synthetic device list, with the device's nickname replaced, or removed
+    when it is the missing marker."""
+    payload = load_fixture(APIType.AquaTemp, "synthetic/device_list")
+
+    if nickname is MISSING:
+        del payload["objectResult"][0]["deviceNickName"]
+    else:
+        payload["objectResult"][0]["deviceNickName"] = nickname
+
+    return payload
+
+
+@pytest.mark.parametrize(
+    ("cloud_responses", "expected"),
+    [
+        pytest.param({REGISTERED: nickname_list(None)}, None, id="null"),
+        pytest.param({REGISTERED: nickname_list("")}, None, id="empty"),
+        pytest.param({REGISTERED: nickname_list(MISSING)}, None, id="missing"),
+        pytest.param({REGISTERED: nickname_list("  ")}, None, id="blank"),
+        pytest.param({REGISTERED: nickname_list(" Pool ")}, "Pool", id="padded"),
+    ],
+)
+async def test_nickname_is_none_unless_the_cloud_has_a_usable_one(api, expected):
+    assert api.get_device_meta(DEVICE_CODE).nickname == expected

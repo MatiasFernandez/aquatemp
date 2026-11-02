@@ -20,6 +20,7 @@ from ..common.consts import (
     DATA_ITEM_CONFIG,
     DATA_ITEM_DEVICES,
     DATA_ITEM_LOGIN_DETAILS,
+    DEFAULT_NAME,
     DOMAIN,
     SIGNAL_AQUA_TEMP_DEVICE_NEW,
 )
@@ -123,7 +124,7 @@ class AquaTempCoordinator(DataUpdateCoordinator):
 
         device_info = DeviceInfo(
             identifiers={(DOMAIN, device_meta.device_id)},
-            name=device_meta.nickname,
+            name=device_meta.nickname or f"{DEFAULT_NAME} {device_code}",
             model=device_meta.model,
         )
 
