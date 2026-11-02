@@ -47,6 +47,7 @@ TO_REDACT = [
     "userName",
     "user_name",
     "accessKey",
+    "deviceSecret",
     CONF_USERNAME,
     HTTP_HEADER_X_TOKEN,
 ]

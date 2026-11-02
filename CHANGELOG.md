@@ -7,6 +7,10 @@ predate this fork and keep their original format.
 
 ## [Unreleased]
 
+### Security
+
+- Redact each device's secret in the downloaded diagnostics, where it showed in the device data from the cloud. It looks like the credential the heat pump's Wi-Fi module uses to connect to the cloud
+
 ## [3.4.1] - 2026-11-02
 
 ### Fixed

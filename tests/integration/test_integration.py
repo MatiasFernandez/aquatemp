@@ -691,6 +691,29 @@ async def test_diagnostics_redact_the_account_email(hass, entry):
         assert "test@example.com" not in json.dumps(data, default=str)
 
 
+# Made up; the device list carries one per device
+DEVICE_SECRET = "0123456789abcdef0123456789abcdef"
+
+
+def device_list_with_secret() -> dict:
+    payload = device_list()
+    payload["objectResult"][0]["deviceSecret"] = DEVICE_SECRET
+
+    return payload
+
+
+@cloud_with(RESPONSES | {DEVICE_LIST: device_list_with_secret()})
+async def test_diagnostics_redact_the_device_secret(hass, entry):
+    device = async_get_ha_device(hass, entry.entry_id, DEVICE_ID)
+
+    entry_data = await async_get_config_entry_diagnostics(hass, entry)
+    device_data = await async_get_device_diagnostics(hass, entry, device)
+
+    for listed in (entry_data["devices"][0], device_data):
+        assert listed["device"]["data"]["deviceSecret"] == "**REDACTED**"
+        assert DEVICE_SECRET not in json.dumps(listed, default=str)
+
+
 async def test_entry_diagnostics_list_each_device_unknown_codes(hass, entry):
     diagnostics = await async_get_config_entry_diagnostics(hass, entry)
 
