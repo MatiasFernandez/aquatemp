@@ -7,6 +7,8 @@ predate this fork and keep their original format.
 
 ## [Unreleased]
 
+## [3.4.1] - 2026-11-02
+
 ### Fixed
 
 - A device with no nickname in the app is named `Aqua Temp <device code>` instead of having no name, which gave entity ids starting with `none_` and a climate entity without a name. Existing entity ids are kept; to fix them, use "Recreate entity IDs" on the device page
@@ -353,7 +355,8 @@ As result of that process, you need to re-setup the integration.
 - Simplified `climate` component to include just its functionality without additional attributes (moved to dedicated components)
 - Add mapping of more Protocol Codes (Parameters) for later support of more sensors/binary_sensors
 
-[Unreleased]: https://github.com/MatiasFernandez/aquatemp/compare/v3.4.0...HEAD
+[Unreleased]: https://github.com/MatiasFernandez/aquatemp/compare/v3.4.1...HEAD
+[3.4.1]: https://github.com/MatiasFernandez/aquatemp/compare/v3.4.0...v3.4.1
 [3.4.0]: https://github.com/MatiasFernandez/aquatemp/compare/v3.3.0...v3.4.0
 [3.3.0]: https://github.com/MatiasFernandez/aquatemp/compare/v3.2.0...v3.3.0
 [3.2.0]: https://github.com/MatiasFernandez/aquatemp/compare/v3.1.0...v3.2.0
