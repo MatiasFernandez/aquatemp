@@ -169,6 +169,26 @@ async def test_device_is_registered_from_the_device_list(hass, entry):
     assert device.model == MODEL
 
 
+def device_list_without_nickname() -> dict:
+    payload = device_list()
+    del payload["objectResult"][0]["deviceNickName"]
+
+    return payload
+
+
+@cloud_with(RESPONSES | {DEVICE_LIST: device_list_without_nickname()})
+async def test_device_without_a_nickname_is_named_after_its_code(hass, entry):
+    device = async_get_ha_device(hass, entry.entry_id, DEVICE_ID)
+    registry = er.async_get(hass)
+
+    assert device.name == f"Aqua Temp {DEVICE_CODE}"
+    assert climate_entity_id(hass) == f"climate.aqua_temp_{DEVICE_CODE}"
+    assert (
+        registry.async_get_entity_id("sensor", DOMAIN, sensor_unique_id("T02"))
+        == f"sensor.aqua_temp_{DEVICE_CODE}_inlet_water_temp_t02"
+    )
+
+
 async def test_device_lookup_ignores_other_entries_devices(hass, entry):
     other_entry = MockConfigEntry(domain=DOMAIN)
     other_entry.add_to_hass(hass)
