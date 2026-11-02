@@ -691,27 +691,70 @@ async def test_diagnostics_redact_the_account_email(hass, entry):
         assert "test@example.com" not in json.dumps(data, default=str)
 
 
-# Made up; the device list carries one per device
-DEVICE_SECRET = "0123456789abcdef0123456789abcdef"
+# Made up. The device list carries the unit's secret and its owner's details
+DEVICE_PRIVATE_DATA = {
+    "deviceSecret": "0123456789abcdef0123456789abcdef",
+    "email": "owner@example.com",
+    "userEmail": "user@example.com",
+    "custEmail": "customer@example.com",
+    "nickName": "owner-nickname",
+    "realName": "Owner Real Name",
+    "phoneNumber": "+10000000001",
+    "customerPhone": "+10000000002",
+}
+
+# Made up. The login response carries the account's user name
+LOGIN_PRIVATE_DATA = {
+    "nickName": "account-nickname",
+    "nick_name": "account-nick-name",
+}
 
 
-def device_list_with_secret() -> dict:
+def device_list_with_private_data() -> dict:
     payload = device_list()
-    payload["objectResult"][0]["deviceSecret"] = DEVICE_SECRET
+    payload["objectResult"][0] |= DEVICE_PRIVATE_DATA
 
     return payload
 
 
-@cloud_with(RESPONSES | {DEVICE_LIST: device_list_with_secret()})
-async def test_diagnostics_redact_the_device_secret(hass, entry):
+def login_with_private_data() -> dict:
+    payload = load_fixture("aqua_temp", "synthetic/login")
+    payload["objectResult"] |= LOGIN_PRIVATE_DATA
+
+    return payload
+
+
+@cloud_with(RESPONSES | {DEVICE_LIST: device_list_with_private_data()})
+async def test_diagnostics_redact_the_device_secret_and_owner_details(hass, entry):
     device = async_get_ha_device(hass, entry.entry_id, DEVICE_ID)
 
     entry_data = await async_get_config_entry_diagnostics(hass, entry)
     device_data = await async_get_device_diagnostics(hass, entry, device)
 
     for listed in (entry_data["devices"][0], device_data):
-        assert listed["device"]["data"]["deviceSecret"] == "**REDACTED**"
-        assert DEVICE_SECRET not in json.dumps(listed, default=str)
+        data = listed["device"]["data"]
+        assert {key: data[key] for key in DEVICE_PRIVATE_DATA} == dict.fromkeys(
+            DEVICE_PRIVATE_DATA, "**REDACTED**"
+        )
+        # The device's own name stays readable
+        assert data["deviceNickName"] == "Heat pump"
+        dumped = json.dumps(listed, default=str)
+        assert not [value for value in DEVICE_PRIVATE_DATA.values() if value in dumped]
+
+
+@cloud_with(RESPONSES | {"app/user/login": login_with_private_data()})
+async def test_diagnostics_redact_the_account_names(hass, entry):
+    device = async_get_ha_device(hass, entry.entry_id, DEVICE_ID)
+
+    entry_data = await async_get_config_entry_diagnostics(hass, entry)
+    device_data = await async_get_device_diagnostics(hass, entry, device)
+
+    for data in (entry_data, device_data):
+        assert data["login-details"] == {
+            "x-token": "**REDACTED**",
+            "nickName": "**REDACTED**",
+            "nick_name": "**REDACTED**",
+        }
 
 
 async def test_entry_diagnostics_list_each_device_unknown_codes(hass, entry):
