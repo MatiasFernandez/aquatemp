@@ -7,6 +7,10 @@ predate this fork and keep their original format.
 
 ## [Unreleased]
 
+### Fixed
+
+- A device with no nickname in the app is named `Aqua Temp <device code>` instead of having no name, which gave entity ids starting with `none_` and a climate entity without a name. Existing entity ids are kept; to fix them, use "Recreate entity IDs" on the device page
+
 ## [3.4.0] - 2026-11-01
 
 ### Added
