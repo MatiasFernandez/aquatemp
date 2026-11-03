@@ -22,6 +22,8 @@ uv run --project tests/floor --locked pytest       # oldest supported Home Assis
 - Everything Home Assistant-specific lives outside `cloud/`: entities, translations, config entries and storage. The coordinator translates between the library and Home Assistant.
 - Device profiles in `cloud/profiles/` are JSON: field names per API type (`api.<type>.json`), and per product the protocol mapping (`mapping.<product id>.json`) and parameter catalog (`entity_description.<product id>.json`). Each falls back to `default` on its own.
 - Each client has its own aiohttp session, so config entries don't share a token.
+- `docs/api/` documents the cloud API as a Bruno collection, one request per endpoint with notes; start from its [README](docs/api/README.md). When a change alters what the client sends or how it reads a response, update the matching request and its **From the integration** notes in the same change.
+- Recorded fixtures in [tests/cloud/fixtures/](tests/cloud/fixtures/README.md) are real API responses and the evidence the tests check the client against. Never edit one to make a change pass: a test failing on a recorded fixture means the code or the test is wrong, or the API changed and needs recording again, which only the maintainer can do. For a response shape nobody has recorded, add a synthetic fixture.
 - Tests: `tests/cloud/` for the library, `tests/integration/` for the rest. Read [tests/AGENTS.md](tests/AGENTS.md) before writing tests if your tool hasn't loaded it.
 
 ## Pull requests

@@ -132,6 +132,10 @@ Limitations of the script as it stands:
 - File paths use Windows separators (`\\`), so it only finds the XML files on Windows.
 - Writing `custom_components/aqua_temp/cloud/profiles/entity_description.<device>.json` is commented out. Uncomment it to regenerate the files, or copy the logged output.
 
+### Call the cloud API by hand
+
+[docs/api/](docs/api/README.md) is a [Bruno](https://www.usebruno.com/) collection documenting what we know about the cloud API, one request per endpoint. Its notes mark what was probed against the live API and what comes from the integration's client; add what you find when you probe.
+
 ## Changelog and releases
 
 - [CHANGELOG.md](CHANGELOG.md) follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Add user-facing changes under `## [Unreleased]`.
