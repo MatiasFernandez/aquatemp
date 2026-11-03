@@ -7,6 +7,10 @@ predate this fork and keep their original format.
 
 ## [Unreleased]
 
+### Fixed
+
+- Read the bundled device profiles without the `aiofiles` package, which the integration used without declaring it and so relied on Home Assistant happening to include it
+
 ## [3.4.2] - 2026-11-02
 
 ### Security

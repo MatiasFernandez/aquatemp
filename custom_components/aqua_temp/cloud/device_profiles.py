@@ -1,11 +1,8 @@
 """Per-product device profiles: which protocol codes a device uses and polls."""
 
-import json
 from typing import Self
 
-import aiofiles
-
-from .api_profile import PROFILES_PATH
+from .api_profile import PROFILES_PATH, read_profile_json
 from .consts import (
     CONFIG_FAN_MODES,
     CONFIG_HVAC_MODES,
@@ -176,10 +173,7 @@ class DeviceProfiles:
 async def _load_product_file(parameter: ProductParameter, product_id: str):
     file_path = PROFILES_PATH / f"{parameter}.{product_id}.json"
 
-    if not file_path.exists():
+    try:
+        return await read_profile_json(file_path)
+    except FileNotFoundError:
         return None
-
-    async with aiofiles.open(file_path) as file:
-        json_str = await file.read()
-
-    return json.loads(json_str)
