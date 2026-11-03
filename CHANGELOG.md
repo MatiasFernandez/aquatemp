@@ -7,6 +7,10 @@ predate this fork and keep their original format.
 
 ## [Unreleased]
 
+### Fixed
+
+- The temperature unit picked for a device is kept when the integration reloads, including after changing its options. It went back to Celsius each time. Deleting the integration still removes it
+
 ## [3.4.2] - 2026-11-02
 
 ### Security

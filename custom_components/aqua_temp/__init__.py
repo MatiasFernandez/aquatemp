@@ -95,8 +95,6 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     coordinator: AquaTempCoordinator = hass.data[DOMAIN][entry.entry_id]
 
-    await coordinator.config_manager.remove(entry.entry_id)
-
     platforms = coordinator.config_manager.platforms
 
     unload_ok = await hass.config_entries.async_unload_platforms(entry, platforms)
@@ -105,3 +103,14 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         del hass.data[DOMAIN][entry.entry_id]
 
     return unload_ok
+
+
+async def async_remove_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
+    """Delete the entry's stored configuration, such as the temperature units.
+
+    Unloading keeps it, so a reload doesn't forget it. The encryption key is
+    shared by all the entries and stays.
+    """
+    _LOGGER.info(f"Removing {DOMAIN} integration, Entry ID: {entry.entry_id}")
+
+    await AquaTempConfigManager(hass, entry).remove(entry.entry_id)
