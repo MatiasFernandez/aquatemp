@@ -13,6 +13,7 @@
   "device_code": "deviceCode",
   "data_endpoint": "app/device/v5/getDataByCode",
   "data_codes": "codes",
+  "semantic_codes": false,
   "protocol_code": "protocolCode",
   "is_fault": "isFault",
   "status": "status",

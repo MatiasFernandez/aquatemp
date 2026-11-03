@@ -19,6 +19,7 @@ class APIParam(StrEnum):
     DeviceCode = "device_code"
     DataEndpoint = "data_endpoint"
     DataCodes = "data_codes"
+    SemanticCodes = "semantic_codes"
     ProtocolCode = "protocol_code"
     IsFault = "is_fault"
     Status = "status"
