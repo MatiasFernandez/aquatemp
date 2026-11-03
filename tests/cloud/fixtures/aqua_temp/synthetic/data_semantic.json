@@ -1,0 +1,66 @@
+{
+  "sessionid": null,
+  "error_code": "0",
+  "error_msg": "Success",
+  "error_msg_code": "",
+  "totalSize": null,
+  "totalPage": null,
+  "nextPage": null,
+  "objectResult": [
+    {
+      "code": "Mode",
+      "value": "1",
+      "dataType": "ENUM",
+      "rangeStart": "0",
+      "rangeEnd": "2",
+      "tmJson": null,
+      "dataTypeAi": "num"
+    },
+    {
+      "code": "T02",
+      "value": "12.5",
+      "dataType": "TEMP",
+      "rangeStart": "",
+      "rangeEnd": "",
+      "tmJson": null,
+      "dataTypeAi": "num"
+    },
+    {
+      "code": "R02",
+      "value": "28.0",
+      "dataType": "TEMP",
+      "rangeStart": "15.00",
+      "rangeEnd": "35.00",
+      "tmJson": null,
+      "dataTypeAi": "num"
+    },
+    {
+      "code": "T03",
+      "value": "14.0",
+      "dataType": "TEMP",
+      "rangeStart": "",
+      "rangeEnd": "",
+      "tmJson": null,
+      "dataTypeAi": "num"
+    },
+    {
+      "code": "InletWaterTemp",
+      "value": "12.5",
+      "dataType": "TEMP",
+      "rangeStart": "",
+      "rangeEnd": "",
+      "tmJson": null,
+      "dataTypeAi": "num"
+    },
+    {
+      "code": "SetHeatTargetTemp",
+      "value": "28.0",
+      "dataType": "TEMP",
+      "rangeStart": "15.00",
+      "rangeEnd": "35.00",
+      "tmJson": null,
+      "dataTypeAi": "num"
+    }
+  ],
+  "isReusltSuc": true
+}
