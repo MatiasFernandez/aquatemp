@@ -607,7 +607,24 @@ async def test_deleting_the_entry_removes_its_stored_configuration(
     assert entry.entry_id not in hass_storage[CONFIGURATION_FILE]["data"]
 
 
-async def test_climate_keeps_its_temperature_unit_when_another_is_selected(
+async def test_climate_follows_the_selected_temperature_unit(hass, entry, freezer):
+    await select_unit(hass, "°F")
+    freezer.tick(timedelta(seconds=REQUEST_REFRESH_DEFAULT_COOLDOWN))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    # The select only tells which unit the device reports in, so the values
+    # (13, 28, 15 and 35) are taken as °F and Home Assistant converts them to
+    # its metric system
+    assert temperatures(hass.states.get(climate_entity_id(hass))) == {
+        "current_temperature": -10.6,
+        "temperature": -2.2,
+        "min_temp": -9.4,
+        "max_temp": 1.7,
+    }
+
+
+async def test_temperature_sensors_follow_the_selected_temperature_unit(
     hass, entry, freezer
 ):
     await select_unit(hass, "°F")
@@ -615,9 +632,11 @@ async def test_climate_keeps_its_temperature_unit_when_another_is_selected(
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
-    # Possible bug: the climate reads the unit once, when it is created, and a
-    # reload resets the unit, so a unit other than Celsius never reaches it
-    assert temperatures(hass.states.get(climate_entity_id(hass)))["temperature"] == 28.0
+    state = hass.states.get(entity_id(hass, "sensor", "T02"))
+
+    # The select only tells which unit the device reports in, so the inlet
+    # water temperature keeps its value (13) and takes the unit
+    assert (state.state, state.attributes["unit_of_measurement"]) == ("13.0", "°F")
 
 
 async def set_temperature(hass: HomeAssistant, temperature: float):

@@ -10,6 +10,7 @@ predate this fork and keep their original format.
 ### Fixed
 
 - The temperature unit picked for a device is kept when the integration reloads, including after changing its options. It went back to Celsius each time. Deleting the integration still removes it
+- The climate entity and the temperature sensors follow the temperature unit picked in the select, instead of keeping Celsius. The select only tells which unit the device reports in: the values are read in that unit, and Home Assistant converts the climate's to its unit system
 
 ## [3.4.2] - 2026-11-02
 
