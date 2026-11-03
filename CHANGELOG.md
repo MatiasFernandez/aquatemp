@@ -7,6 +7,10 @@ predate this fork and keep their original format.
 
 ## [Unreleased]
 
+### Fixed
+
+- The setup and Configure forms say "Failed to connect to the cloud, please try again" when the cloud doesn't answer in time, can't be reached or answers with an error, instead of "Unknown error occurred" and a traceback in the log. The entry is left as it was
+
 ## [3.5.0] - 2026-11-04
 
 ### Added
