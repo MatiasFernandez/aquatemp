@@ -1,8 +1,10 @@
 """Config flow on a real Home Assistant: the form, the entry it creates, and the
 credential check's session, which is released."""
 
+import logging
 from unittest.mock import MagicMock, patch
 
+from aiohttp import ClientError
 import pytest
 
 from custom_components.aqua_temp.common.consts import CONF_API_TYPE, DOMAIN
@@ -14,6 +16,7 @@ from homeassistant.helpers.aiohttp_client import async_create_clientsession
 from tests.cloud.mock_cloud import cloud_with
 
 LOGIN = "app/user/login"
+USER_INFO = "app/user/getUserInfo"
 
 FLOW_MANAGER = "custom_components.aqua_temp.managers.flow_manager"
 
@@ -89,6 +92,42 @@ async def test_rejected_credentials_release_the_session(
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": "invalid_credentials"}
     assert_released(*flow_sessions)
+
+
+@pytest.mark.parametrize(
+    "cloud_responses",
+    [
+        pytest.param({LOGIN: TimeoutError()}, id="timeout"),
+        pytest.param({LOGIN: ClientError()}, id="connection-error"),
+        pytest.param({LOGIN: 503}, id="http-error"),
+    ],
+)
+async def test_unreachable_cloud_shows_the_form_again(
+    hass, api_type, cloud, flow_sessions
+):
+    result = await submit(hass, api_type)
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+    assert result["errors"] == {"base": "cannot_connect"}
+    assert hass.config_entries.async_entries(DOMAIN) == []
+    assert_released(*flow_sessions)
+
+
+@cloud_with({USER_INFO: 500})
+async def test_cloud_error_after_login_is_logged_without_the_token(
+    hass, api_type, cloud, caplog
+):
+    # The failed request carried the session token in its headers
+    with caplog.at_level(logging.INFO):
+        await submit(hass, api_type)
+
+    assert (
+        "Failed to reach the cloud: ClientResponseError: 500, "
+        "message='Internal Server Error', "
+        f"url='https://cloud.linked-go.com:449/crmservice/api/{USER_INFO}'"
+    ) in [record.getMessage() for record in caplog.records]
+    assert "test-token" not in caplog.text
 
 
 async def test_form_starts_with_the_default_title(hass):

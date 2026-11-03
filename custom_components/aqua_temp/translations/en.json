@@ -19,6 +19,7 @@
     },
     "error": {
       "invalid_credentials": "Invalid credentials",
+      "cannot_connect": "Failed to connect to the cloud, please try again",
       "corrupted_encryption_key": "Corrupted encryption key, please follow steps in {invalid_token_url}"
     }
   },
@@ -48,6 +49,7 @@
     },
     "error": {
       "invalid_credentials": "Invalid credentials",
+      "cannot_connect": "Failed to connect to the cloud, please try again",
       "corrupted_encryption_key": "Corrupted encryption key, please follow steps in {invalid_token_url}"
     }
   },
