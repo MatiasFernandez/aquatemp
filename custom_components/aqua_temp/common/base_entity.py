@@ -61,7 +61,7 @@ async def async_setup_base_entry(
         )
 
 
-class BaseEntity(CoordinatorEntity):
+class BaseEntity(CoordinatorEntity[AquaTempCoordinator]):
     _attr_has_entity_name = True
 
     _device_code: str

@@ -8,9 +8,8 @@ from typing import Any
 
 from cryptography.fernet import InvalidToken
 
-from homeassistant.config_entries import ConfigEntry
+from homeassistant.config_entries import ConfigEntry, ConfigFlow, OptionsFlow
 from homeassistant.core import HomeAssistant
-from homeassistant.data_entry_flow import FlowHandler
 from homeassistant.helpers.aiohttp_client import async_create_clientsession
 
 from ..cloud.client import AquaTempAPI
@@ -37,7 +36,7 @@ class IntegrationFlowManager:
     _hass: HomeAssistant
     _entry: ConfigEntry | None
 
-    _flow_handler: FlowHandler
+    _flow_handler: ConfigFlow | OptionsFlow
     _flow_id: str
 
     _config_manager: AquaTempConfigManager
@@ -45,7 +44,7 @@ class IntegrationFlowManager:
     def __init__(
         self,
         hass: HomeAssistant,
-        flow_handler: FlowHandler,
+        flow_handler: ConfigFlow | OptionsFlow,
         entry: ConfigEntry | None = None,
     ):
         self._hass = hass

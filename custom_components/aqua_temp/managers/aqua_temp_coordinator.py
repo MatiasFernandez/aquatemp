@@ -16,6 +16,7 @@ from ..cloud.exceptions import (
     DeviceOfflineError,
     LoginError,
 )
+from ..cloud.modes import FanMode
 from ..common.consts import (
     DATA_ITEM_CONFIG,
     DATA_ITEM_DEVICES,
@@ -244,7 +245,7 @@ class AquaTempCoordinator(DataUpdateCoordinator):
 
         return hvac_mode
 
-    def get_device_fan_mode(self, device_code: str) -> str:
+    def get_device_fan_mode(self, device_code: str) -> FanMode | None:
         fan_mode = self._api.get_device_fan_mode(device_code)
 
         return fan_mode
@@ -266,7 +267,7 @@ class AquaTempCoordinator(DataUpdateCoordinator):
 
         return result
 
-    def get_fan_modes(self, device_code: str) -> list[str]:
+    def get_fan_modes(self, device_code: str) -> dict[FanMode, str]:
         modes = self.get_device_profile(device_code).fan_modes
 
         return modes

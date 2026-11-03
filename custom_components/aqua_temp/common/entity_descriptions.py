@@ -43,7 +43,7 @@ class AquaTempClimateEntityDescription(
 ):
     platform: Platform | None = Platform.CLIMATE
     fan_modes: list[str] | None = None
-    hvac_modes: list[HVACMode] | list[str] = None
+    hvac_modes: list[HVACMode] | list[str] | None = None
 
 
 @dataclass(frozen=True, kw_only=True)
