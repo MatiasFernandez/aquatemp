@@ -16,7 +16,6 @@ dependencies = [
     # Home Assistant 2025.11.0's aiodns 3.5.0 breaks with pycares 5
     "pycares<5",
     "aioresponses",
-    "aiofiles",
     "xmltodict",
 ]
 
