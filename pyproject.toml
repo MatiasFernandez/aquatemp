@@ -25,6 +25,9 @@ dev = [
     # stable Home Assistant, which Dependabot moves. The oldest supported one is
     # tested from its own project, tests/floor/
     "pytest-homeassistant-custom-component==0.13.374",
+    # Exact: ty is in beta and its releases change what it reports, so a new
+    # version arrives as a Dependabot PR that shows any new errors
+    "ty==0.0.96",
 ]
 
 [tool.uv]
@@ -60,6 +63,15 @@ combine-as-imports = true
 
 [tool.ruff.lint.mccabe]
 max-complexity = 25
+
+[tool.ty.src]
+# The integration only; the tests and developer scripts aren't checked. ty
+# checks the bodies of unannotated functions too, without requiring annotations
+include = ["custom_components/aqua_temp"]
+
+[tool.ty.environment]
+# Minimum Python of the oldest supported Home Assistant, like ruff's target-version
+python-version = "3.13"
 
 [tool.pytest.ini_options]
 asyncio_mode = "auto"

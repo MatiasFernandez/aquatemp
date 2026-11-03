@@ -36,6 +36,7 @@ The dev group's exact `pytest-homeassistant-custom-component` pin decides the Ho
 There is no build step. Checks run as pre-commit hooks:
 
 - [ruff](https://docs.astral.sh/ruff/) lint and format for Python, configured in [pyproject.toml](pyproject.toml)
+- [ty](https://docs.astral.sh/ty/) type checking for the integration, configured in [pyproject.toml](pyproject.toml). The hook runs it through `uv run`, so it sees the installed Home Assistant; CI runs it in a job of its own
 - codespell, yamllint, prettier (Markdown, JSON, YAML) and basic file checks
 - [actionlint](https://github.com/rhysd/actionlint) (workflow correctness) and [zizmor](https://docs.zizmor.sh/) (workflow security) for GitHub Actions. Pin third-party actions to a commit SHA with a `# vX.Y.Z` comment; Dependabot keeps both updated.
 

@@ -38,3 +38,14 @@ repos:
     rev: v1.31.1
     hooks:
       - id: zizmor
+  # Runs in the project's uv environment, where Home Assistant and the other
+  # dependencies are installed for ty to follow. Checks the paths configured
+  # in pyproject.toml, not just the changed files
+  - repo: local
+    hooks:
+      - id: ty
+        name: ty
+        entry: uv run --locked ty check
+        language: system
+        types: [python]
+        pass_filenames: false
