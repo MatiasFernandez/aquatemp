@@ -1,6 +1,6 @@
 from homeassistant.const import CONF_USERNAME
 
-from ..cloud.consts import HTTP_HEADER_X_TOKEN
+from ..cloud.consts import SECRET_KEYS
 
 DOMAIN = "aqua_temp"
 DEFAULT_NAME = "Aqua Temp"
@@ -46,8 +46,6 @@ TO_REDACT = [
     "user_id",
     "userName",
     "user_name",
-    "accessKey",
-    "deviceSecret",
     "nickName",
     "nick_name",
     "realName",
@@ -57,5 +55,5 @@ TO_REDACT = [
     "phoneNumber",
     "customerPhone",
     CONF_USERNAME,
-    HTTP_HEADER_X_TOKEN,
+    *SECRET_KEYS,
 ]

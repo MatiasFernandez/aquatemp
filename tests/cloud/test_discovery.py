@@ -1,4 +1,7 @@
-"""Device discovery: device-list requests, the unfiltered fallback, several devices."""
+"""Device discovery: device-list requests, the unfiltered fallback, several devices
+and the device secret kept out of the debug log."""
+
+import logging
 
 import pytest
 
@@ -15,6 +18,9 @@ DEVICE_LISTS = [REGISTERED, SHARED_TOBE, SHARED_APPECT]
 
 SHARED_DEVICE_CODE = "000000000002"
 MISSING = object()
+
+# Made up. The real device list carries each unit's secret
+DEVICE_SECRET = "0123456789abcdef0123456789abcdef"
 
 
 def listed_device(name: str) -> dict:
@@ -133,3 +139,29 @@ def nickname_list(nickname) -> dict:
 )
 async def test_nickname_is_none_unless_the_cloud_has_a_usable_one(api, expected):
     assert api.get_device_meta(DEVICE_CODE).nickname == expected
+
+
+def device_list_with_secret() -> dict:
+    """The synthetic device list, with the device secret the real one carries."""
+    payload = load_fixture(APIType.AquaTemp, "synthetic/device_list")
+    payload["objectResult"][0]["deviceSecret"] = DEVICE_SECRET
+
+    return payload
+
+
+@pytest.mark.parametrize(
+    "cloud_responses",
+    [
+        pytest.param({REGISTERED: device_list_with_secret()}, id="filtered"),
+        pytest.param(
+            {REGISTERED: ["synthetic/device_list_empty", device_list_with_secret()]},
+            id="unfiltered",
+        ),
+    ],
+)
+async def test_debug_log_hides_the_device_secret(client, caplog):
+    with caplog.at_level(logging.DEBUG):
+        await client.initialize(throw_error=True)
+
+    assert DEVICE_SECRET not in caplog.text
+    assert "'deviceSecret': '<redacted>'" in caplog.text
