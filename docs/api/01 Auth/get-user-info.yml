@@ -1,0 +1,32 @@
+info:
+  name: Get User Info
+  type: http
+  seq: 2
+
+http:
+  method: POST
+  url: "{{base_url}}/app/user/getUserInfo"
+
+runtime:
+  scripts:
+    - type: after-response
+      code: |-
+        const userId = res.body?.objectResult?.userId;
+
+        if (userId) {
+          bru.setEnvVar("user_id", userId);
+          console.log("user_id captured");
+        }
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+  forwardAuthorizationHeader: true
+
+docs: |-
+  Stores `user_id`, which the two device share lists send as `toUser`.
+
+  **From the integration.** Sent with no body. `objectResult.userId` is the
+  account's numeric id; `toUser` wants this, not the login email.

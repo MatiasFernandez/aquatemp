@@ -1,0 +1,55 @@
+info:
+  name: Status Parameters
+  type: http
+  seq: 3
+
+http:
+  method: POST
+  url: "{{base_url}}/app/device/getControlDetailStatusByDeviceCode?lang=en"
+  params:
+    - name: lang
+      value: en
+      type: query
+  body:
+    type: json
+    data: |-
+      {
+        "deviceCode": "{{device_code}}",
+        "protocalId": "{{protocal_id}}",
+        "pageIndex": 1,
+        "pageSize": 9999,
+        "paramName": "",
+        "num": ""
+      }
+
+runtime:
+  scripts:
+    - type: after-response
+      code: |-
+        // Enum Options needs the detailId of an ENUM item; take the first one
+        const items = res.body?.objectResult?.dataList ?? [];
+        const enumItem = items.find((item) => item.tranferUnit === "ENUM");
+
+        if (enumItem) {
+          bru.setEnvVar("detail_id", enumItem.detailId);
+          console.log("detail_id set to " + enumItem.detailId + " (" + enumItem.num + ")");
+        }
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+  forwardAuthorizationHeader: true
+
+docs: |-
+  **Probed (2026-11).** The readings, at `objectResult.dataList`. Each item
+  has `num` (the protocol code), `content` (label), `description`,
+  `dataValue` (the value; there is no `value`), `showUnit`, `tranferUnit`,
+  `address`, `detailId` and, on most items, `standardNum`.
+
+  - `tranferUnit` uses the `dataType` vocabulary of Get Data By Code.
+  - `standardNum` is the code's semantic name (`T02` -> `InletWaterTemp`).
+    It isn't unique: `T23`-`T27` all say `Inverter1State`.
+  - Ranges are only text in `description` (`O08` "0-50A").
+  - `showUnit` is sometimes wrong: `T14`, a voltage, says `A`.

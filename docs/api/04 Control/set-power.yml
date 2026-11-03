@@ -1,0 +1,32 @@
+info:
+  name: Set Power
+  type: http
+  seq: 1
+
+http:
+  method: POST
+  url: "{{base_url}}/app/device/control"
+  body:
+    type: json
+    data: |-
+      {
+        "param": [
+          {
+            "deviceCode": "{{device_code}}",
+            "protocolCode": "power",
+            "value": "1"
+          }
+        ]
+      }
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+  forwardAuthorizationHeader: true
+
+docs: |-
+  **From the integration.** `"1"` on, `"0"` off. The profiles name the code
+  `Power`, but the integration sends it lowercased, `power`, as the body
+  above does.

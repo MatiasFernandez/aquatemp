@@ -1,0 +1,31 @@
+info:
+  name: Set Fan Mode
+  type: http
+  seq: 4
+
+http:
+  method: POST
+  url: "{{base_url}}/app/device/control"
+  body:
+    type: json
+    data: |-
+      {
+        "param": [
+          {
+            "deviceCode": "{{device_code}}",
+            "protocolCode": "Manual-mute",
+            "value": "0"
+          }
+        ]
+      }
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+  forwardAuthorizationHeader: true
+
+docs: |-
+  **From the integration.** `"0"` auto, `"1"` low. The protocol
+  code is literally `Manual-mute`.

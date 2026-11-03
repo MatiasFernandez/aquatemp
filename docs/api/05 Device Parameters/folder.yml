@@ -1,0 +1,36 @@
+info:
+  name: Device Parameters
+  type: folder
+  seq: 5
+
+request: {}
+
+docs:
+  content: |-
+    The device's own parameter lists, with labels, units, ranges and option
+    labels: 69 status and 175 control parameters on the unit probed. The
+    integration doesn't call any of these.
+
+    **Probed (2026-11).** Run them in order: each one's answer feeds the next.
+
+    1. Query Device By Id, with `device_id`, the device list's `deviceId` (not
+       the device code). Stores `product_id`.
+    2. Query Product By Id. Stores `protocal_id`.
+    3. Status Parameters and Control Parameters. Each stores the `detailId` of
+       its first `ENUM` item in `detail_id`.
+    4. Enum Options. To read another item's options, set `detail_id` to that
+       item's `detailId`.
+
+    - Every request takes `?lang=en`. Other languages return the same English
+      text.
+    - Values match Get Data By Code. The status list also splits the bit
+      fields into one row per bit, with its state (`O01`-`O05`, `O13`,
+      `S01`-`S06`). Get Data By Code answers these codes as unknown.
+    - Writes go through `app/device/createDeviceControlConfigData`
+      `{deviceCode, protocalId, address, value}`, by register address. Never
+      sent.
+    - `app/protocal/getProtocalParamByDetailIdDistinct` `{detailId,
+      deviceCode, protocalId, address}` returns bit labels for a `BINARY`
+      control item. For status items, whose `protocalId` is `null`, it answers
+      `-1` "deviceCode、detailId、protocalId、address not blank".
+  type: text/markdown

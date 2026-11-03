@@ -10,7 +10,7 @@ repos:
     hooks:
       - id: codespell
         args:
-          - --ignore-words-list=hass
+          - --ignore-words-list=hass,protocal
           - --quiet-level=2
         exclude_types: [csv, json, svg, xml]
   - repo: https://github.com/pre-commit/pre-commit-hooks

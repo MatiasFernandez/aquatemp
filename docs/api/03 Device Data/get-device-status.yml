@@ -1,0 +1,42 @@
+info:
+  name: Get Device Status
+  type: http
+  seq: 3
+
+http:
+  method: POST
+  url: "{{base_url}}/app/device/getDeviceStatus"
+  body:
+    type: json
+    data: |-
+      {
+        "deviceCode": "{{device_code}}"
+      }
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+  forwardAuthorizationHeader: true
+
+docs: |-
+  Whether the device is online and whether it has a fault.
+
+  **From the integration.** Polled after Get Data By Code. When
+  `objectResult.isFault` is set, the integration follows with Get Fault
+  Data. The cloud takes 4 to 5 minutes to report `OFFLINE` after the device
+  drops.
+
+  **Probed (2026-10).**
+
+  | Field                  | Online    | Offline              |
+  | ---------------------- | --------- | -------------------- |
+  | `error_code`           | `"0"`     | `"0"`                |
+  | `error_msg`            | `Success` | `离线` ("offline")    |
+  | `objectResult.status`  | `ONLINE`  | `OFFLINE`            |
+  | `objectResult.isFault` | `false`   | `false`              |
+
+  - `status` is the online signal. `error_msg` changes too, but it is a
+    localised message.
+  - `isFault` is a JSON boolean, duplicated as snake_case `is_fault`.

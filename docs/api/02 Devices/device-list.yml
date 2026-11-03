@@ -1,0 +1,60 @@
+info:
+  name: Device List (owned)
+  type: http
+  seq: 1
+
+http:
+  method: POST
+  url: "{{base_url}}/app/device/deviceList"
+  body:
+    type: json
+    data: |-
+      {
+        "productIds": {{product_ids}},
+        "pageIndex": 1,
+        "pageSize": 999
+      }
+
+runtime:
+  scripts:
+    - type: after-response
+      code: |-
+        const devices = res.body?.objectResult ?? [];
+
+        if (devices.length && !bru.getEnvVar("device_code")) {
+          bru.setEnvVar("device_code", devices[0].deviceCode);
+
+          if (devices[0].deviceId) {
+            bru.setEnvVar("device_id", devices[0].deviceId);
+          }
+
+          console.log("device_code set to " + devices[0].deviceCode);
+        }
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+  forwardAuthorizationHeader: true
+
+docs: |-
+  Devices owned by the logged-in account. Like Shared Devices (accepted),
+  fills `device_code` and `device_id` from the first result if
+  `device_code` is still empty.
+
+  **From the integration.** `productIds` filters the list by product. The
+  environment's `product_ids` is the integration's allow-list
+  (cloud/consts.py `PRODUCT_IDS`). When no list returns a device, the
+  integration sends the same requests again without `productIds`, which
+  returns devices of any product; to do the same here, delete
+  `productIds` from the body. Each entry carries `deviceCode`,
+  `deviceId`, `productId`, `deviceNickName` and `custModel`.
+
+  **Probed (2026-10).**
+
+  - Filtered to a unit's own product id, the list came back `Success` with
+    an empty `objectResult` for an account that controls that unit. Why is
+    still open.
+  - Each entry includes `deviceSecret`, a credential of the device's Wi-Fi
+    module. Don't paste responses anywhere public.

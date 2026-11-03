@@ -1,0 +1,28 @@
+info:
+  name: Control
+  type: folder
+  seq: 4
+
+request: {}
+
+docs:
+  content: |-
+    **Every request in this folder writes to the real heat pump.**
+
+    All of them post `{"param": [{deviceCode, protocolCode, value}, ...]}` to
+    `app/device/control`; one request can carry several entries.
+
+    **From the integration.** Success is `error_msg == "Success"`;
+    `error_code "-100"` means the token expired. The protocol codes and values
+    below are the `default` mapping
+    (custom_components/aqua_temp/cloud/profiles/mapping.default.json); check
+    the device's own `mapping.<product id>.json` before assuming them.
+
+    **Probed (2026-10).**
+
+    - The cloud forwards the command and waits for the device to acknowledge
+      it: about 5 seconds online, with `objectResult: null`.
+    - To an offline device it gives up after about 51 seconds with HTTP 200,
+      `error_code "-1"` and `设备响应超时` ("device response timeout"). A
+      client timeout shorter than that hides this answer.
+  type: text/markdown

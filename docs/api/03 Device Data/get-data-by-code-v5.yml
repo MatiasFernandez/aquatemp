@@ -1,0 +1,47 @@
+info:
+  name: Get Data By Code (v5)
+  type: http
+  seq: 2
+
+http:
+  method: POST
+  url: "{{base_url}}/app/device/v5/getDataByCode"
+  body:
+    type: json
+    data: |-
+      {
+        "deviceCode": "{{device_code}}",
+        "codes": {{protocol_codes}},
+        "bitCodes": ["WaterFlowSwitch", "Sys1CompState", "Sys1HighPressureSwitch", "Sys1LowPressureSwitch"]
+      }
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+  forwardAuthorizationHeader: true
+
+docs: |-
+  The versioned variant of Get Data By Code, with a second array for single
+  bits. The integration doesn't call it.
+
+  **Probed (2026-09).**
+
+  - The codes go in `codes`. Sent as `protocalCodes`, the request answers
+    `Success` with an empty `objectResult`, which looks the same as a device
+    that knows nothing. Keep a known code in any probe of this endpoint.
+  - For `codes` it knows the same codes as the unversioned endpoint, with
+    the same types, ranges and response shape.
+  - `bitCodes` takes semantic names of single bits: `WaterFlowSwitch`,
+    `Sys1CompState`, `Sys1HighPressureSwitch`, `Sys1LowPressureSwitch`,
+    `EmergencySwitch`, `ModeSwitch`, `Master/SlaveSwitch`,
+    `InletWaterTempSensorFault`, `OutletWaterTempSensorFault`,
+    `ATSensorFault`. They answer only through this array, and both arrays
+    work in one request.
+  - A known bit comes back with `dataType: null` and range `0`-`1`, so the
+    "empty `dataType` means unknown" rule needs `null` and `""` kept apart.
+  - Polarity is per bit: `WaterFlowSwitch` reads `0` while water flows and
+    `1` with the pump off, while `Sys1CompState` reads `1` with the
+    compressor running.
+  - Legacy codes (`S01`, `O01`) sent in `bitCodes` answer as unknown.
