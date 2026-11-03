@@ -114,6 +114,8 @@ async def test_each_device_polls_its_catalog_codes(api, wire):
         if endpoint == DATA and body["deviceCode"] == HITEMP_DEVICE_CODE
     ]
 
+    # No semantic codes, though the account reads through them: the Hitemp
+    # catalog has none
     assert hitemp_request["codes"] == ["Mode", *hitemp_codes]
 
 

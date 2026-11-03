@@ -1518,6 +1518,78 @@
       "rangeEnd": "999",
       "tmJson": null,
       "dataTypeAi": "num"
+    },
+    {
+      "code": "SetCurrentTemp",
+      "value": "28.0",
+      "dataType": "TEMP",
+      "rangeStart": "0",
+      "rangeEnd": "99",
+      "tmJson": null,
+      "dataTypeAi": "num"
+    },
+    {
+      "code": "SetHeatTargetTemp",
+      "value": "28.0",
+      "dataType": "TEMP",
+      "rangeStart": "15.00",
+      "rangeEnd": "35.00",
+      "tmJson": null,
+      "dataTypeAi": "num"
+    },
+    {
+      "code": "SetCoolMinTargetTemp",
+      "value": "8.0",
+      "dataType": "TEMP",
+      "rangeStart": "-9",
+      "rangeEnd": "35.00",
+      "tmJson": null,
+      "dataTypeAi": "num"
+    },
+    {
+      "code": "SetCoolMaxTargetTemp",
+      "value": "35.0",
+      "dataType": "TEMP",
+      "rangeStart": "8.00",
+      "rangeEnd": "80",
+      "tmJson": null,
+      "dataTypeAi": "num"
+    },
+    {
+      "code": "SetHeatMinTargetTemp",
+      "value": "15.0",
+      "dataType": "TEMP",
+      "rangeStart": "-30",
+      "rangeEnd": "35.00",
+      "tmJson": null,
+      "dataTypeAi": "num"
+    },
+    {
+      "code": "SetHeatMaxTargetTemp",
+      "value": "35.0",
+      "dataType": "TEMP",
+      "rangeStart": "15.00",
+      "rangeEnd": "90",
+      "tmJson": null,
+      "dataTypeAi": "num"
+    },
+    {
+      "code": "InletWaterTemp",
+      "value": "12.5",
+      "dataType": "TEMP",
+      "rangeStart": "",
+      "rangeEnd": "",
+      "tmJson": null,
+      "dataTypeAi": "num"
+    },
+    {
+      "code": "OutletWaterTemp",
+      "value": "14.0",
+      "dataType": "TEMP",
+      "rangeStart": "",
+      "rangeEnd": "",
+      "tmJson": null,
+      "dataTypeAi": "num"
     }
   ],
   "isReusltSuc": true

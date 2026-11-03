@@ -41,11 +41,22 @@ def legacy_aqua_temp_profile() -> ApiProfile:
     return ApiProfile(APIType.AquaTemp, fields)
 
 
-def default_profile_codes() -> list[str]:
-    """Codes requested for the default profile: Mode, then the JSON's."""
-    profile = [item["key"] for item in json.loads(DEFAULT_PROFILE.read_text())]
+def hi_temp_profile() -> ApiProfile:
+    return ApiProfile(
+        APIType.HiTemp, json.loads((PROFILES / "api.hi_temp.json").read_text())
+    )
 
-    return ["Mode", *profile]
+
+def default_profile_codes() -> list[str]:
+    """Codes requested for the default profile: Mode, then the JSON's keys, then
+    its semantic codes."""
+    profile = json.loads(DEFAULT_PROFILE.read_text())
+    keys = [item["key"] for item in profile]
+    semantic_codes = [
+        item["semantic_code"] for item in profile if "semantic_code" in item
+    ]
+
+    return ["Mode", *keys, *semantic_codes]
 
 
 # Answered with an empty value and dataType in the idle recording
@@ -106,7 +117,7 @@ async def test_requests_device_protocol_codes(api, cloud, api_type, api_profile)
     assert set(body) == {"deviceCode", "codes"}
     assert body["deviceCode"] == DEVICE_CODE
     # Possible bug: "Mode" leads the polled codes and is in the profile
-    # too, so it is requested twice
+    # too, so it is requested twice. The semantic codes follow the catalog's
     assert body["codes"] == default_profile_codes()
     assert body["codes"].count("Mode") == 2
 
@@ -133,6 +144,20 @@ async def test_reads_follow_the_profile(api, cloud, api_type, api_profile):
     assert device_data["T02"] == "13.0"
     assert device_data["Mode"] == "1"
     assert device_data["F10"] is None
+
+
+@pytest.mark.parametrize("api_profile", [hi_temp_profile()], ids=["hi_temp"])
+async def test_hi_temp_accounts_do_not_request_semantic_codes(
+    api, cloud, api_type, api_profile
+):
+    cloud.post(LEGACY_DATA_URL, payload=load_fixture(api_type, "get_data_by_code.idle"))
+
+    await api.update()
+
+    [data_request] = cloud.requests.get(("POST", URL(LEGACY_DATA_URL)))
+    keys = [item["key"] for item in json.loads(DEFAULT_PROFILE.read_text())]
+
+    assert data_request.kwargs["json"]["protocalCodes"] == ["Mode", *keys]
 
 
 async def test_reported_values_become_device_data(api, cloud, api_type, api_profile):

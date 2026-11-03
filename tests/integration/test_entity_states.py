@@ -45,7 +45,7 @@ async def test_water_delta_t_is_outlet_minus_inlet(hass, entry):
     assert state_of(hass, "sensor", "water_delta_t").state == "1.5"
 
 
-@cloud_with({DATA: data_with(T03="")})
+@cloud_with({DATA: data_with(T03="", OutletWaterTemp="")})
 async def test_water_delta_t_without_an_input_is_unknown(hass, entry):
     assert state_of(hass, "sensor", "water_delta_t").state == "unknown"
 

@@ -236,8 +236,9 @@ async def test_water_delta_t_is_created(hass, entry):
     assert sensor_unique_id("water_delta_t") in entry_unique_ids(hass, entry)
 
 
-# T03 is the default mapping's outlet water temperature
-@cloud_with(RESPONSES | {DATA: data_untyped("T03")})
+# T03 is the default mapping's outlet water temperature, read through
+# OutletWaterTemp too: the input is unknown when both codes are
+@cloud_with(RESPONSES | {DATA: data_untyped("T03", "OutletWaterTemp")})
 async def test_water_delta_t_is_skipped_when_an_input_is_unknown(hass, entry):
     assert sensor_unique_id("water_delta_t") not in entry_unique_ids(hass, entry)
 
@@ -441,7 +442,22 @@ async def test_climate_reports_temperatures_while_powered_off(hass, entry):
     }
 
 
-@cloud_with(RESPONSES | {DATA: data_with(Power="1", T02="", R02="", R10="", R11="")})
+@cloud_with(
+    RESPONSES
+    | {
+        DATA: data_with(
+            Power="1",
+            T02="",
+            R02="",
+            R10="",
+            R11="",
+            InletWaterTemp="",
+            SetHeatTargetTemp="",
+            SetHeatMinTargetTemp="",
+            SetHeatMaxTargetTemp="",
+        )
+    }
+)
 async def test_climate_temperatures_the_device_does_not_know_are_empty(hass, entry):
     state = hass.states.get(climate_entity_id(hass))
 

@@ -14,7 +14,7 @@ DATA_REQUESTS = {
 }
 
 SEMANTIC_CODES = {
-    APIType.AquaTemp: False,
+    APIType.AquaTemp: True,
     APIType.HiTemp: False,
     APIType.AquaTempOld: False,
 }
