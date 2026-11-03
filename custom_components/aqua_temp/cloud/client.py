@@ -515,7 +515,7 @@ class AquaTempAPI:
             if code not in unknown_codes
         ]
 
-        param_data_endpoint = self._api_profile.get(APIParam.DataEndpoint)
+        data_endpoint = self._api_profile.data_endpoint
         param_device_code = self._api_profile.get(APIParam.DeviceCode)
         param_data_codes = self._api_profile.get(APIParam.DataCodes)
         param_object_result = self._api_profile.get(APIParam.ObjectResult)
@@ -527,7 +527,7 @@ class AquaTempAPI:
             param_data_codes: codes,
         }
 
-        data_response = await self._post_request(param_data_endpoint, data)
+        data_response = await self._post_request(data_endpoint, data)
         error_msg = data_response.get(param_error_msg)
 
         object_result_items = data_response.get(param_object_result, [])
@@ -536,9 +536,7 @@ class AquaTempAPI:
             self._record_unknown_codes(device_code, object_result_items)
 
             if codes and not object_result_items:
-                self._warn_empty_read(
-                    device_code, param_data_endpoint, param_data_codes
-                )
+                self._warn_empty_read(device_code, data_endpoint, param_data_codes)
 
             else:
                 self._devices_read_empty.discard(device_code)
@@ -594,7 +592,7 @@ class AquaTempAPI:
 
         self._unknown_codes[device_code] = unknown_codes
 
-    def _warn_empty_read(self, device_code: str, endpoint: str, codes_field: str):
+    def _warn_empty_read(self, device_code: str, endpoint: Endpoints, codes_field: str):
         """Warn once per device until a read returns values again."""
         if device_code in self._devices_read_empty:
             return
@@ -819,7 +817,7 @@ class AquaTempAPI:
                 self._devices[device_code] = device
 
     async def _post_request(
-        self, endpoint: str, data: dict | list | None = None
+        self, endpoint: Endpoints, data: dict | list | None = None
     ) -> dict:
         param_url = self._api_profile.get(APIParam.URL)
         param_suffix = self._api_profile.get(APIParam.Suffix)

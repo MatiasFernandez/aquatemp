@@ -23,3 +23,10 @@ async def test_data_endpoint_and_code_field(profile_type, expected):
         profile.get(APIParam.DataEndpoint),
         profile.get(APIParam.DataCodes),
     ) == expected
+
+
+def test_unknown_data_endpoint_fails_on_load():
+    fields = {"data_endpoint": "app/device/v6/getDataByCode"}
+
+    with pytest.raises(ValueError, match="v6/getDataByCode"):
+        ApiProfile(APIType.AquaTemp, fields)
