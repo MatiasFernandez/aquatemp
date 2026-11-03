@@ -774,8 +774,8 @@ class AquaTempAPI:
                 self._devices[device_code] = device
 
     async def _post_request(
-        self, endpoint: Endpoints, data: dict | list | None = None
-    ) -> dict | None:
+        self, endpoint: str, data: dict | list | None = None
+    ) -> dict:
         param_url = self._api_profile.get(APIParam.URL)
         param_suffix = self._api_profile.get(APIParam.Suffix)
 

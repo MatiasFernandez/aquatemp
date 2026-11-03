@@ -112,7 +112,7 @@ def _async_device_as_dict(
     entity_registry = er.async_get(hass)
 
     ha_device = async_get_ha_device(hass, config_entry_id, device_id)
-    data = {}
+    data: dict[str, Any] = {}
 
     if ha_device:
         data["device"] = {
