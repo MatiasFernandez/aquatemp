@@ -93,10 +93,12 @@ class AquaTempClimateEntity(BaseEntity, ClimateEntity, ABC):
         target_temperature = coordinator.get_device_target_temperature(device_code)
         minimum_temperature = coordinator.get_device_minimum_temperature(device_code)
         maximum_temperature = coordinator.get_device_maximum_temperature(device_code)
+        temperature_unit = coordinator.get_temperature_unit(device_code)
 
         if not is_power_on:
             hvac_mode = HVACMode.OFF
 
+        self._attr_temperature_unit = temperature_unit
         self._attr_min_temp = minimum_temperature
         self._attr_max_temp = maximum_temperature
         self._attr_hvac_mode = hvac_mode

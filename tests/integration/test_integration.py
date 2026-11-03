@@ -20,7 +20,7 @@ from pytest_homeassistant_custom_component.common import (
 )
 
 from custom_components.aqua_temp.cloud.exceptions import OperationFailedException
-from custom_components.aqua_temp.common.consts import DOMAIN
+from custom_components.aqua_temp.common.consts import CONFIGURATION_FILE, DOMAIN
 from custom_components.aqua_temp.common.device_lookup import async_get_ha_device
 from custom_components.aqua_temp.diagnostics import (
     async_get_config_entry_diagnostics,
@@ -582,7 +582,7 @@ async def test_selecting_a_temperature_unit_writes_nothing_to_the_device(
     assert [endpoint for endpoint, _ in wire] == [DATA, STATUS]
 
 
-async def test_reload_resets_the_temperature_unit(hass, entry, freezer):
+async def test_reload_keeps_the_temperature_unit(hass, entry, freezer):
     await select_unit(hass, "°F")
     freezer.tick(timedelta(seconds=REQUEST_REFRESH_DEFAULT_COOLDOWN))
     async_fire_time_changed(hass)
@@ -591,12 +591,40 @@ async def test_reload_resets_the_temperature_unit(hass, entry, freezer):
     assert await hass.config_entries.async_reload(entry.entry_id)
     await hass.async_block_till_done()
 
-    # Possible bug: unloading removes the entry's stored configuration, so the
-    # unit picked is lost on every reload, including after an options change
-    assert hass.states.get(unit_entity_id(hass)).state == "°C"
+    assert hass.states.get(unit_entity_id(hass)).state == "°F"
 
 
-async def test_climate_keeps_its_temperature_unit_when_another_is_selected(
+async def test_deleting_the_entry_removes_its_stored_configuration(
+    hass, entry, hass_storage
+):
+    await select_unit(hass, "°F")
+    stored_before = entry.entry_id in hass_storage[CONFIGURATION_FILE]["data"]
+
+    await hass.config_entries.async_remove(entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert stored_before
+    assert entry.entry_id not in hass_storage[CONFIGURATION_FILE]["data"]
+
+
+async def test_climate_follows_the_selected_temperature_unit(hass, entry, freezer):
+    await select_unit(hass, "°F")
+    freezer.tick(timedelta(seconds=REQUEST_REFRESH_DEFAULT_COOLDOWN))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    # The select only tells which unit the device reports in, so the values
+    # (13, 28, 15 and 35) are taken as °F and Home Assistant converts them to
+    # its metric system
+    assert temperatures(hass.states.get(climate_entity_id(hass))) == {
+        "current_temperature": -10.6,
+        "temperature": -2.2,
+        "min_temp": -9.4,
+        "max_temp": 1.7,
+    }
+
+
+async def test_temperature_sensors_follow_the_selected_temperature_unit(
     hass, entry, freezer
 ):
     await select_unit(hass, "°F")
@@ -604,9 +632,11 @@ async def test_climate_keeps_its_temperature_unit_when_another_is_selected(
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
-    # Possible bug: the climate reads the unit once, when it is created, and a
-    # reload resets the unit, so a unit other than Celsius never reaches it
-    assert temperatures(hass.states.get(climate_entity_id(hass)))["temperature"] == 28.0
+    state = hass.states.get(entity_id(hass, "sensor", "T02"))
+
+    # The select only tells which unit the device reports in, so the inlet
+    # water temperature keeps its value (13) and takes the unit
+    assert (state.state, state.attributes["unit_of_measurement"]) == ("13.0", "°F")
 
 
 async def set_temperature(hass: HomeAssistant, temperature: float):
