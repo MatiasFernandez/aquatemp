@@ -7,6 +7,11 @@ predate this fork and keep their original format.
 
 ## [Unreleased]
 
+### Security
+
+- Stop logging the session token and the password hash at DEBUG level. The login response, with its token, and the login request, with the password hash, were logged whole, so a debug log attached to an issue handed out a live session whether or not **Log session token** was on. That option's warning is now the only place the token is logged
+- Stop logging each device's secret at DEBUG level, the same secret the downloaded diagnostics already redact. The device lists and each discovered device were logged whole, secret included
+
 ## [3.4.2] - 2026-11-02
 
 ### Security

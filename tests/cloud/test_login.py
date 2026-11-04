@@ -170,13 +170,19 @@ async def test_session_token_is_not_logged_by_default(client, caplog):
     assert "test-token" not in caplog.text
 
 
-async def test_debug_log_shows_the_session_token(client, caplog):
+async def test_debug_log_hides_the_session_token_and_password_hash(client, caplog):
     with caplog.at_level(logging.DEBUG):
         await client.initialize(throw_error=True)
 
-    # Possible bug: the login response is logged whole, token included,
-    # without the opt-in
-    assert "'x-token': 'test-token'" in caplog.text
+    login_logs = [
+        record.getMessage() for record in caplog.records if LOGIN in record.getMessage()
+    ]
+    assert len(login_logs) == 1
+    assert "test-token" not in caplog.text
+    assert PASSWORD_HASH not in caplog.text
+    # The rest of the line stays useful
+    assert "'userName': 'test@example.com'" in login_logs[0]
+    assert "'x-token': '<redacted>'" in login_logs[0]
 
 
 async def test_session_token_is_logged_when_opted_in(

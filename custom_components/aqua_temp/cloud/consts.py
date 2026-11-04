@@ -6,6 +6,11 @@ from .modes import FanMode, Mode
 
 HTTP_HEADER_X_TOKEN = "x-token"
 
+# Keys of the cloud's requests and responses whose values are credentials: the
+# session token in the login response, the password hash in the login request,
+# each device's secret in the device lists and the access key the app knows of
+SECRET_KEYS = frozenset({HTTP_HEADER_X_TOKEN, "password", "deviceSecret", "accessKey"})
+
 # Every heat pump the Aqua Temp Android app lists as of version 2.1.5, plus Hitemp,
 # which the app doesn't list
 PRODUCT_IDS = [

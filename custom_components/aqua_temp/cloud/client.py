@@ -39,6 +39,7 @@ from .consts import (
     POWER_MODE_OFF,
     POWER_MODE_ON,
     PRODUCT_ID_DEFAULT,
+    SECRET_KEYS,
 )
 from .device_profiles import DeviceProfile, DeviceProfiles
 from .endpoints import Endpoints
@@ -52,6 +53,20 @@ from .exceptions import (
 from .modes import FanMode, Mode
 
 _LOGGER = logging.getLogger(__name__)
+
+
+def _redacted(value):
+    """A copy of a request body or response safe to log, secrets masked."""
+    if isinstance(value, dict):
+        return {
+            key: "<redacted>" if key in SECRET_KEYS else _redacted(item)
+            for key, item in value.items()
+        }
+
+    if isinstance(value, list):
+        return [_redacted(item) for item in value]
+
+    return value
 
 
 def _is_transient(error: ClientConnectionError | ClientResponseError) -> bool:
@@ -726,7 +741,8 @@ class AquaTempAPI:
                 device_code = self._get_device_id(device)
 
                 _LOGGER.debug(
-                    f"Discover device: {device_code} by {device_list_url}, Data: {device}"
+                    f"Discover device: {device_code} by {device_list_url}, "
+                    f"Data: {_redacted(device)}"
                 )
 
                 self._devices[device_code] = device
@@ -768,7 +784,8 @@ class AquaTempAPI:
                     f"Unfiltered discovery: device {device_code} productId={product_id} (not in PRODUCT_IDS allow-list)"
                 )
                 _LOGGER.debug(
-                    f"Discover device: {device_code} by {device_list_url}, Data: {device}"
+                    f"Discover device: {device_code} by {device_list_url}, "
+                    f"Data: {_redacted(device)}"
                 )
 
                 self._devices[device_code] = device
@@ -795,7 +812,10 @@ class AquaTempAPI:
                 response.raise_for_status()
 
                 result = await response.json()
-                _LOGGER.debug(f"Request to {url}, Body: {data}, Result: {result}")
+                _LOGGER.debug(
+                    f"Request to {url}, Body: {_redacted(data)}, "
+                    f"Result: {_redacted(result)}"
+                )
 
         except TimeoutError:
             # The bare exception has an empty message, which would reach the
