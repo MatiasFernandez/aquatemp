@@ -1,0 +1,34 @@
+opencollection: 1.0.0
+
+info:
+  name: AquaTemp / LinkedGo
+  version: "1"
+
+request:
+  headers:
+    - name: Content-Type
+      value: application/json; charset=utf-8
+    - name: x-token
+      value: "{{token}}"
+
+docs:
+  content: |-
+    # Aqua Temp / LinkedGo cloud API
+
+    What we know about the cloud API, one request per endpoint. Each request's
+    notes mark where that knowledge stands:
+
+    - **Probed**: seen in live API responses, on the date given.
+    - **From the integration**: what the integration's cloud client sends and
+      expects. It works against the live API, so take it as the API's
+      behaviour, but nobody probed it separately.
+
+    Run "01 Auth / Login" first: it stores x-token in the environment. "Get
+    User Info" stores user_id, which the share lists need.
+  type: text/markdown
+bundled: false
+extensions:
+  bruno:
+    ignore:
+      - node_modules
+      - .git

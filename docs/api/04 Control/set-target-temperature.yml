@@ -1,0 +1,42 @@
+info:
+  name: Set Target Temperature
+  type: http
+  seq: 2
+
+http:
+  method: POST
+  url: "{{base_url}}/app/device/control"
+  body:
+    type: json
+    data: |-
+      {
+        "param": [
+          {
+            "deviceCode": "{{device_code}}",
+            "protocolCode": "R02",
+            "value": 26
+          },
+          {
+            "deviceCode": "{{device_code}}",
+            "protocolCode": "Set_Temp",
+            "value": 26
+          }
+        ]
+      }
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+  forwardAuthorizationHeader: true
+
+docs: |-
+  **From the integration.** The same temperature goes in one request twice:
+  to the target code of the current mode, and to the profile's
+  `temperature` code. Both come from the device's profile. In the
+  `default` mapping the targets are `R01` cool, `R02` heat, `R03` auto,
+  with the limits in `R08`-`R11`, and the `temperature` code is
+  `Set_Temp`. Hitemp (`1245226668902080512`) uses `R01` for both. The body
+  above is heat in the `default` mapping; take both codes from the
+  device's profile and mode.

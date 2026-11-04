@@ -1,0 +1,33 @@
+info:
+  name: Set HVAC Mode
+  type: http
+  seq: 3
+
+http:
+  method: POST
+  url: "{{base_url}}/app/device/control"
+  body:
+    type: json
+    data: |-
+      {
+        "param": [
+          {
+            "deviceCode": "{{device_code}}",
+            "protocolCode": "Mode",
+            "value": "1"
+          }
+        ]
+      }
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+  forwardAuthorizationHeader: true
+
+docs: |-
+  **From the integration.** `"0"` cool, `"1"` heat, `"2"` auto. There is no
+  "off" value: off is Set Power `"0"`. The integration sends `Set_Temp` with
+  the current target first, then `Mode`, in one `param` list, and leaves out
+  the `Mode` entry when the mapping gives both the same code.

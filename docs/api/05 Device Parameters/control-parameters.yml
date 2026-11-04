@@ -1,0 +1,48 @@
+info:
+  name: Control Parameters
+  type: http
+  seq: 4
+
+http:
+  method: POST
+  url: "{{base_url}}/app/device/getControlParamConfigByDeviceCode?lang=en"
+  params:
+    - name: lang
+      value: en
+      type: query
+  body:
+    type: json
+    data: |-
+      {
+        "deviceCode": "{{device_code}}",
+        "pageIndex": 1,
+        "pageSize": 9999,
+        "paramName": "",
+        "num": ""
+      }
+
+runtime:
+  scripts:
+    - type: after-response
+      code: |-
+        // Enum Options needs the detailId of an ENUM item; take the first one
+        const items = res.body?.objectResult?.dataList ?? [];
+        const enumItem = items.find((item) => item.tranferUnit === "ENUM");
+
+        if (enumItem) {
+          bru.setEnvVar("detail_id", enumItem.detailId);
+          console.log("detail_id set to " + enumItem.detailId + " (" + enumItem.num + ")");
+        }
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+  forwardAuthorizationHeader: true
+
+docs: |-
+  **Probed (2026-11).** The settings, at `objectResult.dataList`. Each item
+  has `num`, `content`, `description`, `value`, `showUnit`, `tranferUnit`,
+  `rangeStart`/`rangeEnd` (`R01` 8-35), `address` and `detailId`. No
+  `protocalId` in the body, unlike Status Parameters.

@@ -1,0 +1,32 @@
+info:
+  name: Enum Options
+  type: http
+  seq: 5
+
+http:
+  method: POST
+  url: "{{base_url}}/app/protocal/getEnumDataByDetailId?lang=en"
+  params:
+    - name: lang
+      value: en
+      type: query
+  body:
+    type: json
+    data: |-
+      {
+        "detailId": "{{detail_id}}"
+      }
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+  forwardAuthorizationHeader: true
+
+docs: |-
+  **Probed (2026-11).** The option labels of an `ENUM` item, by the item's
+  `detailId` from either parameter list. `objectResult` is a list of
+  options, each with `value`, `meaning` and `enMeaning`. For example `H02` 0 Chiller, 1 Heat
+  pump, 2 Heat only; `H16` refrigerant 0 R410A, 1 R407C, 2 R32, 3 R290;
+  `Current mode` 0 cooling, 1 Heating, 2 Defrosting.

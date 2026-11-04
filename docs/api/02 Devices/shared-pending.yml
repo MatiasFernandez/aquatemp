@@ -1,0 +1,30 @@
+info:
+  name: Shared Devices (pending)
+  type: http
+  seq: 3
+
+http:
+  method: POST
+  url: "{{base_url}}/app/device/getMyTobeAppectDeviceShareDataList"
+  body:
+    type: json
+    data: |-
+      {
+        "productIds": {{product_ids}},
+        "toUser": "{{user_id}}"
+      }
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+  forwardAuthorizationHeader: true
+
+docs: |-
+  Share invitations waiting for you to accept. Unlike the other two lists,
+  it doesn't fill `device_code`: a device you haven't accepted isn't yours
+  to read or control yet.
+
+  **From the integration.** Takes no pagination parameters, unlike the
+  accepted list.

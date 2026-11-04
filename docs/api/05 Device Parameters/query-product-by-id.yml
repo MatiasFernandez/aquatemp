@@ -1,0 +1,41 @@
+info:
+  name: Query Product By Id
+  type: http
+  seq: 2
+
+http:
+  method: POST
+  url: "{{base_url}}/app/product/queryProductById?lang=en"
+  params:
+    - name: lang
+      value: en
+      type: query
+  body:
+    type: json
+    data: |-
+      {
+        "id": "{{product_id}}"
+      }
+
+runtime:
+  scripts:
+    - type: after-response
+      code: |-
+        const protocalId = res.body?.objectResult?.protocalId;
+
+        if (protocalId) {
+          bru.setEnvVar("protocal_id", protocalId);
+          console.log("protocal_id captured: " + protocalId);
+        }
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+  forwardAuthorizationHeader: true
+
+docs: |-
+  **Probed (2026-11).** `objectResult.protocalId` identifies the product's
+  protocol, which Status Parameters needs. The path is under `app/product/`,
+  not `app/device/`.

@@ -1,0 +1,71 @@
+info:
+  name: Login
+  type: http
+  seq: 1
+
+http:
+  method: POST
+  url: "{{base_url}}/app/user/login"
+  body:
+    type: json
+    data: |-
+      {
+        "userName": "{{user_name}}",
+        "password": "{{password_md5}}"
+      }
+
+runtime:
+  scripts:
+    - type: before-request
+      code: |-
+        // The API expects the MD5 hex digest of the plaintext password
+        const CryptoJS = require("crypto-js");
+        const password = bru.getEnvVar("password");
+
+        bru.setVar("password_md5", CryptoJS.MD5(password).toString());
+    - type: after-response
+      code: |-
+        // The token is at objectResult["x-token"], not in a response header
+        const token = res.body?.objectResult?.["x-token"];
+
+        if (token) {
+          bru.setEnvVar("token", token);
+          console.log("x-token captured");
+        } else {
+          console.log("No x-token in response: " + JSON.stringify(res.body));
+        }
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+  forwardAuthorizationHeader: true
+
+docs: |-
+  Run this first. Every request, this one included, sends
+  `x-token: {{token}}` from the collection headers; this one refreshes the
+  variable. Set `user_name`
+  and `password` (plaintext) in the environment secrets; the pre-request
+  script hashes the password.
+
+  **From the integration.** The body is `userName` and the MD5 hex digest of
+  the password. The token comes back at `objectResult["x-token"]`.
+
+  **Probed (2026).** Errors come back as HTTP 200 with the code in
+  `error_msg_code`:
+
+  | Body                       | `error_msg_code` | Message                  |
+  | -------------------------- | ---------------- | ------------------------ |
+  | unknown `userName`         | `1400033`        | 用户不存在, no such user  |
+  | known user, wrong password | `1400034`        | 密码错误, wrong password  |
+  | no `password`              | `1400032`        | 账号和密码不能为空, empty |
+  | `user_name` for `userName` | `1400032`        | the key isn't recognised |
+
+  - `userName` is the account's email, matched exactly: no format check,
+    and a different case or a trailing space reads as "no such user".
+  - Passwords longer than 16 characters fail with `1400034` when the whole
+    password is hashed, and pass once the password is changed to 16
+    characters or fewer.
+  - A new login invalidates the previous token: the account has one session
+    at a time.

@@ -1,0 +1,53 @@
+info:
+  name: Get Data By Code
+  type: http
+  seq: 1
+
+http:
+  method: POST
+  url: "{{base_url}}/app/device/getDataByCode"
+  body:
+    type: json
+    data: |-
+      {
+        "deviceCode": "{{device_code}}",
+        "protocalCodes": {{protocol_codes}}
+      }
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+  forwardAuthorizationHeader: true
+
+docs: |-
+  Reads parameters by protocol code; the main endpoint for probing. Edit the
+  `protocol_codes` environment variable to change what you ask for.
+  `protocalCodes` is the API's own spelling.
+
+  **From the integration.** Every poll sends the codes of the device's
+  profile in one request, leaving out the codes an earlier answer marked as
+  unknown. `objectResult` is a list of `{code, value, ...}`.
+
+  **Probed (2026-09 to 2026-10).**
+
+  - The cloud answers `Success` for any code and echoes each one back. A
+    code the device doesn't know comes back with an empty `value` *and* an
+    empty `dataType`; on this endpoint a known one always carries a
+    `dataType`. Read support
+    from `dataType`, not from `value`.
+  - `dataType` is one of `TEMP` (one decimal), `DIGI1` (integer), `DIGI5`
+    (one decimal, not a temperature), `ENUM` and `BINARY` (a 16-character
+    bit string, for fault and status words). Many codes also carry real
+    bounds in `rangeStart`/`rangeEnd`, e.g. `R02` `15.00`-`35.00`.
+  - Both code vocabularies work here: legacy codes (`T02`, `R02`) and
+    semantic names (`InletWaterTemp`, `SetHeatTargetTemp`), in the same
+    request. A code may contain a space or a slash (`Current Mode`,
+    `EM03/EM04`).
+  - Switch and relay states (`S01`-`S06`, `O01`-`O05`) answer as unknown,
+    under either vocabulary. Their semantic names are served by Get Data By
+    Code (v5) in its `bitCodes` array.
+  - An offline device answers like an online one: `Success`, typed values,
+    nothing marking them stale. They are the last values the device
+    reported. Get Device Status says whether it is online.

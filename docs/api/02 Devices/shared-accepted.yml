@@ -1,0 +1,50 @@
+info:
+  name: Shared Devices (accepted)
+  type: http
+  seq: 2
+
+http:
+  method: POST
+  url: "{{base_url}}/app/device/getMyAppectDeviceShareDataList"
+  body:
+    type: json
+    data: |-
+      {
+        "productIds": {{product_ids}},
+        "toUser": "{{user_id}}",
+        "pageIndex": 1,
+        "pageSize": 999
+      }
+
+runtime:
+  scripts:
+    - type: after-response
+      code: |-
+        const devices = res.body?.objectResult ?? [];
+
+        if (devices.length && !bru.getEnvVar("device_code")) {
+          bru.setEnvVar("device_code", devices[0].deviceCode);
+
+          if (devices[0].deviceId) {
+            bru.setEnvVar("device_id", devices[0].deviceId);
+          }
+
+          console.log("device_code set to " + devices[0].deviceCode);
+        }
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+  forwardAuthorizationHeader: true
+
+docs: |-
+  Devices another account shared with you that you already accepted. Fills
+  `device_code` and `device_id` from the first result if `device_code` is
+  still empty, as Device List does.
+  "Appect" is the API's own spelling.
+
+  **From the integration.** Same entry shape as Device List. `toUser` is
+  `userId` from Get User Info. An empty `objectResult` means no shares, not
+  an auth failure.

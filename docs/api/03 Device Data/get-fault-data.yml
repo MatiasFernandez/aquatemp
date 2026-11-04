@@ -1,0 +1,27 @@
+info:
+  name: Get Fault Data
+  type: http
+  seq: 4
+
+http:
+  method: POST
+  url: "{{base_url}}/app/device/getFaultDataByDeviceCode"
+  body:
+    type: json
+    data: |-
+      {
+        "deviceCode": "{{device_code}}"
+      }
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+  forwardAuthorizationHeader: true
+
+docs: |-
+  Details of the device's active faults.
+
+  **From the integration.** `objectResult` is a list; the integration shows
+  `[0].description`.
