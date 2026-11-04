@@ -7,6 +7,8 @@ predate this fork and keep their original format.
 
 ## [Unreleased]
 
+## [3.5.0] - 2026-11-04
+
 ### Added
 
 - A warning in the log when the cloud answers a device read with no values
@@ -377,7 +379,8 @@ As result of that process, you need to re-setup the integration.
 - Simplified `climate` component to include just its functionality without additional attributes (moved to dedicated components)
 - Add mapping of more Protocol Codes (Parameters) for later support of more sensors/binary_sensors
 
-[Unreleased]: https://github.com/MatiasFernandez/aquatemp/compare/v3.4.2...HEAD
+[Unreleased]: https://github.com/MatiasFernandez/aquatemp/compare/v3.5.0...HEAD
+[3.5.0]: https://github.com/MatiasFernandez/aquatemp/compare/v3.4.2...v3.5.0
 [3.4.2]: https://github.com/MatiasFernandez/aquatemp/compare/v3.4.1...v3.4.2
 [3.4.1]: https://github.com/MatiasFernandez/aquatemp/compare/v3.4.0...v3.4.1
 [3.4.0]: https://github.com/MatiasFernandez/aquatemp/compare/v3.3.0...v3.4.0
