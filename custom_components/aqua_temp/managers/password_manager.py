@@ -141,13 +141,13 @@ class PasswordManager:
 
             await self._store.async_save(store_data)
 
-    def _encrypt(self, data: str) -> str:
+    def _encrypt(self, data: str | None) -> str | None:
         if data is not None:
             data = self._crypto.encrypt(data.encode()).decode()
 
         return data
 
-    def _decrypt(self, data: str) -> str:
+    def _decrypt(self, data: str | None) -> str | None:
         if data is not None and len(data) > 0:
             data = self._crypto.decrypt(data.encode()).decode()
 
