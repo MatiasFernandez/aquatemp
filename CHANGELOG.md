@@ -7,6 +7,16 @@ predate this fork and keep their original format.
 
 ## [Unreleased]
 
+### Added
+
+- A warning in the log when the cloud answers a device read with no values
+- A warning in the log when the two codes read for the same value disagree
+
+### Changed
+
+- Aqua Temp accounts read device data from the cloud's versioned endpoint (`v5/getDataByCode`), the one the official app uses; Hitemp and old Aqua Temp accounts are unchanged
+- Most Aqua Temp devices read the water temperatures, the heating target and the target bounds through the codes the official app uses, falling back to the previous ones on units that don't answer them. Hitemp and old Aqua Temp accounts are unchanged
+
 ### Security
 
 - Stop logging the session token and the password hash at DEBUG level. The login response, with its token, and the login request, with the password hash, were logged whole, so a debug log attached to an issue handed out a live session whether or not **Log session token** was on. That option's warning is now the only place the token is logged

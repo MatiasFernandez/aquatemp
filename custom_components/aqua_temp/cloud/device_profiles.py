@@ -86,6 +86,18 @@ class DeviceProfile:
         return codes
 
     @property
+    def semantic_codes(self) -> dict[str, str]:
+        """Each catalog key that has a semantic code, the code the official app
+        requests for the same value, mapped to it; in catalog order."""
+        semantic_codes = {
+            parameter["key"]: parameter["semantic_code"]
+            for parameter in self._parameters
+            if parameter.get("semantic_code")
+        }
+
+        return semantic_codes
+
+    @property
     def hvac_modes(self) -> dict[Mode, str | None]:
         """Each mode's value on the wire."""
         return self._hvac_modes

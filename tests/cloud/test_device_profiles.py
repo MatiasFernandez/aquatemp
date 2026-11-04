@@ -54,6 +54,7 @@ def resolve_with_profiles(device_profiles: DeviceProfiles, product_id: str) -> d
             for mode in profile.hvac_modes
         },
         "poll_codes": profile.poll_codes,
+        "semantic_codes": profile.semantic_codes,
     }
 
 
@@ -114,6 +115,23 @@ AQUA_TEMP_MAPPING = DEFAULT_MAPPING | {
 }
 
 
+# Each pairing proven on a unit by reading both codes in the same request
+SEMANTIC_CODES = {
+    "default": {
+        "Set_Temp": "SetCurrentTemp",
+        "R02": "SetHeatTargetTemp",
+        "R08": "SetCoolMinTargetTemp",
+        "R09": "SetCoolMaxTargetTemp",
+        "R10": "SetHeatMinTargetTemp",
+        "R11": "SetHeatMaxTargetTemp",
+        "T02": "InletWaterTemp",
+        "T03": "OutletWaterTemp",
+    },
+    HITEMP: {},
+    AQUA_TEMP: {},
+}
+
+
 @pytest.mark.parametrize(
     ("product_id", "mapping_id", "catalog_id", "mapping"),
     [
@@ -137,4 +155,5 @@ def test_product_resolves_to_its_profile(
         # Possible bug: "Mode" leads even where the catalog lists it, and
         # even for Hitemp, whose mode role is mode_real
         "poll_codes": ["Mode", *catalog_keys(catalog_id)],
+        "semantic_codes": SEMANTIC_CODES[catalog_id],
     }

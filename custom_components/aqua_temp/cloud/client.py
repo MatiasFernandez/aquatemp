@@ -78,6 +78,11 @@ def _is_transient(error: ClientConnectionError | ClientResponseError) -> bool:
     return True
 
 
+def _is_answered_unknown(item: dict) -> bool:
+    """Whether the cloud answered the item as a code the device doesn't know."""
+    return item.get("dataType") == ""
+
+
 @dataclass(frozen=True)
 class Credentials:
     """The account's login; the password goes on the wire MD5-hashed."""
@@ -108,6 +113,8 @@ class AquaTempAPI:
     _devices: dict
     _device_profiles_by_code: dict[str, DeviceProfile]
     _unknown_codes: dict[str, frozenset[str]]
+    _devices_read_empty: set[str]
+    _disagreeing_codes: set[tuple[str, str]]
     _login_details: dict | None
 
     _session: ClientSession
@@ -136,6 +143,8 @@ class AquaTempAPI:
         self._devices = {}
         self._device_profiles_by_code = {}
         self._unknown_codes = {}
+        self._devices_read_empty = set()
+        self._disagreeing_codes = set()
         self._login_details = None
 
         self._session = session
@@ -506,31 +515,46 @@ class AquaTempAPI:
             await self._connect()
 
     async def _fetch_data(self, device_code: str):
+        device_profile = self._get_device_profile(device_code)
+        semantic_codes = (
+            device_profile.semantic_codes
+            if self._api_profile.get(APIParam.SemanticCodes)
+            else {}
+        )
+
         unknown_codes = self.get_unknown_codes(device_code)
         codes = [
-            code
-            for code in self._get_device_profile(device_code).poll_codes
-            if code not in unknown_codes
+            code for code in device_profile.poll_codes if code not in unknown_codes
         ]
+        codes.extend(
+            code for code in semantic_codes.values() if code not in unknown_codes
+        )
 
+        data_endpoint = self._api_profile.data_endpoint
         param_device_code = self._api_profile.get(APIParam.DeviceCode)
-        param_protocal_codes = self._api_profile.get(APIParam.ProtocalCodes)
+        param_data_codes = self._api_profile.get(APIParam.DataCodes)
         param_object_result = self._api_profile.get(APIParam.ObjectResult)
         param_error_msg = self._api_profile.get(APIParam.ErrorMessage)
         param_error_code = self._api_profile.get(APIParam.ErrorCode)
 
         data = {
             param_device_code: device_code,
-            param_protocal_codes: codes,
+            param_data_codes: codes,
         }
 
-        data_response = await self._post_request(Endpoints.DeviceData, data)
+        data_response = await self._post_request(data_endpoint, data)
         error_msg = data_response.get(param_error_msg)
 
         object_result_items = data_response.get(param_object_result, [])
 
         if error_msg == "Success":
-            self._record_unknown_codes(device_code, object_result_items)
+            self._record_unknown_codes(device_code, object_result_items, semantic_codes)
+
+            if codes and not object_result_items:
+                self._warn_empty_read(device_code, data_endpoint, param_data_codes)
+
+            else:
+                self._devices_read_empty.discard(device_code)
 
             for object_result_item in object_result_items:
                 code = object_result_item.get("code")
@@ -541,6 +565,10 @@ class AquaTempAPI:
 
                 self._devices[device_code][code] = value
 
+            self._resolve_semantic_codes(
+                device_code, semantic_codes, object_result_items
+            )
+
         else:
             error_code = data_response.get(param_error_code)
             if error_code == "-100":
@@ -549,12 +577,20 @@ class AquaTempAPI:
             else:
                 _LOGGER.error(f"Failed to fetch parameters, Error: {error_msg}")
 
-    def _record_unknown_codes(self, device_code: str, object_result_items: list):
+    def _record_unknown_codes(
+        self,
+        device_code: str,
+        object_result_items: list,
+        semantic_codes: dict[str, str],
+    ):
         """Note the codes the device doesn't know, once, from its first answer.
 
         The cloud echoes such a code with an empty value and an empty
         dataType; only the empty dataType tells it apart from a known code
         without a value. A missing or null dataType is not that signal.
+        An aliased entry's two codes are noted only when both are unknown:
+        while either answers, both are requested on every poll, so the read
+        follows whichever answers.
         """
         if device_code in self._unknown_codes or not object_result_items:
             return
@@ -563,7 +599,7 @@ class AquaTempAPI:
             item for item in object_result_items if item.get("code") is not None
         ]
         unknown_codes = frozenset(
-            item["code"] for item in coded_items if item.get("dataType") == ""
+            item["code"] for item in coded_items if _is_answered_unknown(item)
         )
 
         # Every code unknown looks like a backend hiccup rather than codes
@@ -576,12 +612,92 @@ class AquaTempAPI:
             unknown_codes = frozenset()
 
         else:
+            unknown_codes -= {
+                code
+                for key, semantic_code in semantic_codes.items()
+                if not {key, semantic_code} <= unknown_codes
+                for code in (key, semantic_code)
+            }
+
             _LOGGER.debug(
                 f"Device {device_code} doesn't know codes, skipping them: "
                 f"{sorted(unknown_codes)}"
             )
 
         self._unknown_codes[device_code] = unknown_codes
+
+    def _resolve_semantic_codes(
+        self,
+        device_code: str,
+        semantic_codes: dict[str, str],
+        object_result_items: list,
+    ):
+        """Store each aliased entry's value under its key: the semantic code's
+        when the device knows it, even without a value; else the key's own,
+        already stored. The semantic value stays under its own code too."""
+        items = {item.get("code"): item for item in object_result_items}
+        device_data = self._devices[device_code]
+
+        for key, semantic_code in semantic_codes.items():
+            semantic_item = items.get(semantic_code)
+
+            if semantic_item is None or _is_answered_unknown(semantic_item):
+                continue
+
+            legacy_item = items.get(key)
+
+            if legacy_item is not None and not _is_answered_unknown(legacy_item):
+                self._warn_disagreement(
+                    device_code,
+                    (key, device_data[key]),
+                    (semantic_code, device_data[semantic_code]),
+                )
+
+            device_data[key] = device_data[semantic_code]
+
+    def _warn_disagreement(
+        self,
+        device_code: str,
+        legacy: tuple[str, str | None],
+        semantic: tuple[str, str | None],
+    ):
+        """Warn when two codes for the same value differ, once per device and
+        pair: a pairing that is wrong on this unit."""
+        (key, legacy_value), (semantic_code, semantic_value) = legacy, semantic
+        pair = (device_code, key)
+
+        if legacy_value == semantic_value or pair in self._disagreeing_codes:
+            return
+
+        self._disagreeing_codes.add(pair)
+
+        _LOGGER.warning(
+            "Device %s: %s reads %r but %s, the code for the same value, reads "
+            "%r; using %s. The two may not be the same value on this unit",
+            device_code,
+            key,
+            legacy_value,
+            semantic_code,
+            semantic_value,
+            semantic_code,
+        )
+
+    def _warn_empty_read(self, device_code: str, endpoint: Endpoints, codes_field: str):
+        """Warn once per device until a read returns values again."""
+        if device_code in self._devices_read_empty:
+            return
+
+        self._devices_read_empty.add(device_code)
+
+        # The cloud answers a request with the wrong field name with success
+        # and no values, so a wrong profile or a backend change looks like this
+        _LOGGER.warning(
+            "Device %s: %s returned no values for the requested codes; "
+            "the %s field may be wrong, or the cloud changed",
+            device_code,
+            endpoint,
+            codes_field,
+        )
 
     async def _send_passthrough_instruction(self, device_code: str):
         param_device_code = self._api_profile.get(APIParam.DeviceCode)
@@ -791,7 +907,7 @@ class AquaTempAPI:
                 self._devices[device_code] = device
 
     async def _post_request(
-        self, endpoint: str, data: dict | list | None = None
+        self, endpoint: Endpoints, data: dict | list | None = None
     ) -> dict:
         param_url = self._api_profile.get(APIParam.URL)
         param_suffix = self._api_profile.get(APIParam.Suffix)

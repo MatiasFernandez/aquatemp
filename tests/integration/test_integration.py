@@ -33,6 +33,8 @@ from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.update_coordinator import REQUEST_REFRESH_DEFAULT_COOLDOWN
 from homeassistant.util import dt as dt_util, slugify
 from tests.cloud.mock_cloud import (
+    DATA,
+    DATA_IDLE,
     DEVICE_CODE,
     cloud_with,
     data_untyped,
@@ -41,7 +43,6 @@ from tests.cloud.mock_cloud import (
 )
 
 CONTROL = "app/device/control"
-DATA = "app/device/getDataByCode"
 DEVICE_LIST = "app/device/deviceList"
 STATUS = "app/device/getDeviceStatus"
 
@@ -76,7 +77,7 @@ def two_device_list() -> dict:
 
 RESPONSES = {
     DEVICE_LIST: device_list(),
-    DATA: "get_data_by_code.idle",
+    DATA: DATA_IDLE,
     CONTROL: "synthetic/control_success",
 }
 
@@ -235,8 +236,9 @@ async def test_water_delta_t_is_created(hass, entry):
     assert sensor_unique_id("water_delta_t") in entry_unique_ids(hass, entry)
 
 
-# T03 is the default mapping's outlet water temperature
-@cloud_with(RESPONSES | {DATA: data_untyped("T03")})
+# T03 is the default mapping's outlet water temperature, read through
+# OutletWaterTemp too: the input is unknown when both codes are
+@cloud_with(RESPONSES | {DATA: data_untyped("T03", "OutletWaterTemp")})
 async def test_water_delta_t_is_skipped_when_an_input_is_unknown(hass, entry):
     assert sensor_unique_id("water_delta_t") not in entry_unique_ids(hass, entry)
 
@@ -337,7 +339,7 @@ async def test_pressing_refresh_data_polls_the_cloud(hass, entry, wire, freezer)
     assert [endpoint for endpoint, _ in wire] == [DATA, STATUS]
 
 
-@cloud_with(RESPONSES | {DATA: ["get_data_by_code.idle", 500, 500, 500]})
+@cloud_with(RESPONSES | {DATA: [DATA_IDLE, 500, 500, 500]})
 async def test_refresh_data_stays_available_after_a_failed_update(hass, entry, freezer):
     with patch("custom_components.aqua_temp.cloud.client.sleep"):
         await hass.services.async_call(
@@ -385,7 +387,7 @@ def powered_on_in(mode: str) -> dict:
     return RESPONSES | {DATA: data_with(Power="1", Mode=mode)}
 
 
-# Recorded: T02 13.0, R01 27.0, R02 28.0, R03 27.0, R08 8.0, R09 35.0, R10 15.0,
+# Recorded: T02 12.5, R01 27.0, R02 28.0, R03 27.0, R08 8.0, R09 35.0, R10 15.0,
 # R11 35.0. Each mode reads its own target, minimum and maximum codes
 @pytest.mark.parametrize(
     ("cloud_responses", "expected"),
@@ -393,7 +395,7 @@ def powered_on_in(mode: str) -> dict:
         pytest.param(
             powered_on_in("0"),
             {
-                "current_temperature": 13.0,
+                "current_temperature": 12.5,
                 "temperature": 27.0,
                 "min_temp": 8.0,
                 "max_temp": 35.0,
@@ -403,7 +405,7 @@ def powered_on_in(mode: str) -> dict:
         pytest.param(
             powered_on_in("1"),
             {
-                "current_temperature": 13.0,
+                "current_temperature": 12.5,
                 "temperature": 28.0,
                 "min_temp": 15.0,
                 "max_temp": 35.0,
@@ -413,7 +415,7 @@ def powered_on_in(mode: str) -> dict:
         pytest.param(
             powered_on_in("2"),
             {
-                "current_temperature": 13.0,
+                "current_temperature": 12.5,
                 "temperature": 27.0,
                 "min_temp": 8.0,
                 "max_temp": 35.0,
@@ -433,14 +435,29 @@ async def test_climate_reports_temperatures_while_powered_off(hass, entry):
     state = hass.states.get(climate_entity_id(hass))
 
     assert temperatures(state) == {
-        "current_temperature": 13.0,
+        "current_temperature": 12.5,
         "temperature": 28.0,
         "min_temp": 15.0,
         "max_temp": 35.0,
     }
 
 
-@cloud_with(RESPONSES | {DATA: data_with(Power="1", T02="", R02="", R10="", R11="")})
+@cloud_with(
+    RESPONSES
+    | {
+        DATA: data_with(
+            Power="1",
+            T02="",
+            R02="",
+            R10="",
+            R11="",
+            InletWaterTemp="",
+            SetHeatTargetTemp="",
+            SetHeatMinTargetTemp="",
+            SetHeatMaxTargetTemp="",
+        )
+    }
+)
 async def test_climate_temperatures_the_device_does_not_know_are_empty(hass, entry):
     state = hass.states.get(climate_entity_id(hass))
 

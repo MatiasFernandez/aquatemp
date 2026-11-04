@@ -7,13 +7,12 @@ import voluptuous as vol
 from custom_components.aqua_temp.managers.password_manager import PasswordManager
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.data_entry_flow import FlowResultType
-from tests.cloud.mock_cloud import cloud_with
+from tests.cloud.mock_cloud import DATA, DATA_IDLE, cloud_with
 
 # Literal on purpose: the expected values must not come from the config under test
 LOGIN = "app/user/login"
-DATA = "app/device/getDataByCode"
 
-RESPONSES = {DATA: "get_data_by_code.idle"}
+RESPONSES = {DATA: DATA_IDLE}
 
 
 @pytest.fixture(autouse=True)
