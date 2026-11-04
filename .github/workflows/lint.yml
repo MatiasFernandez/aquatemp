@@ -26,3 +26,18 @@ jobs:
         with:
           python-version: "3.13"
       - uses: pre-commit/action@2c7b3805fd2a0fd8c1884dcaebf91fc102a13ecd # v3.0.1
+        env:
+          # Needs the project's uv environment; runs in the ty job instead
+          SKIP: ty
+
+  ty:
+    name: ty
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      # Installs the Python in .python-version and the versions locked in uv.lock
+      - uses: astral-sh/setup-uv@1c37ad07a6a961277cf70c0d37d6f313000f5884 # v10.3.0
+      - run: uv sync --locked
+      - run: uv run ty check
