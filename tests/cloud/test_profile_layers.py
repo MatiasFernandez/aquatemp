@@ -21,6 +21,9 @@ CLASSES = {"pool_heat_pump": [MEMBER, OTHER_MEMBER]}
 DEFAULT_MAPPING = {
     "mode": "Mode",
     "power": "Power",
+    "temperature": "Set_Temp",
+    "fan": "Manual-mute",
+    "current_temperature": "T02",
     "hvac_modes": {
         "off": {"set": None, "target": None},
         "heat": {"set": "1", "target": "R02"},
@@ -193,8 +196,7 @@ async def test_mapping_delta_merges_key_by_key(tmp_path):
                 "inherits": "default",
                 "hvac_modes": {"heat": {"target": "R04"}},
             },
-            # null: this product has no code for the role
-            f"mapping.{MEMBER}.json": {"inherits": "pool_heat_pump", "power": None},
+            f"mapping.{MEMBER}.json": {"inherits": "pool_heat_pump", "mode": "Mode2"},
         },
     )
     profile = profiles.for_product(MEMBER)
@@ -202,14 +204,87 @@ async def test_mapping_delta_merges_key_by_key(tmp_path):
     assert (profile.mapping_chain, profile.mapping) == (
         ("default", "pool_heat_pump", MEMBER),
         {
-            "mode": "Mode",
-            "power": None,
+            "mode": "Mode2",
+            "power": "Power",
+            "temperature": "Set_Temp",
+            "fan": "Manual-mute",
+            "current_temperature": "T02",
             "hvac_modes": {
                 "off": {"set": None, "target": None},
                 "heat": {"set": "1", "target": "R04"},
             },
             "fan_modes": {"auto": "0"},
         },
+    )
+
+
+async def test_null_in_a_mapping_delta_leaves_an_optional_role_without_a_code(
+    tmp_path,
+):
+    profiles = await load(
+        tmp_path,
+        {
+            f"mapping.{MEMBER}.json": {
+                "inherits": "default",
+                "current_temperature": None,
+            }
+        },
+    )
+    profile = profiles.for_product(MEMBER)
+
+    assert (profile.mapping, profile.get_pc_key("current_temperature")) == (
+        {
+            "mode": "Mode",
+            "power": "Power",
+            "temperature": "Set_Temp",
+            "fan": "Manual-mute",
+            "hvac_modes": {
+                "off": {"set": None, "target": None},
+                "heat": {"set": "1", "target": "R02"},
+            },
+            "fan_modes": {"auto": "0"},
+        },
+        None,
+    )
+
+
+@pytest.mark.parametrize(
+    "inherited",
+    [{}, {"extra": "x"}],
+    ids=["under_a_new_key", "replacing_a_value_that_is_not_an_object"],
+)
+async def test_null_in_a_mapping_delta_is_removed_at_any_depth(tmp_path, inherited):
+    mapping = DEFAULT_MAPPING | inherited
+    delta = {"extra": {"kept": "K1", "dropped": None, "nested": {"gone": None}}}
+
+    profiles = await load(
+        tmp_path,
+        {
+            "mapping.default.json": mapping,
+            f"mapping.{MEMBER}.json": {"inherits": "default"} | delta,
+        },
+    )
+    profile = profiles.for_product(MEMBER)
+
+    assert profile.mapping["extra"] == {"kept": "K1", "nested": {}}
+
+
+async def test_null_in_a_mapping_delta_drops_a_mode(tmp_path):
+    profiles = await load(
+        tmp_path,
+        {
+            f"mapping.{MEMBER}.json": {
+                "inherits": "default",
+                "hvac_modes": {"heat": None},
+                "fan_modes": {"auto": None, "low": "1"},
+            }
+        },
+    )
+    profile = profiles.for_product(MEMBER)
+
+    assert (profile.hvac_modes, profile.fan_modes) == (
+        {"off": None},
+        {"low": "1"},
     )
 
 
@@ -354,6 +429,43 @@ async def test_product_reports_its_class(tmp_path):
             },
             '"entries" must be an array',
         ),
+        (
+            {f"mapping.{MEMBER}.json": {"inherits": "default", "hvac_modes": None}},
+            f'mapping.{MEMBER}.json: "hvac_modes" must list at least one mode',
+        ),
+        (
+            {
+                f"mapping.{MEMBER}.json": {
+                    "inherits": "default",
+                    "hvac_modes": {"off": None, "heat": None},
+                }
+            },
+            f'mapping.{MEMBER}.json: "hvac_modes" must list at least one mode',
+        ),
+        (
+            {
+                f"mapping.{MEMBER}.json": DEFAULT_MAPPING
+                | {"hvac_modes": {"heat": None}}
+            },
+            "each an object",
+        ),
+        (
+            {f"mapping.{MEMBER}.json": {"inherits": "default", "fan_modes": None}},
+            f'mapping.{MEMBER}.json: "fan_modes" must list at least one fan mode',
+        ),
+        (
+            {
+                f"mapping.{MEMBER}.json": {
+                    "inherits": "default",
+                    "fan_modes": {"auto": None},
+                }
+            },
+            f'mapping.{MEMBER}.json: "fan_modes" must list at least one fan mode',
+        ),
+        (
+            {"mapping.default.json": DEFAULT_MAPPING | {"fan_modes": {}}},
+            'mapping.default.json: "fan_modes" must list at least one fan mode',
+        ),
     ],
     ids=[
         "remove_missing_key",
@@ -378,12 +490,94 @@ async def test_product_reports_its_class(tmp_path):
         "catalog_entry_without_key",
         "remove_not_an_array",
         "entries_not_an_array",
+        "hvac_modes_removed",
+        "hvac_modes_emptied",
+        "hvac_mode_not_an_object",
+        "fan_modes_removed",
+        "fan_modes_emptied",
+        "fan_modes_empty_in_complete_file",
     ],
 )
 async def test_invalid_profiles_fail_on_load(tmp_path, files, error):
     write_profiles(tmp_path, files)
 
     with pytest.raises(InvalidProfileError, match=error):
+        await DeviceProfiles.load(tmp_path)
+
+
+@pytest.mark.parametrize(
+    "mapping, error",
+    [
+        (
+            DEFAULT_MAPPING | {"hvac_modes": {"off": {}, "dry": {"set": "3"}}},
+            '"hvac_modes" lists unknown modes: .*dry',
+        ),
+        (
+            DEFAULT_MAPPING | {"fan_modes": {"turbo": "0"}},
+            '"fan_modes" lists unknown fan modes: .*turbo',
+        ),
+        (
+            {"inherits": "default", "hvac_modes": {"heat": {"set": None}}},
+            r'"hvac_modes.heat.set" must be a string',
+        ),
+        (
+            DEFAULT_MAPPING
+            | {"hvac_modes": {"off": {"set": "9"}, "heat": {"set": "1"}}},
+            r'"hvac_modes.off.set" must be null or absent',
+        ),
+        (
+            {"inherits": "default", "hvac_modes": {"cool": {"set": "1"}}},
+            "hvac_modes set values must differ between modes, repeated: .*1",
+        ),
+        (
+            DEFAULT_MAPPING | {"fan_modes": {"auto": "0", "low": "0"}},
+            "fan_modes values must differ between modes, repeated: .*0",
+        ),
+        (
+            DEFAULT_MAPPING | {"fan_modes": {"auto": {}}},
+            r'"fan_modes.auto" must be a string',
+        ),
+        (
+            {"inherits": "default", "power": None},
+            '"power" must be the protocol code of that role',
+        ),
+        (
+            {"inherits": "default", "mode": None},
+            '"mode" must be the protocol code of that role',
+        ),
+        (
+            {"inherits": "default", "temperature": None},
+            '"temperature" must be the protocol code of that role',
+        ),
+        (
+            {"inherits": "default", "fan": None},
+            '"fan" must be the protocol code of that role',
+        ),
+        (
+            {key: value for key, value in DEFAULT_MAPPING.items() if key != "power"},
+            '"power" must be the protocol code of that role',
+        ),
+    ],
+    ids=[
+        "unknown_hvac_mode",
+        "unknown_fan_mode",
+        "hvac_mode_without_a_wire_value",
+        "off_with_a_wire_value",
+        "hvac_modes_sharing_a_wire_value",
+        "fan_modes_sharing_a_wire_value",
+        "fan_mode_value_not_a_string",
+        "power_role_removed",
+        "mode_role_removed",
+        "temperature_role_removed",
+        "fan_role_removed",
+        "power_role_missing_from_complete_file",
+    ],
+)
+async def test_invalid_mapping_fails_on_load_naming_the_file(tmp_path, mapping, error):
+    # The product's mapping would otherwise crash later, or silently drop a mode
+    write_profiles(tmp_path, {f"mapping.{MEMBER}.json": mapping})
+
+    with pytest.raises(InvalidProfileError, match=f"mapping.{MEMBER}.json: .*{error}"):
         await DeviceProfiles.load(tmp_path)
 
 

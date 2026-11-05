@@ -11,7 +11,12 @@ from .api_profile import PROFILES_PATH
 from .consts import (
     CONFIG_FAN_MODES,
     CONFIG_HVAC_MODES,
+    CONFIG_HVAC_OFF,
     CONFIG_HVAC_SET,
+    CONFIG_SET_FAN,
+    CONFIG_SET_MODE,
+    CONFIG_SET_POWER,
+    CONFIG_SET_TEMPERATURE,
     PRODUCT_ID_DEFAULT,
     PRODUCT_IDS,
     ProductParameter,
@@ -29,6 +34,14 @@ INHERITS = "inherits"
 CATALOG_DELTA_REMOVE = "remove"
 CATALOG_DELTA_ENTRIES = "entries"
 CATALOG_DELTA_FIELDS = {INHERITS, CATALOG_DELTA_REMOVE, CATALOG_DELTA_ENTRIES}
+
+# The roles the client sends or reads on every device, so each needs a code
+REQUIRED_ROLES = (
+    CONFIG_SET_POWER,
+    CONFIG_SET_MODE,
+    CONFIG_SET_TEMPERATURE,
+    CONFIG_SET_FAN,
+)
 
 # Polled ahead of the catalog, which lists it too, so it goes on the wire
 # twice
@@ -190,7 +203,13 @@ class DeviceProfiles:
       or is appended after them, in file order.
     - A mapping is complete as an object without "inherits" and a delta with
       it, merged into the one below key by key, nested objects included;
-      a null value means the product has no code for that role.
+      a null value removes the key, at any depth. A null removes a
+      role or a mode a level below has, but every resolved mapping must still
+      give a code for the power, mode, temperature and fan roles (the client
+      sends and reads them on every device) and list at least one HVAC mode and
+      one fan mode. Mode names must be known ones; each HVAC mode but off needs
+      a "set" string, off none, and no two modes of a table share a wire value.
+      A null on any other role means the product has no code for it.
 
     The default level must ship both kinds of file, complete. Classes are
     listed in profiles/classes.json as {"<class>": ["<product id>", ...]}; the
@@ -360,28 +379,129 @@ def _resolve_mapping(
         raise InvalidProfileError(f"{file_name} must be an object")
 
     if INHERITS not in mapping:
+        _check_mapping(file_name, mapping)
+
         return _ResolvedMapping((level,), mapping)
 
     _check_inherits(file_name, mapping, below)
 
     changes = {key: value for key, value in mapping.items() if key != INHERITS}
+    merged = _merge_mapping(below.mapping, changes)
+    _check_mapping(file_name, merged)
 
-    return _ResolvedMapping(
-        (*below.chain, level), _merge_mapping(below.mapping, changes)
-    )
+    return _ResolvedMapping((*below.chain, level), merged)
 
 
 def _merge_mapping(below: dict, changes: dict) -> dict:
+    """below with changes merged in key by key; a null change removes the key,
+    at any depth."""
     merged = dict(below)
 
     for key, value in changes.items():
-        if isinstance(value, dict) and isinstance(merged.get(key), dict):
-            merged[key] = _merge_mapping(merged[key], value)
+        if value is None:
+            merged.pop(key, None)
+
+        elif isinstance(value, dict):
+            inherited = merged.get(key)
+            merged[key] = _merge_mapping(
+                inherited if isinstance(inherited, dict) else {}, value
+            )
 
         else:
             merged[key] = value
 
     return merged
+
+
+def _check_mapping(file_name: str, mapping: dict):
+    """Raises unless the resolved mapping is one the client can use: a code for
+    each of the roles it sends or reads, and mode tables the climate entity can
+    offer. In the tables, every name must be a known mode, each wire value a
+    string used once, and only off may lack one."""
+    for role in REQUIRED_ROLES:
+        if not isinstance(mapping.get(role), str):
+            raise InvalidProfileError(
+                f'{file_name}: "{role}" must be the protocol code of that role'
+            )
+
+    hvac_modes = mapping.get(CONFIG_HVAC_MODES)
+    fan_modes = mapping.get(CONFIG_FAN_MODES)
+
+    if (
+        not isinstance(hvac_modes, dict)
+        or not hvac_modes
+        or not all(isinstance(mode, dict) for mode in hvac_modes.values())
+    ):
+        raise InvalidProfileError(
+            f'{file_name}: "{CONFIG_HVAC_MODES}" must list at least one mode, '
+            "each an object"
+        )
+
+    if not isinstance(fan_modes, dict) or not fan_modes:
+        raise InvalidProfileError(
+            f'{file_name}: "{CONFIG_FAN_MODES}" must list at least one fan mode'
+        )
+
+    unknown_modes = hvac_modes.keys() - {str(mode) for mode in Mode}
+
+    if unknown_modes:
+        raise InvalidProfileError(
+            f'{file_name}: "{CONFIG_HVAC_MODES}" lists unknown modes: '
+            f"{sorted(unknown_modes)}"
+        )
+
+    unknown_fan_modes = fan_modes.keys() - {str(mode) for mode in FanMode}
+
+    if unknown_fan_modes:
+        raise InvalidProfileError(
+            f'{file_name}: "{CONFIG_FAN_MODES}" lists unknown fan modes: '
+            f"{sorted(unknown_fan_modes)}"
+        )
+
+    hvac_set_values = []
+
+    for name, mode in hvac_modes.items():
+        value = mode.get(CONFIG_HVAC_SET)
+
+        if name == CONFIG_HVAC_OFF:
+            if value is not None:
+                raise InvalidProfileError(
+                    f'{file_name}: "{CONFIG_HVAC_MODES}.{name}.{CONFIG_HVAC_SET}" '
+                    "must be null or absent"
+                )
+
+        elif not isinstance(value, str):
+            raise InvalidProfileError(
+                f'{file_name}: "{CONFIG_HVAC_MODES}.{name}.{CONFIG_HVAC_SET}" '
+                "must be a string"
+            )
+
+        else:
+            hvac_set_values.append(value)
+
+    _check_distinct(
+        file_name, f"{CONFIG_HVAC_MODES} {CONFIG_HVAC_SET}", hvac_set_values
+    )
+
+    for name, value in fan_modes.items():
+        if not isinstance(value, str):
+            raise InvalidProfileError(
+                f'{file_name}: "{CONFIG_FAN_MODES}.{name}" must be a string'
+            )
+
+    _check_distinct(file_name, CONFIG_FAN_MODES, list(fan_modes.values()))
+
+
+def _check_distinct(file_name: str, what: str, values: list[str]):
+    """Raises if two modes share a wire value, which the reverse lookup could
+    not tell apart."""
+    repeated = sorted({value for value in values if values.count(value) > 1})
+
+    if repeated:
+        raise InvalidProfileError(
+            f"{file_name}: {what} values must differ between modes, "
+            f"repeated: {repeated}"
+        )
 
 
 def _resolve_catalog(
