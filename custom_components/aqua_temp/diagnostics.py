@@ -80,7 +80,7 @@ def _async_get_diagnostics(
                     device_id,
                     device_details,
                     coordinator.get_unknown_codes(device_code),
-                    coordinator.get_device_profile(device_code),
+                    _device_profile(coordinator, device_code),
                 )
 
     else:
@@ -94,7 +94,7 @@ def _async_get_diagnostics(
                     coordinator.get_device_meta(device_code).device_id,
                     devices[device_code],
                     coordinator.get_unknown_codes(device_code),
-                    coordinator.get_device_profile(device_code),
+                    _device_profile(coordinator, device_code),
                 )
                 for device_code in devices
             ]
@@ -160,6 +160,16 @@ def _async_device_as_dict(
             )
 
     return data
+
+
+def _device_profile(
+    coordinator: AquaTempCoordinator, device_code: str
+) -> DeviceProfile:
+    """The profile for the device's product. The client binds a device to the
+    same one, but only on its first update, which may not have run yet."""
+    product_id = coordinator.get_device_meta(device_code).product_id
+
+    return coordinator.config_manager.device_profiles.for_product(product_id)
 
 
 def _profile_as_dict(device_profile: DeviceProfile) -> dict[str, Any]:
