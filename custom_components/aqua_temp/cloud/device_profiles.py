@@ -515,14 +515,18 @@ def _check_unique(file_name: str, keys: list[str]):
 
 async def _load_json(file_path: Path):
     """The file's contents, None if there is no such file. A file holding null
-    raises, rather than reading as missing."""
+    or invalid JSON raises, rather than reading as missing."""
     if not file_path.exists():
         return None
 
     async with aiofiles.open(file_path) as file:
         json_str = await file.read()
 
-    content = json.loads(json_str)
+    try:
+        content = json.loads(json_str)
+
+    except json.JSONDecodeError as ex:
+        raise InvalidProfileError(f"{file_path.name} is not valid JSON: {ex}") from ex
 
     if content is None:
         raise InvalidProfileError(f"{file_path.name} is null")

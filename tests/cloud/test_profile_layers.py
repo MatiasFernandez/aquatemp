@@ -382,3 +382,18 @@ async def test_file_holding_null_fails_on_load(tmp_path, file_name):
 
     with pytest.raises(InvalidProfileError, match=f"{file_name} is null"):
         await DeviceProfiles.load(tmp_path)
+
+
+@pytest.mark.parametrize(
+    "file_name",
+    ["classes.json", f"mapping.{MEMBER}.json", f"entity_description.{MEMBER}.json"],
+)
+async def test_file_with_invalid_json_fails_on_load(tmp_path, file_name):
+    write_profiles(tmp_path, {})
+    (tmp_path / file_name).write_text('{"delta": yes}')
+
+    with pytest.raises(
+        InvalidProfileError,
+        match=f"{file_name} is not valid JSON: Expecting value: line 1 column 11",
+    ):
+        await DeviceProfiles.load(tmp_path)
