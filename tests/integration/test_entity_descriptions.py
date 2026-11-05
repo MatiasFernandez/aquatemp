@@ -5,10 +5,12 @@ from pathlib import Path
 
 import pytest
 
+from custom_components.aqua_temp.cloud.device_profiles import DeviceProfiles
 from custom_components.aqua_temp.common.entity_descriptions import (
     build_entity_descriptions,
 )
 
+PROFILES = Path(__file__).parents[2] / "custom_components/aqua_temp/cloud/profiles"
 TRANSLATIONS = (
     Path(__file__).parents[2] / "custom_components/aqua_temp/translations/en.json"
 )
@@ -76,3 +78,34 @@ def test_translation_keys_have_an_english_name(device_profiles, product_id):
     }
 
     assert translation_keys - named == set()
+
+
+def test_translation_key_names_the_level_defining_the_entry():
+    # A product delta overriding one default entry and adding one
+    member = "1132174963097280512"
+    mapping = json.loads((PROFILES / "mapping.default.json").read_text())
+    catalogs = {
+        "default": [
+            {"key": "T01", "platform": "sensor"},
+            {"key": "T02", "platform": "sensor"},
+        ],
+        member: {
+            "entries": [
+                {"key": "T02", "platform": "sensor", "name": "Inlet"},
+                {"key": "Set/Temp", "platform": "sensor"},
+            ]
+        },
+    }
+    profile = DeviceProfiles({"default": mapping}, catalogs).for_product(member)
+
+    translation_keys = {
+        description.key: description.translation_key
+        for description in build_entity_descriptions(profile)
+        if description.key in ("T01", "T02", "Set/Temp")
+    }
+
+    assert translation_keys == {
+        "T01": "default_t01",
+        "T02": f"{member}_t02",
+        "Set/Temp": f"{member}_settemp",
+    }
