@@ -216,3 +216,31 @@ async def test_hvac_off_powers_off_with_the_device_code(heat_pumps, wire):
             },
         )
     ]
+
+
+async def test_command_before_the_first_update_uses_the_device_codes(api, wire):
+    wire.clear()
+
+    await api.set_hvac_mode(HITEMP_DEVICE_CODE, "off")
+
+    # The Hitemp power code, not the default profile's "Power"
+    assert wire == [
+        (
+            CONTROL,
+            {
+                "param": [
+                    {
+                        "deviceCode": HITEMP_DEVICE_CODE,
+                        "protocolCode": "mo6",
+                        "value": "0",
+                    }
+                ]
+            },
+        )
+    ]
+
+
+async def test_device_no_list_returned_gets_the_default_profile(api, device_profiles):
+    assert api.get_device_profile("000000000099") is device_profiles.for_product(
+        "default"
+    )
