@@ -808,6 +808,40 @@ async def test_device_diagnostics_show_its_resolved_profile(hass, entry):
     }
 
 
+HITEMP = "1245226668902080512"
+
+
+def list_with_a_hitemp() -> dict:
+    """The device list with a Hitemp after the first device."""
+    payload = two_device_list()
+    payload["objectResult"][1]["productId"] = HITEMP
+
+    return payload
+
+
+@cloud_with(RESPONSES | {DEVICE_LIST: list_with_a_hitemp(), DATA: 500})
+async def test_device_diagnostics_show_its_profile_before_its_first_update(
+    hass, config_entry
+):
+    # Registered on an earlier run; the failing first device stops this
+    # update before reaching the Hitemp
+    dr.async_get(hass).async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        identifiers={(DOMAIN, OTHER_DEVICE_ID)},
+    )
+    await set_up(hass, config_entry)
+    device = async_get_ha_device(hass, config_entry.entry_id, OTHER_DEVICE_ID)
+
+    diagnostics = await async_get_device_diagnostics(hass, config_entry, device)
+    profile = diagnostics["device"]["profile"]
+
+    assert (profile["class"], profile["mapping_chain"], profile["catalog_chain"]) == (
+        None,
+        [HITEMP],
+        [HITEMP],
+    )
+
+
 def status_entity_id(hass: HomeAssistant) -> str:
     unique_id = slugify(f"{DOMAIN}_binary_sensor_device_status_{DEVICE_CODE}")
 
