@@ -16,7 +16,7 @@ from ..cloud.exceptions import (
     DeviceOfflineError,
     LoginError,
 )
-from ..cloud.modes import FanMode
+from ..cloud.modes import FanMode, Mode
 from ..common.consts import (
     DATA_ITEM_CONFIG,
     DATA_ITEM_DEVICES,
@@ -181,7 +181,7 @@ class AquaTempCoordinator(DataUpdateCoordinator):
         return self._config_manager.get_temperature_unit(device_code)
 
     async def set_hvac_mode(self, device_code: str, hvac_mode: HVACMode):
-        await self._control(self._api.set_hvac_mode(device_code, hvac_mode))
+        await self._control(self._api.set_hvac_mode(device_code, Mode(hvac_mode)))
 
     async def set_temperature(self, device_code: str, temperature: float):
         await self._control(self._api.set_temperature(device_code, temperature))

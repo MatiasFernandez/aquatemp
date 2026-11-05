@@ -82,7 +82,7 @@ class BaseEntity(CoordinatorEntity[AquaTempCoordinator]):
 
         unique_id_parts = [
             DOMAIN,
-            entity_description.platform,
+            str(entity_description.platform),
             entity_description.key,
             device_code,
         ]

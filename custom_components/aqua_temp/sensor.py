@@ -27,6 +27,8 @@ async def async_setup_entry(
 class AquaTempSensorEntity(BaseEntity, SensorEntity):
     """Representation of a sensor."""
 
+    entity_description: AquaTempSensorEntityDescription
+
     def __init__(
         self,
         entity_description: AquaTempSensorEntityDescription,
