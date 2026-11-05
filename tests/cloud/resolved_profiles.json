@@ -2971,75 +2971,6 @@
           "unit_of_measurement": null
         },
         {
-          "key": "T1",
-          "name": "Suction Temp. [T1]",
-          "platform": "sensor",
-          "device_class": "temperature",
-          "unit_of_measurement": "°C"
-        },
-        {
-          "key": "T2",
-          "name": "Inlet water Temp. [T2]",
-          "platform": "sensor",
-          "device_class": "temperature",
-          "unit_of_measurement": "°C",
-          "entity_category": null,
-          "state_class": "measurement"
-        },
-        {
-          "key": "T3",
-          "name": "Outlet water Temp. [T3]",
-          "platform": "sensor",
-          "device_class": "temperature",
-          "unit_of_measurement": "°C",
-          "entity_category": null,
-          "state_class": "measurement"
-        },
-        {
-          "key": "T4",
-          "name": "Coil 1 Temp. [T4]",
-          "platform": "sensor",
-          "device_class": "temperature",
-          "unit_of_measurement": "°C"
-        },
-        {
-          "key": "T5",
-          "name": "Ambient Temp. [T5]",
-          "platform": "sensor",
-          "device_class": "temperature",
-          "unit_of_measurement": "°C",
-          "entity_category": null,
-          "state_class": "measurement"
-        },
-        {
-          "key": "T6",
-          "name": "Exhaust Temp. [T6]",
-          "platform": "sensor",
-          "device_class": "temperature",
-          "unit_of_measurement": "°C"
-        },
-        {
-          "key": "T7",
-          "name": "Compressor current Detect [T7]",
-          "platform": "sensor",
-          "device_class": "current",
-          "unit_of_measurement": "A"
-        },
-        {
-          "key": "T8",
-          "name": "AC Fan Output [T8]",
-          "platform": "sensor",
-          "device_class": null,
-          "unit_of_measurement": "%"
-        },
-        {
-          "key": "T9",
-          "name": "Flow Rate Input [T9]",
-          "platform": "sensor",
-          "device_class": "frequency",
-          "unit_of_measurement": "Hz"
-        },
-        {
           "key": "T10",
           "name": "Pressure Sensor [T10]",
           "platform": "sensor",
@@ -3171,6 +3102,75 @@
           "platform": "sensor",
           "device_class": null,
           "unit_of_measurement": null
+        },
+        {
+          "key": "T1",
+          "name": "Suction Temp. [T1]",
+          "platform": "sensor",
+          "device_class": "temperature",
+          "unit_of_measurement": "°C"
+        },
+        {
+          "key": "T2",
+          "name": "Inlet water Temp. [T2]",
+          "platform": "sensor",
+          "device_class": "temperature",
+          "unit_of_measurement": "°C",
+          "entity_category": null,
+          "state_class": "measurement"
+        },
+        {
+          "key": "T3",
+          "name": "Outlet water Temp. [T3]",
+          "platform": "sensor",
+          "device_class": "temperature",
+          "unit_of_measurement": "°C",
+          "entity_category": null,
+          "state_class": "measurement"
+        },
+        {
+          "key": "T4",
+          "name": "Coil 1 Temp. [T4]",
+          "platform": "sensor",
+          "device_class": "temperature",
+          "unit_of_measurement": "°C"
+        },
+        {
+          "key": "T5",
+          "name": "Ambient Temp. [T5]",
+          "platform": "sensor",
+          "device_class": "temperature",
+          "unit_of_measurement": "°C",
+          "entity_category": null,
+          "state_class": "measurement"
+        },
+        {
+          "key": "T6",
+          "name": "Exhaust Temp. [T6]",
+          "platform": "sensor",
+          "device_class": "temperature",
+          "unit_of_measurement": "°C"
+        },
+        {
+          "key": "T7",
+          "name": "Compressor current Detect [T7]",
+          "platform": "sensor",
+          "device_class": "current",
+          "unit_of_measurement": "A"
+        },
+        {
+          "key": "T8",
+          "name": "AC Fan Output [T8]",
+          "platform": "sensor",
+          "device_class": null,
+          "unit_of_measurement": "%"
+        },
+        {
+          "key": "T9",
+          "name": "Flow Rate Input [T9]",
+          "platform": "sensor",
+          "device_class": "frequency",
+          "unit_of_measurement": "Hz"
         }
       ]
     }
