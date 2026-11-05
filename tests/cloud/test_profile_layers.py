@@ -262,6 +262,7 @@ async def test_product_reports_its_class(tmp_path):
         ),
         ({"entity_description.default.json": None}, "is missing"),
         ({"mapping.default.json": None}, "is missing"),
+        ({"classes.json": None}, "classes.json is missing"),
         ({f"mapping.{MEMBER}.json": ["Power"]}, "must be an object"),
         (
             {f"entity_description.{MEMBER}.json": "T01"},
@@ -343,6 +344,7 @@ async def test_product_reports_its_class(tmp_path):
         "mapping_delta_not_true",
         "default_catalog_missing",
         "default_mapping_missing",
+        "class_table_missing",
         "mapping_not_an_object",
         "catalog_neither_array_nor_object",
         "unknown_product_in_class",

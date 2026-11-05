@@ -245,9 +245,14 @@ class DeviceProfiles:
     async def load(cls, profiles_path: Path = PROFILES_PATH) -> Self:
         """Read the class table and every level's files from profiles_path.
 
-        Each level may ship a mapping, a catalog, both or neither.
+        The class table must be there, even if empty; each level may ship a
+        mapping, a catalog, both or neither.
         """
         classes = await _load_json(profiles_path / CLASSES_FILE)
+
+        if classes is None:
+            raise InvalidProfileError(f"{CLASSES_FILE} is missing")
+
         mappings = {}
         catalogs = {}
 
