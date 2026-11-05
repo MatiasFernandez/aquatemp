@@ -167,7 +167,9 @@ def build_entity_descriptions(
     device_profile: DeviceProfile,
 ) -> list[AquaTempEntityDescription]:
     """Built-in entities, then the catalog's, then those derived from the mapping."""
-    catalog_id = device_profile.catalog_id
+    # Every shipped catalog is a complete file, so its top level defines
+    # every entry
+    catalog_id = device_profile.catalog_chain[-1]
     entities = copy(DEFAULT_ENTITY_DESCRIPTIONS)
 
     for data_item in device_profile.parameters:
