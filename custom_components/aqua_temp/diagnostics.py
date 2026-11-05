@@ -11,6 +11,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.device_registry import DeviceEntry
 
+from .cloud.device_profiles import DeviceProfile
 from .common.consts import (
     DATA_ITEM_CONFIG,
     DATA_ITEM_DEVICES,
@@ -79,6 +80,7 @@ def _async_get_diagnostics(
                     device_id,
                     device_details,
                     coordinator.get_unknown_codes(device_code),
+                    coordinator.get_device_profile(device_code),
                 )
 
     else:
@@ -92,6 +94,7 @@ def _async_get_diagnostics(
                     coordinator.get_device_meta(device_code).device_id,
                     devices[device_code],
                     coordinator.get_unknown_codes(device_code),
+                    coordinator.get_device_profile(device_code),
                 )
                 for device_code in devices
             ]
@@ -107,6 +110,7 @@ def _async_device_as_dict(
     device_id: str,
     device_data: dict,
     unknown_codes: frozenset[str],
+    device_profile: DeviceProfile,
 ) -> dict[str, Any]:
     """Represent a Shinobi monitor as a dictionary."""
     entity_registry = er.async_get(hass)
@@ -122,6 +126,7 @@ def _async_device_as_dict(
             "disabled_by": ha_device.disabled_by,
             "data": device_data,
             "unknown_codes": sorted(unknown_codes),
+            "profile": _profile_as_dict(device_profile),
             "entities": [],
         }
 
@@ -155,3 +160,15 @@ def _async_device_as_dict(
             )
 
     return data
+
+
+def _profile_as_dict(device_profile: DeviceProfile) -> dict[str, Any]:
+    """The device's resolved profile and the files it comes from. The class is
+    listed apart, as a chain leaves out a level without a file."""
+    return {
+        "class": device_profile.product_class,
+        "mapping_chain": list(device_profile.mapping_chain),
+        "catalog_chain": list(device_profile.catalog_chain),
+        "mapping": device_profile.mapping,
+        "catalog": device_profile.parameters,
+    }

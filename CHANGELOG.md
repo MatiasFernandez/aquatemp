@@ -7,6 +7,10 @@ predate this fork and keep their original format.
 
 ## [Unreleased]
 
+### Added
+
+- The downloaded diagnostics show each device's profile: its product class, the profile files its mapping and parameter list come from, and what they resolve to. The log line binding a device to its profile names the same files
+
 ## [3.5.0] - 2026-11-04
 
 ### Added
