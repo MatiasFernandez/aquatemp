@@ -790,6 +790,24 @@ async def test_device_diagnostics_list_its_unknown_codes(hass, entry):
     assert diagnostics["device"]["unknown_codes"] == sorted(UNKNOWN_CODES)
 
 
+async def test_device_diagnostics_show_its_resolved_profile(hass, entry):
+    # The device's product, 1132174963097280512, is in the heat pump class,
+    # which ships no profile file of its own
+    device = async_get_ha_device(hass, entry.entry_id, DEVICE_ID)
+
+    diagnostics = await async_get_device_diagnostics(hass, entry, device)
+
+    assert diagnostics["device"]["profile"] == {
+        "class": "pool_heat_pump",
+        "mapping_chain": ["default"],
+        "catalog_chain": ["default"],
+        "mapping": json.loads((PROFILES / "mapping.default.json").read_text()),
+        "catalog": json.loads(
+            (PROFILES / "entity_description.default.json").read_text()
+        ),
+    }
+
+
 def status_entity_id(hass: HomeAssistant) -> str:
     unique_id = slugify(f"{DOMAIN}_binary_sensor_device_status_{DEVICE_CODE}")
 
