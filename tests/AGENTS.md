@@ -34,6 +34,7 @@ Running the suite, the mocked cloud and fixtures: see [CONTRIBUTING.md](../CONTR
 ## Expected values
 
 - Literals, or read from the profile files or fixtures. Never computed by the code under test.
+- The resolved-profile references are expected values like fixtures: regenerate them only for a change meant to alter them (see [CONTRIBUTING.md](../CONTRIBUTING.md#resolved-profile-references)).
 - Pinning behavior that looks wrong: keep the assertion and add `# Possible bug: ...`.
 
 ## Home Assistant
