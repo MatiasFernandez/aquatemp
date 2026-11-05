@@ -211,7 +211,7 @@ class DeviceProfiles:
         classes: dict[str, list[str]] | None = None,
     ):
         """Mappings and catalogs by level: default, a class name or a product id."""
-        self._classes = classes or {}
+        self._classes = {} if classes is None else classes
         class_by_product = _class_by_product(self._classes)
 
         default_mapping = _resolve_mapping(mappings, PRODUCT_ID_DEFAULT, None)
@@ -247,11 +247,13 @@ class DeviceProfiles:
 
         Each level may ship a mapping, a catalog, both or neither.
         """
-        classes = await _load_json(profiles_path / CLASSES_FILE) or {}
+        classes = await _load_json(profiles_path / CLASSES_FILE)
         mappings = {}
         catalogs = {}
 
-        for level in [PRODUCT_ID_DEFAULT, *classes, *PRODUCT_IDS]:
+        class_names = list(classes) if isinstance(classes, dict) else []
+
+        for level in [PRODUCT_ID_DEFAULT, *class_names, *PRODUCT_IDS]:
             mapping = await _load_json(
                 profiles_path / f"{ProductParameter.MAPPING}.{level}.json"
             )
@@ -306,12 +308,20 @@ def _profile(
 def _class_by_product(classes: dict[str, list[str]]) -> dict[str, str]:
     """Each classified product's class; raises on an id that isn't in
     PRODUCT_IDS or is in two classes, and on a class named like a level."""
+    if not isinstance(classes, dict):
+        raise InvalidProfileError(f"{CLASSES_FILE} must be an object")
+
     class_by_product = {}
 
     for product_class, product_ids in classes.items():
         if product_class == PRODUCT_ID_DEFAULT or product_class in PRODUCT_IDS:
             raise InvalidProfileError(
                 f"{CLASSES_FILE}: class {product_class} is named like a level"
+            )
+
+        if not _is_list_of_strings(product_ids):
+            raise InvalidProfileError(
+                f"{CLASSES_FILE}: {product_class} must be an array of product ids"
             )
 
         for product_id in product_ids:
@@ -389,6 +399,7 @@ def _resolve_catalog(
         return below
 
     if isinstance(catalog, list):
+        _check_entries(file_name, catalog)
         _check_unique(file_name, [entry["key"] for entry in catalog])
 
         return _ResolvedCatalog((level,), [(level, entry) for entry in catalog])
@@ -407,6 +418,18 @@ def _resolve_catalog(
 
     removed = catalog.get(CATALOG_DELTA_REMOVE, [])
     added = catalog.get(CATALOG_DELTA_ENTRIES, [])
+
+    if not _is_list_of_strings(removed):
+        raise InvalidProfileError(
+            f'{file_name}: "{CATALOG_DELTA_REMOVE}" must be an array of keys'
+        )
+
+    if not isinstance(added, list):
+        raise InvalidProfileError(
+            f'{file_name}: "{CATALOG_DELTA_ENTRIES}" must be an array'
+        )
+
+    _check_entries(file_name, added)
     _check_unique(file_name, [*removed, *(entry["key"] for entry in added)])
     entries = {entry["key"]: entry for entry in added}
 
@@ -445,6 +468,19 @@ def _check_inherits(
         raise InvalidProfileError(
             f'{file_name} applies on {base}, so "{INHERITS}" must be "{base}"'
         )
+
+
+def _check_entries(file_name: str, entries: list):
+    """Raises unless every catalog entry is an object with a string key."""
+    for entry in entries:
+        if not isinstance(entry, dict) or not isinstance(entry.get("key"), str):
+            raise InvalidProfileError(
+                f"{file_name}: every entry must be an object with a key"
+            )
+
+
+def _is_list_of_strings(value) -> bool:
+    return isinstance(value, list) and all(isinstance(item, str) for item in value)
 
 
 def _check_unique(file_name: str, keys: list[str]):
