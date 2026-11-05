@@ -84,6 +84,16 @@ Fixtures live in [tests/cloud/fixtures/](tests/cloud/fixtures/), one folder per 
 - Top-level files are real responses recorded from a device, merged and sanitised (device code replaced, metadata dropped). The maintainer regenerates them from private probe recordings; don't edit them by hand.
 - Files under `synthetic/` are written by hand for endpoints that were never recorded.
 
+### Resolved-profile references
+
+Two committed files pin what every known product's profile resolves to, plus the default, a device reporting no product and an unknown product: [tests/cloud/resolved_profiles.json](tests/cloud/resolved_profiles.json) (the mapping and catalog) and [tests/integration/resolved_entity_names.json](tests/integration/resolved_entity_names.json) (each entity's platform, key and English name). Products with the same result share one entry. The tests rebuild both and compare.
+
+A diff in either one is a change users will see: different codes polled or controlled, entities added, removed or renamed. When a change to a profile is meant to do that, regenerate them and review the diff as part of the change; never regenerate them only to make a test pass.
+
+```bash
+PYTHONPATH=. uv run python utils/show-profile.py --write-references
+```
+
 ### Mutation testing
 
 [mutmut](https://mutmut.readthedocs.io/) checks that the tests catch changes to the code: it applies small edits (mutants) to the modules in `source_paths` under `[tool.mutmut]` in [pyproject.toml](pyproject.toml), and runs the tests covering each one. Run it on demand, not in CI, when adding or reviewing tests.
@@ -101,7 +111,7 @@ A surviving mutant is a change the tests don't notice. Some are harmless edits t
 
 ## Developer scripts
 
-Both scripts import `custom_components` and `utils` as top-level packages, so run them from the repository root with `PYTHONPATH=.`.
+The scripts import `custom_components` and `utils` as top-level packages, so run them from the repository root with `PYTHONPATH=.`.
 
 ### Call the cloud API from the CLI
 
@@ -118,6 +128,17 @@ USERNAME=you@example.com PASSWORD=secret DEBUG=true PYTHONPATH=. uv run python u
 | `DEBUG`              | `False` | `True` enables DEBUG-level output |
 
 The API allows one login per account at a time, so running the script logs out the mobile app or Home Assistant session using the same account.
+
+### Show a product's profile
+
+[utils/show-profile.py](utils/show-profile.py) prints the mapping and catalog a product resolves to, and the profile files they come from.
+
+```bash
+PYTHONPATH=. uv run python utils/show-profile.py 1442284873216843776   # one product
+PYTHONPATH=. uv run python utils/show-profile.py --all                 # every known product
+```
+
+`--write-references` rewrites the [resolved-profile references](#resolved-profile-references) instead.
 
 ### Generate entity descriptions from the app resources
 
