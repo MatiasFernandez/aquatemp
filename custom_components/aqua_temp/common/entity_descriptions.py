@@ -166,16 +166,20 @@ def get_derived_entity_descriptions(
 def build_entity_descriptions(
     device_profile: DeviceProfile,
 ) -> list[AquaTempEntityDescription]:
-    """Built-in entities, then the catalog's, then those derived from the mapping."""
-    # Every shipped catalog is a complete file, so its top level defines
-    # every entry
-    catalog_id = device_profile.catalog_chain[-1]
+    """Built-in entities, then the catalog's, then those derived from the mapping.
+
+    A catalog entity's translation key is <level>_<key>, lowercased and without
+    "/", where level is the profile level whose file defines the entry.
+    """
+    parameter_layers = device_profile.parameter_layers
     entities = copy(DEFAULT_ENTITY_DESCRIPTIONS)
 
     for data_item in device_profile.parameters:
         platform = data_item.get("platform")
         key = data_item.get("key")
-        translation_key = f"{catalog_id}_{key}".replace("/", "").lower()
+        # Prefixed with the profile file defining the entry, so an inherited
+        # entry shares the translation of the level it comes from
+        translation_key = f"{parameter_layers[key]}_{key}".replace("/", "").lower()
 
         if platform == Platform.SENSOR:
             state_class = data_item.get("state_class")
