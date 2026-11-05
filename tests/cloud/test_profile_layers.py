@@ -242,6 +242,27 @@ async def test_product_reports_its_class(tmp_path):
             {"classes.json": {"default": [MEMBER]}},
             "class default is named like a level",
         ),
+        ({"classes.json": []}, "classes.json must be an object"),
+        (
+            {"classes.json": {"pool_heat_pump": MEMBER}},
+            "pool_heat_pump must be an array of product ids",
+        ),
+        (
+            {f"entity_description.{MEMBER}.json": ["T01"]},
+            "every entry must be an object with a key",
+        ),
+        (
+            {f"entity_description.{MEMBER}.json": {"entries": [{"name": "T01"}]}},
+            "every entry must be an object with a key",
+        ),
+        (
+            {f"entity_description.{MEMBER}.json": {"remove": "A"}},
+            '"remove" must be an array of keys',
+        ),
+        (
+            {f"entity_description.{MEMBER}.json": {"entries": D}},
+            '"entries" must be an array',
+        ),
     ],
     ids=[
         "remove_missing_key",
@@ -258,6 +279,12 @@ async def test_product_reports_its_class(tmp_path):
         "unknown_product_in_class",
         "product_in_two_classes",
         "class_named_like_a_level",
+        "class_table_not_an_object",
+        "class_not_an_array",
+        "catalog_entry_not_an_object",
+        "catalog_entry_without_key",
+        "remove_not_an_array",
+        "entries_not_an_array",
     ],
 )
 async def test_invalid_profiles_fail_on_load(tmp_path, files, error):
