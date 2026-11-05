@@ -29,8 +29,9 @@ def describe(device_profiles: DeviceProfiles, product_id: str) -> dict:
 
     return {
         "product_id": product_id,
-        "mapping_id": profile.mapping_id,
-        "catalog_id": profile.catalog_id,
+        "class": profile.product_class,
+        "mapping_chain": profile.mapping_chain,
+        "catalog_chain": profile.catalog_chain,
         "mapping": profile.mapping,
         "catalog": profile.parameters,
     }

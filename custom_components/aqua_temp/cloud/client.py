@@ -1096,8 +1096,9 @@ class AquaTempAPI:
         _LOGGER.info(
             f"Device {device_code} mapped to "
             f"Product ID {product_id}, "
-            f"Mapping Key: {device_profile.mapping_id}, "
-            f"Entity Description Key: {device_profile.catalog_id}"
+            f"Class: {device_profile.product_class}, "
+            f"Mapping: {' → '.join(device_profile.mapping_chain)}, "
+            f"Catalog: {' → '.join(device_profile.catalog_chain)}"
         )
 
     def _get_device_profile(self, device_code: str) -> DeviceProfile:
