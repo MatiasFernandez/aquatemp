@@ -9,6 +9,7 @@ from .endpoints import Endpoints
 from .exceptions import (
     DeviceNotRespondingError,
     DeviceOfflineError,
+    InvalidProfileError,
     InvalidTokenError,
     LoginError,
     OperationFailedException,
@@ -31,6 +32,7 @@ __all__ = [
     "DeviceProfiles",
     "Endpoints",
     "FanMode",
+    "InvalidProfileError",
     "InvalidTokenError",
     "LoginError",
     "Mode",

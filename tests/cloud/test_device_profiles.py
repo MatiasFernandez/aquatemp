@@ -12,7 +12,7 @@ import pytest
 
 from custom_components.aqua_temp.cloud.device_profiles import DeviceProfiles
 
-PROFILES = Path(__file__).parents[2] / "custom_components/aqua_temp/cloud/profiles"
+RESOLVED_PROFILES = Path(__file__).parent / "resolved_profiles.json"
 
 ROLES = [
     "mode",
@@ -42,8 +42,9 @@ def resolve_with_profiles(device_profiles: DeviceProfiles, product_id: str) -> d
     profile = device_profiles.for_product(product_id)
 
     return {
-        "mapping_id": profile.mapping_id,
-        "catalog_id": profile.catalog_id,
+        "class": profile.product_class,
+        "mapping_chain": profile.mapping_chain,
+        "catalog_chain": profile.catalog_chain,
         "pc_keys": {role: profile.get_pc_key(role) for role in ROLES},
         "hvac_modes": profile.hvac_modes,
         "hvac_modes_reverse": profile.hvac_modes_reverse,
@@ -58,10 +59,16 @@ def resolve_with_profiles(device_profiles: DeviceProfiles, product_id: str) -> d
     }
 
 
-def catalog_keys(catalog_id: str) -> list[str]:
-    catalog = PROFILES / f"entity_description.{catalog_id}.json"
+def catalog_keys(product_id: str) -> list[str]:
+    """The keys of the product's catalog in the resolved-profile reference."""
+    reference = json.loads(RESOLVED_PROFILES.read_text(encoding="utf-8"))
+    [catalog] = [
+        group["catalog"]
+        for group in reference["catalogs"]
+        if product_id in group["products"]
+    ]
 
-    return [item["key"] for item in json.loads(catalog.read_text())]
+    return [item["key"] for item in catalog]
 
 
 DEFAULT_MAPPING = {
@@ -133,27 +140,35 @@ SEMANTIC_CODES = {
 
 
 @pytest.mark.parametrize(
-    ("product_id", "mapping_id", "catalog_id", "mapping"),
+    ("product_id", "product_class", "mapping_chain", "catalog_chain", "mapping"),
     [
-        ("default", "default", "default", DEFAULT_MAPPING),
-        (HITEMP, HITEMP, HITEMP, HITEMP_MAPPING),
-        (AQUA_TEMP, AQUA_TEMP, AQUA_TEMP, AQUA_TEMP_MAPPING),
-        (UNKNOWN, "default", "default", DEFAULT_MAPPING),
-        (PEISA, "default", "default", DEFAULT_MAPPING),
+        ("default", None, ("default",), ("default",), DEFAULT_MAPPING),
+        (HITEMP, None, (HITEMP,), (HITEMP,), HITEMP_MAPPING),
+        (
+            AQUA_TEMP,
+            "pool_heat_pump",
+            (AQUA_TEMP,),
+            ("default", AQUA_TEMP),
+            AQUA_TEMP_MAPPING,
+        ),
+        (UNKNOWN, None, ("default",), ("default",), DEFAULT_MAPPING),
+        (PEISA, "pool_heat_pump", ("default",), ("default",), DEFAULT_MAPPING),
     ],
     ids=["default", "hitemp", "aqua_temp", "unknown", "peisa"],
 )
 def test_product_resolves_to_its_profile(
-    resolve, product_id, mapping_id, catalog_id, mapping
+    resolve, product_id, product_class, mapping_chain, catalog_chain, mapping
 ):
+    # No class file ships, so the class adds nothing to either chain
     profile = resolve(product_id)
 
     assert profile == {
-        "mapping_id": mapping_id,
-        "catalog_id": catalog_id,
+        "class": product_class,
+        "mapping_chain": mapping_chain,
+        "catalog_chain": catalog_chain,
         **mapping,
         # Possible bug: "Mode" leads even where the catalog lists it, and
         # even for Hitemp, whose mode role is mode_real
-        "poll_codes": ["Mode", *catalog_keys(catalog_id)],
-        "semantic_codes": SEMANTIC_CODES[catalog_id],
+        "poll_codes": ["Mode", *catalog_keys(product_id)],
+        "semantic_codes": SEMANTIC_CODES[catalog_chain[-1]],
     }

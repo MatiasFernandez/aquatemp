@@ -7,6 +7,14 @@ predate this fork and keep their original format.
 
 ## [Unreleased]
 
+### Added
+
+- The downloaded diagnostics show each device's profile: its product class, the profile files its mapping and parameter list come from, and what they resolve to. The log line binding a device to its profile names the same files
+
+### Fixed
+
+- A command sent to a device before its first update, as when an earlier device's update fails after a reload, uses the codes of the device's own product instead of the default ones. A Hitemp unit, for one, was sent the default power code
+
 ## [3.5.0] - 2026-11-04
 
 ### Added

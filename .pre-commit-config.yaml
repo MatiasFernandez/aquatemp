@@ -30,6 +30,8 @@ repos:
     rev: v3.9.10
     hooks:
       - id: prettier
+        # written by utils/show-profile.py --write-references
+        exclude: ^tests/(cloud/resolved_profiles|integration/resolved_entity_names)\.json$
   - repo: https://github.com/rhysd/actionlint
     rev: v1.7.12
     hooks:

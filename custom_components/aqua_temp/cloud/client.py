@@ -38,7 +38,6 @@ from .consts import (
     HTTP_HEADER_X_TOKEN,
     POWER_MODE_OFF,
     POWER_MODE_ON,
-    PRODUCT_ID_DEFAULT,
     SECRET_KEYS,
 )
 from .device_profiles import DeviceProfile, DeviceProfiles
@@ -1074,7 +1073,8 @@ class AquaTempAPI:
         return device_meta
 
     def get_device_profile(self, device_code: str) -> DeviceProfile:
-        """The profile the device was bound to on its first fetch."""
+        """The profile the device was bound to on its first fetch; before it,
+        its product's profile, which the first fetch binds it to."""
         device_profile = self._get_device_profile(device_code)
 
         return device_profile
@@ -1096,15 +1096,24 @@ class AquaTempAPI:
         _LOGGER.info(
             f"Device {device_code} mapped to "
             f"Product ID {product_id}, "
-            f"Mapping Key: {device_profile.mapping_id}, "
-            f"Entity Description Key: {device_profile.catalog_id}"
+            f"Class: {device_profile.product_class}, "
+            f"Mapping: {' → '.join(device_profile.mapping_chain)}, "
+            f"Catalog: {' → '.join(device_profile.catalog_chain)}"
         )
 
     def _get_device_profile(self, device_code: str) -> DeviceProfile:
         device_profile = self._device_profiles_by_code.get(device_code)
 
+        # Before the device's first update, the profile it will be bound to;
+        # the default one for a code no device list returned
         if device_profile is None:
-            device_profile = self._device_profiles.for_product(PRODUCT_ID_DEFAULT)
+            device_data = self.get_device_data(device_code)
+            product_id = (
+                None
+                if device_data is None
+                else self._get_device_product_id(device_data)
+            )
+            device_profile = self._device_profiles.for_product(product_id)
 
         return device_profile
 

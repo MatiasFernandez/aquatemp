@@ -65,3 +65,7 @@ class DeviceOfflineError(Exception):
         result = f"The device is offline, so {self.operation} wasn't sent"
 
         return result
+
+
+class InvalidProfileError(Exception):
+    """A device profile file, or the class table, breaks the layering rules."""

@@ -56,6 +56,38 @@ The oldest supported Home Assistant (the floor) and the latest one stay at most 
 
 If a commit only reformats code, add its full SHA to [.git-blame-ignore-revs](.git-blame-ignore-revs).
 
+## Device profiles
+
+What the integration polls and controls on a heat pump comes from JSON files in [cloud/profiles/](custom_components/aqua_temp/cloud/profiles/). Each product gets a mapping (`mapping.<level>.json`: the code behind each role, such as mode, power and each mode's target temperature) and a catalog (`entity_description.<level>.json`: the parameters to poll, and the entity each one with a platform becomes). Both resolve through three levels, each one optional except the last:
+
+1. the product, `<product id>`
+2. its class, from [classes.json](custom_components/aqua_temp/cloud/profiles/classes.json). `pool_heat_pump` holds the 30 product ids the official app handles as one group, requesting the same 45 codes and 10 bit codes for all of them; they are inferred to be heat pumps from those codes, and pool ones from the app showing them with its swimming pool page and image. No class has a mapping or catalog file yet.
+3. `default`, which must have both files, complete
+
+A file is either complete, replacing everything below it, or a delta holding only its differences from the level below. Prefer a delta for a product that differs from its class or `default` in a few entries, so fixes to the level below still reach it.
+
+- A catalog is complete as an array of entries. As an object it's a delta: `remove` lists the keys of inherited entries to drop, and each of `entries` replaces the inherited entry with the same `key` whole, keeping its place, or is appended after the inherited ones.
+- A mapping is complete as a plain object. With `"delta": true` it's a delta, merged into the one below key by key, nested objects included. `null` removes the key at any depth: for a role it means the product has no code for it, and in `hvac_modes` or `fan_modes` it drops a mode. The resolved mapping must still list at least one of each.
+
+```json
+{
+  "remove": ["T01"],
+  "entries": [
+    { "key": "T1", "name": "Suction Temp. [T1]", "platform": "sensor" }
+  ]
+}
+```
+
+```json
+{ "delta": true, "hvac_modes": { "heat": { "target": "R04" } } }
+```
+
+A file breaking these rules, such as removing a key the level below doesn't have or listing a key twice, fails when the integration loads, and so in the tests.
+
+A catalog entity's English name is in [translations/en.json](custom_components/aqua_temp/translations/en.json) under `<level>_<key>` (lowercased, without `/`), where `<level>` is the file that defines the entry: an inherited entry uses the lower level's translation, and an entry a delta adds or replaces needs one under the delta's level.
+
+Check what a product resolves to with [utils/show-profile.py](#show-a-products-profile). A change to a profile file shows up in the [resolved-profile references](#resolved-profile-references): regenerate them and check that only the products you meant to change moved. The device diagnostics show the same for a live device.
+
 ## Tests
 
 [pytest](https://docs.pytest.org/) runs offline against a mocked cloud ([aioresponses](https://github.com/pnuckowski/aioresponses)), driving the cloud library's real API client and profiles through a full update cycle. Any request without a registered response fails the test, so nothing reaches the real cloud.
@@ -84,6 +116,16 @@ Fixtures live in [tests/cloud/fixtures/](tests/cloud/fixtures/), one folder per 
 - Top-level files are real responses recorded from a device, merged and sanitised (device code replaced, metadata dropped). The maintainer regenerates them from private probe recordings; don't edit them by hand.
 - Files under `synthetic/` are written by hand for endpoints that were never recorded.
 
+### Resolved-profile references
+
+Two committed files pin what every known product's [profile](#device-profiles) resolves to, plus the default, a device reporting no product and an unknown product: [tests/cloud/resolved_profiles.json](tests/cloud/resolved_profiles.json) (the mapping and catalog) and [tests/integration/resolved_entity_names.json](tests/integration/resolved_entity_names.json) (each entity's platform, key and English name). Products with the same result share one entry. The tests rebuild both and compare.
+
+A diff in either one is a change users will see: different codes polled or controlled, entities added, removed or renamed. When a change to a profile is meant to do that, regenerate them and review the diff as part of the change; never regenerate them only to make a test pass.
+
+```bash
+PYTHONPATH=. uv run python utils/show-profile.py --write-references
+```
+
 ### Mutation testing
 
 [mutmut](https://mutmut.readthedocs.io/) checks that the tests catch changes to the code: it applies small edits (mutants) to the modules in `source_paths` under `[tool.mutmut]` in [pyproject.toml](pyproject.toml), and runs the tests covering each one. Run it on demand, not in CI, when adding or reviewing tests.
@@ -101,7 +143,7 @@ A surviving mutant is a change the tests don't notice. Some are harmless edits t
 
 ## Developer scripts
 
-Both scripts import `custom_components` and `utils` as top-level packages, so run them from the repository root with `PYTHONPATH=.`.
+The scripts import `custom_components` and `utils` as top-level packages, so run them from the repository root with `PYTHONPATH=.`.
 
 ### Call the cloud API from the CLI
 
@@ -118,6 +160,17 @@ USERNAME=you@example.com PASSWORD=secret DEBUG=true PYTHONPATH=. uv run python u
 | `DEBUG`              | `False` | `True` enables DEBUG-level output |
 
 The API allows one login per account at a time, so running the script logs out the mobile app or Home Assistant session using the same account.
+
+### Show a product's profile
+
+[utils/show-profile.py](utils/show-profile.py) prints the mapping and catalog a product resolves to, its class, and the files each comes from (its chain, lowest level first).
+
+```bash
+PYTHONPATH=. uv run python utils/show-profile.py 1442284873216843776   # one product
+PYTHONPATH=. uv run python utils/show-profile.py --all                 # every known product
+```
+
+`--write-references` rewrites the [resolved-profile references](#resolved-profile-references) instead.
 
 ### Generate entity descriptions from the app resources
 

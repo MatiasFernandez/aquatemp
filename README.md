@@ -79,11 +79,11 @@ Each heat pump becomes a Home Assistant device, named after its nickname in the 
 
 Plus one sensor per parameter in the model's profile: temperatures, pressures, frequencies, valve positions and so on. Which profile a heat pump gets depends on its product ID:
 
-| Product ID          | Profile                                                                                                          | HVAC modes            | Fan modes      |
-| ------------------- | ---------------------------------------------------------------------------------------------------------------- | --------------------- | -------------- |
-| 1245226668902080512 | Hitemp ([parameters](custom_components/aqua_temp/cloud/profiles/entity_description.1245226668902080512.json))    | off, heat             | off, low, high |
-| 1442284873216843776 | Aqua Temp ([parameters](custom_components/aqua_temp/cloud/profiles/entity_description.1442284873216843776.json)) | off, cool, heat, auto | auto, low      |
-| Any other           | Default ([parameters](custom_components/aqua_temp/cloud/profiles/entity_description.default.json))               | off, cool, heat, auto | auto, low      |
+| Product ID          | Profile                                                                                                                                       | HVAC modes            | Fan modes      |
+| ------------------- | --------------------------------------------------------------------------------------------------------------------------------------------- | --------------------- | -------------- |
+| 1245226668902080512 | Hitemp ([parameters](custom_components/aqua_temp/cloud/profiles/entity_description.1245226668902080512.json))                                 | off, heat             | off, low, high |
+| 1442284873216843776 | Aqua Temp (default's parameters with [these changes](custom_components/aqua_temp/cloud/profiles/entity_description.1442284873216843776.json)) | off, cool, heat, auto | auto, low      |
+| Any other           | Default ([parameters](custom_components/aqua_temp/cloud/profiles/entity_description.default.json))                                            | off, cool, heat, auto | auto, low      |
 
 The integration picks up the heat pumps on the account whose product ID is on its list of known heat pumps ([`PRODUCT_IDS`](custom_components/aqua_temp/cloud/consts.py)). If none of them matches, it takes every device on the account. New heat pumps on the account show up without reloading the integration.
 
