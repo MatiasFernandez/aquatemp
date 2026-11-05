@@ -300,6 +300,12 @@ async def test_product_reports_its_class(tmp_path):
             '"inherits" must be "pool_heat_pump"',
         ),
         ({"entity_description.default.json": None}, "is missing"),
+        ({"mapping.default.json": None}, "is missing"),
+        ({f"mapping.{MEMBER}.json": ["Power"]}, "must be an object"),
+        (
+            {f"entity_description.{MEMBER}.json": "T01"},
+            "must be an array or an object",
+        ),
         (
             {"classes.json": {"pool_heat_pump": ["1000000000000000000"]}},
             "1000000000000000000 in pool_heat_pump is not a known product",
@@ -323,7 +329,10 @@ async def test_product_reports_its_class(tmp_path):
         "delta_without_inherits",
         "delta_inheriting_a_level_without_a_file",
         "delta_skipping_the_class_file",
-        "default_missing",
+        "default_catalog_missing",
+        "default_mapping_missing",
+        "mapping_not_an_object",
+        "catalog_neither_array_nor_object",
         "unknown_product_in_class",
         "product_in_two_classes",
         "class_named_like_a_level",
@@ -333,4 +342,17 @@ async def test_invalid_profiles_fail_on_load(tmp_path, files, error):
     write_profiles(tmp_path, files)
 
     with pytest.raises(InvalidProfileError, match=error):
+        await DeviceProfiles.load(tmp_path)
+
+
+@pytest.mark.parametrize(
+    "file_name",
+    ["classes.json", f"mapping.{MEMBER}.json", f"entity_description.{MEMBER}.json"],
+)
+async def test_file_holding_null_fails_on_load(tmp_path, file_name):
+    # Not read as a missing file, which would silently drop a class or a delta
+    write_profiles(tmp_path, {})
+    (tmp_path / file_name).write_text("null")
+
+    with pytest.raises(InvalidProfileError, match=f"{file_name} is null"):
         await DeviceProfiles.load(tmp_path)
