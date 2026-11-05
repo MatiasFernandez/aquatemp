@@ -187,7 +187,10 @@ class DeviceProfiles:
       or is appended after them, in file order.
     - A mapping is complete as a plain object. With "delta": true it is a
       delta, merged into the one below key by key, nested objects included;
-      a null value means the product has no code for that role.
+      a null value removes the key, at any depth. A role without a key maps
+      no code, so null means the product has no code for that role; in the
+      mode tables it drops a mode. Every resolved mapping must still list at
+      least one HVAC mode and one fan mode.
 
     The default level must ship both kinds of file, complete. Classes are
     listed in profiles/classes.json as {"<class>": ["<product id>", ...]}; the
@@ -357,6 +360,8 @@ def _resolve_mapping(
         raise InvalidProfileError(f"{file_name} must be an object")
 
     if MAPPING_DELTA not in mapping:
+        _check_mode_tables(file_name, mapping)
+
         return _ResolvedMapping((level,), mapping)
 
     if mapping[MAPPING_DELTA] is not True:
@@ -366,23 +371,50 @@ def _resolve_mapping(
         raise InvalidProfileError(f"{file_name} must be complete, not a delta")
 
     changes = {key: value for key, value in mapping.items() if key != MAPPING_DELTA}
+    merged = _merge_mapping(below.mapping, changes)
+    _check_mode_tables(file_name, merged)
 
-    return _ResolvedMapping(
-        (*below.chain, level), _merge_mapping(below.mapping, changes)
-    )
+    return _ResolvedMapping((*below.chain, level), merged)
 
 
 def _merge_mapping(below: dict, changes: dict) -> dict:
+    """below with changes merged in key by key; a null change removes the key,
+    at any depth."""
     merged = dict(below)
 
     for key, value in changes.items():
-        if isinstance(value, dict) and isinstance(merged.get(key), dict):
+        if value is None:
+            merged.pop(key, None)
+
+        elif isinstance(value, dict) and isinstance(merged.get(key), dict):
             merged[key] = _merge_mapping(merged[key], value)
 
         else:
             merged[key] = value
 
     return merged
+
+
+def _check_mode_tables(file_name: str, mapping: dict):
+    """Raises unless the mapping lists at least one HVAC mode, each an object,
+    and at least one fan mode: the climate entity offers both."""
+    hvac_modes = mapping.get(CONFIG_HVAC_MODES)
+    fan_modes = mapping.get(CONFIG_FAN_MODES)
+
+    if (
+        not isinstance(hvac_modes, dict)
+        or not hvac_modes
+        or not all(isinstance(mode, dict) for mode in hvac_modes.values())
+    ):
+        raise InvalidProfileError(
+            f'{file_name}: "{CONFIG_HVAC_MODES}" must list at least one mode, '
+            "each an object"
+        )
+
+    if not isinstance(fan_modes, dict) or not fan_modes:
+        raise InvalidProfileError(
+            f'{file_name}: "{CONFIG_FAN_MODES}" must list at least one fan mode'
+        )
 
 
 def _resolve_catalog(

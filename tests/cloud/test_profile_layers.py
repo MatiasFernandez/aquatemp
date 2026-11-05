@@ -154,8 +154,7 @@ async def test_mapping_delta_merges_key_by_key(tmp_path):
                 "delta": True,
                 "hvac_modes": {"heat": {"target": "R04"}},
             },
-            # null: this product has no code for the role
-            f"mapping.{MEMBER}.json": {"delta": True, "power": None},
+            f"mapping.{MEMBER}.json": {"delta": True, "mode": "Mode2"},
         },
     )
     profile = profiles.for_product(MEMBER)
@@ -163,14 +162,52 @@ async def test_mapping_delta_merges_key_by_key(tmp_path):
     assert (profile.mapping_chain, profile.mapping) == (
         ("default", "pool_heat_pump", MEMBER),
         {
-            "mode": "Mode",
-            "power": None,
+            "mode": "Mode2",
+            "power": "Power",
             "hvac_modes": {
                 "off": {"set": None, "target": None},
                 "heat": {"set": "1", "target": "R04"},
             },
             "fan_modes": {"auto": "0"},
         },
+    )
+
+
+async def test_null_in_a_mapping_delta_leaves_the_role_without_a_code(tmp_path):
+    profiles = await load(
+        tmp_path, {f"mapping.{MEMBER}.json": {"delta": True, "power": None}}
+    )
+    profile = profiles.for_product(MEMBER)
+
+    assert (profile.mapping, profile.get_pc_key("power")) == (
+        {
+            "mode": "Mode",
+            "hvac_modes": {
+                "off": {"set": None, "target": None},
+                "heat": {"set": "1", "target": "R02"},
+            },
+            "fan_modes": {"auto": "0"},
+        },
+        None,
+    )
+
+
+async def test_null_in_a_mapping_delta_drops_a_mode(tmp_path):
+    profiles = await load(
+        tmp_path,
+        {
+            f"mapping.{MEMBER}.json": {
+                "delta": True,
+                "hvac_modes": {"heat": None},
+                "fan_modes": {"auto": None, "low": "1"},
+            }
+        },
+    )
+    profile = profiles.for_product(MEMBER)
+
+    assert (profile.hvac_modes, profile.fan_modes) == (
+        {"off": None},
+        {"low": "1"},
     )
 
 
@@ -263,6 +300,38 @@ async def test_product_reports_its_class(tmp_path):
             {f"entity_description.{MEMBER}.json": {"entries": D}},
             '"entries" must be an array',
         ),
+        (
+            {f"mapping.{MEMBER}.json": {"delta": True, "hvac_modes": None}},
+            f'mapping.{MEMBER}.json: "hvac_modes" must list at least one mode',
+        ),
+        (
+            {
+                f"mapping.{MEMBER}.json": {
+                    "delta": True,
+                    "hvac_modes": {"off": None, "heat": None},
+                }
+            },
+            f'mapping.{MEMBER}.json: "hvac_modes" must list at least one mode',
+        ),
+        (
+            {
+                f"mapping.{MEMBER}.json": DEFAULT_MAPPING
+                | {"hvac_modes": {"heat": None}}
+            },
+            "each an object",
+        ),
+        (
+            {f"mapping.{MEMBER}.json": {"delta": True, "fan_modes": None}},
+            f'mapping.{MEMBER}.json: "fan_modes" must list at least one fan mode',
+        ),
+        (
+            {f"mapping.{MEMBER}.json": {"delta": True, "fan_modes": {"auto": None}}},
+            f'mapping.{MEMBER}.json: "fan_modes" must list at least one fan mode',
+        ),
+        (
+            {"mapping.default.json": DEFAULT_MAPPING | {"fan_modes": {}}},
+            'mapping.default.json: "fan_modes" must list at least one fan mode',
+        ),
     ],
     ids=[
         "remove_missing_key",
@@ -285,6 +354,12 @@ async def test_product_reports_its_class(tmp_path):
         "catalog_entry_without_key",
         "remove_not_an_array",
         "entries_not_an_array",
+        "hvac_modes_removed",
+        "hvac_modes_emptied",
+        "hvac_mode_not_an_object",
+        "fan_modes_removed",
+        "fan_modes_emptied",
+        "fan_modes_empty_in_complete_file",
     ],
 )
 async def test_invalid_profiles_fail_on_load(tmp_path, files, error):

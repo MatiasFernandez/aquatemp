@@ -67,7 +67,7 @@ What the integration polls and controls on a heat pump comes from JSON files in 
 A file is either complete, replacing everything below it, or a delta holding only its differences from the level below. Prefer a delta for a product that differs from its class or `default` in a few entries, so fixes to the level below still reach it.
 
 - A catalog is complete as an array of entries. As an object it's a delta: `remove` lists the keys of inherited entries to drop, and each of `entries` replaces the inherited entry with the same `key` whole, keeping its place, or is appended after the inherited ones.
-- A mapping is complete as a plain object. With `"delta": true` it's a delta, merged into the one below key by key, nested objects included. `null` means the product has no code for that role.
+- A mapping is complete as a plain object. With `"delta": true` it's a delta, merged into the one below key by key, nested objects included. `null` removes the key at any depth: for a role it means the product has no code for it, and in `hvac_modes` or `fan_modes` it drops a mode. The resolved mapping must still list at least one of each.
 
 ```json
 {
