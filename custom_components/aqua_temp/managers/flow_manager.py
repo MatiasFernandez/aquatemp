@@ -6,6 +6,7 @@ from copy import copy
 import logging
 from typing import Any
 
+from aiohttp import ClientError
 from cryptography.fernet import InvalidToken
 
 from homeassistant.config_entries import ConfigEntry, ConfigFlow, OptionsFlow
@@ -136,6 +137,14 @@ class IntegrationFlowManager:
 
             except InvalidToken:
                 error_key = "corrupted_encryption_key"
+
+            except (TimeoutError, ClientError) as ex:
+                # Timeouts and aiohttp errors from the client
+                error_key = "cannot_connect"
+
+                # Not repr(): a failed request's repr holds its headers, and
+                # with them the session token
+                _LOGGER.warning(f"Cloud request failed: {type(ex).__name__}: {ex}")
 
             if error_key is not None:
                 form_errors = {"base": error_key}

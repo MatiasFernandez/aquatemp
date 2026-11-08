@@ -1,6 +1,7 @@
 """Options flow on a real Home Assistant: editing an entry's credentials, title,
 polling interval, request timeout and session token logging."""
 
+from aiohttp import ClientError
 import pytest
 import voluptuous as vol
 
@@ -123,12 +124,34 @@ async def test_rejected_credentials_keep_the_entry(hass, api_type, entry):
     assert (entry.title, dict(entry.data), dict(entry.options)) == before
 
 
+@pytest.mark.parametrize(
+    "cloud_responses",
+    [
+        pytest.param(RESPONSES | {LOGIN: ["synthetic/login", error]}, id=name)
+        for name, error in [
+            ("timeout", TimeoutError()),
+            ("connection-error", ClientError()),
+            ("http-error", 503),
+        ]
+    ],
+)
+async def test_unreachable_cloud_keeps_the_entry(hass, api_type, entry):
+    before = (entry.title, dict(entry.data), dict(entry.options))
+
+    result = await submit(hass, entry, new_settings(api_type))
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": "cannot_connect"}
+    assert (entry.title, dict(entry.data), dict(entry.options)) == before
+
+
 @cloud_with(RESPONSES | {LOGIN: ["synthetic/login", TimeoutError()]})
-async def test_new_settings_are_checked_with_the_new_timeout(hass, api_type, entry):
-    # Possible bug: the form doesn't catch a timeout, so Home Assistant shows
-    # an unknown error instead of saying the cloud can't be reached
-    with pytest.raises(TimeoutError, match=rf"Request to {LOGIN} timed out after 15 s"):
-        await submit(hass, entry, new_settings(api_type))
+async def test_new_settings_are_checked_with_the_new_timeout(
+    hass, api_type, entry, caplog
+):
+    await submit(hass, entry, new_settings(api_type))
+
+    assert f"Request to {LOGIN} timed out after 15 s" in caplog.text
 
 
 @pytest.mark.parametrize(
