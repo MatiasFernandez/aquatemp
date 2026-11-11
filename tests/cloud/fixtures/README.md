@@ -5,7 +5,7 @@ Cloud API response bodies, one folder per API type. Every file is listed below; 
 - **Recorded** files are real responses from a heat pump, merged and sanitised (device code replaced, metadata dropped). The maintainer regenerates them from private probe recordings; don't edit them by hand.
 - **Synthetic** files, under `synthetic/`, are written by hand for endpoints that were never recorded. Replace them with recorded ones when possible.
 
-Device code `000000000001` and productId `1132174963097280512` stand for the same unit everywhere. That productId has no dedicated profile, so it falls back to the default one.
+Device code `000000000001` and productId `1132174963097280512` stand for the same unit everywhere. That productId has no profile files of its own: it gets the default ones, plus the bit codes its class, `pool_heat_pump`, adds to the catalog.
 
 ## aqua_temp
 

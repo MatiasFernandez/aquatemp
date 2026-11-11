@@ -133,12 +133,36 @@ UNKNOWN_CODES = {
 }
 
 
-def expected_unique_ids(catalog_id: str, skipped: set[str] = frozenset()) -> set[str]:
-    """Built-in entities, the catalog's sensors and binary sensors but those
-    for skipped codes, and Water ΔT."""
-    catalog = json.loads(
-        (PROFILES / f"entity_description.{catalog_id}.json").read_text()
+def device_catalog() -> list[dict]:
+    """The device's catalog: its product, 1132174963097280512, has none of its
+    own, so it is the default one with the heat pump class's entries after."""
+    default = json.loads((PROFILES / "entity_description.default.json").read_text())
+    pool_heat_pump = json.loads(
+        (PROFILES / "entity_description.pool_heat_pump.json").read_text()
     )
+
+    return [*default, *pool_heat_pump["entries"]]
+
+
+# The heat pump class's entries, read in the bit codes array
+BIT_CODES = {
+    "Sys1CompState",
+    "WaterFlowSwitch",
+    "InletWaterTempSensorFault",
+    "OutletWaterTempSensorFault",
+    "ATSensorFault",
+    "EmergencySwitch",
+    "Sys1HighPressureSwitch",
+    "Sys1LowPressureSwitch",
+    "ModeSwitch",
+    "Master/SlaveSwitch",
+}
+
+
+def expected_unique_ids(skipped: set[str] = frozenset()) -> set[str]:
+    """Built-in entities, the device catalog's sensors and binary sensors but
+    those for skipped codes, and Water ΔT."""
+    catalog = device_catalog()
 
     entities = [
         ("binary_sensor", "api_status"),
@@ -211,10 +235,20 @@ def sensor_unique_id(code: str) -> str:
 
 
 async def test_device_gets_its_catalog_entities(hass, entry):
-    # The device's product, 1132174963097280512, has no catalog of its own
-    assert entry_unique_ids(hass, entry) == expected_unique_ids(
-        "default", skipped=UNKNOWN_CODES
-    )
+    assert entry_unique_ids(hass, entry) == expected_unique_ids(skipped=UNKNOWN_CODES)
+
+
+@pytest.mark.parametrize("api_type", ["aqua_temp_old"])
+@cloud_with(
+    {
+        "app/device/getDataByCode": "synthetic/get_data_by_code",
+        "app/device/getDeviceStatus": "synthetic/device_status",
+        "device/sendDevicePassthroughInstruction": "synthetic/passthrough_success",
+    }
+)
+async def test_api_type_without_bit_codes_skips_their_entities(hass, entry):
+    # The old Aqua Temp API type reads an endpoint without the bit codes array
+    assert entry_unique_ids(hass, entry) == expected_unique_ids(skipped=BIT_CODES)
 
 
 async def test_codes_the_device_does_not_know_get_no_entity(hass, entry):
@@ -229,7 +263,7 @@ async def test_codes_the_device_does_not_know_get_no_entity(hass, entry):
 
 @cloud_with(RESPONSES | {DATA: data_untyped()})
 async def test_every_code_unknown_skips_no_entity(hass, entry):
-    assert entry_unique_ids(hass, entry) == expected_unique_ids("default")
+    assert entry_unique_ids(hass, entry) == expected_unique_ids()
 
 
 async def test_water_delta_t_is_created(hass, entry):
@@ -792,7 +826,7 @@ async def test_device_diagnostics_list_its_unknown_codes(hass, entry):
 
 async def test_device_diagnostics_show_its_resolved_profile(hass, entry):
     # The device's product, 1132174963097280512, is in the heat pump class,
-    # which ships no profile file of its own
+    # which ships a catalog but no mapping
     device = async_get_ha_device(hass, entry.entry_id, DEVICE_ID)
 
     diagnostics = await async_get_device_diagnostics(hass, entry, device)
@@ -800,11 +834,9 @@ async def test_device_diagnostics_show_its_resolved_profile(hass, entry):
     assert diagnostics["device"]["profile"] == {
         "class": "pool_heat_pump",
         "mapping_chain": ["default"],
-        "catalog_chain": ["default"],
+        "catalog_chain": ["default", "pool_heat_pump"],
         "mapping": json.loads((PROFILES / "mapping.default.json").read_text()),
-        "catalog": json.loads(
-            (PROFILES / "entity_description.default.json").read_text()
-        ),
+        "catalog": device_catalog(),
     }
 
 

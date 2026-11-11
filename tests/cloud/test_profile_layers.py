@@ -1,7 +1,6 @@
 """Profile layering: product, class, then default, each file complete or a delta.
 
-Synthetic profiles in a temporary directory stand in for the shipped ones, which
-ship no class file.
+Synthetic profiles in a temporary directory stand in for the shipped ones.
 """
 
 import json

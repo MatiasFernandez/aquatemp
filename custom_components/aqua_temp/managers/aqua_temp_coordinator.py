@@ -146,6 +146,11 @@ class AquaTempCoordinator(DataUpdateCoordinator):
 
         return unknown_codes
 
+    def get_unread_codes(self, device_code: str) -> frozenset[str]:
+        unread_codes = self._api.get_unread_codes(device_code)
+
+        return unread_codes
+
     def get_debug_data(self) -> dict:
         config_data = self._config_manager.get_debug_data()
 
