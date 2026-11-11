@@ -87,6 +87,14 @@ A file breaking these rules, such as a delta naming the wrong level, removing a 
 
 A catalog entry with `"request_field": "bitCodes"` is requested in the read's bit codes array rather than with the other codes: single bits such as `Sys1CompState` answer only there. Only an API type whose `api.<type>.json` names a `bit_codes` field has that array; on the others such an entry isn't requested.
 
+Besides `key`, `name`, `platform` and `device_class`, an entry describes its entity with:
+
+- `unit_of_measurement` and `state_class`, for a sensor.
+- `on_value` and `off_value`, for a binary sensor: the value that reads as on, and the one that reads as off. With `off_value` set, any other value, a missing one included, makes the entity unavailable.
+- `entity_category`: absent puts the entity under diagnostics, `null` with the device's main entities.
+- `enabled_default`: `false` adds the entity disabled.
+- `verified`: `false` when nothing confirms what the entity shows, such as a bit whose meaning and polarity were guessed rather than seen on a device or in the official app. It doesn't change the entity; it tells whoever reads the profile.
+
 A catalog entity's English name is in [translations/en.json](custom_components/aqua_temp/translations/en.json) under `<level>_<key>` (lowercased, without `/`), where `<level>` is the file that defines the entry: an inherited entry uses the lower level's translation, and an entry a delta adds or replaces needs one under the delta's level.
 
 Check what a product resolves to with [utils/show-profile.py](#show-a-products-profile). A change to a profile file shows up in the [resolved-profile references](#resolved-profile-references): regenerate them and check that only the products you meant to change moved. The device diagnostics show the same for a live device.
