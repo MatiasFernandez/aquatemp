@@ -1,0 +1,29 @@
+{
+  "inherits": "pool_heat_pump",
+  "entries": [
+    {
+      "key": "EmergencySwitch",
+      "name": "Remote on/off switch",
+      "platform": "binary_sensor",
+      "request_field": "bitCodes",
+      "device_class": "problem",
+      "on_value": "0",
+      "off_value": "1",
+      "entity_category": "diagnostic",
+      "enabled_default": false,
+      "verified": true
+    },
+    {
+      "key": "Master/SlaveSwitch",
+      "name": "Master/slave switch",
+      "platform": "binary_sensor",
+      "request_field": "bitCodes",
+      "device_class": null,
+      "on_value": "0",
+      "off_value": "1",
+      "entity_category": "diagnostic",
+      "enabled_default": false,
+      "verified": false
+    }
+  ]
+}

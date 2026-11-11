@@ -1,5 +1,5 @@
 {
-  "inherits": "default",
+  "inherits": "pool_heat_pump",
   "remove": ["T01", "T02", "T03", "T04", "T05", "T06", "T07", "T08", "T09"],
   "entries": [
     {
@@ -110,6 +110,30 @@
       "platform": "sensor",
       "device_class": "frequency",
       "unit_of_measurement": "Hz"
+    },
+    {
+      "key": "EmergencySwitch",
+      "name": "Remote on/off switch",
+      "platform": "binary_sensor",
+      "request_field": "bitCodes",
+      "device_class": "problem",
+      "on_value": "0",
+      "off_value": "1",
+      "entity_category": "diagnostic",
+      "enabled_default": false,
+      "verified": true
+    },
+    {
+      "key": "Master/SlaveSwitch",
+      "name": "Master/slave switch",
+      "platform": "binary_sensor",
+      "request_field": "bitCodes",
+      "device_class": null,
+      "on_value": "0",
+      "off_value": "1",
+      "entity_category": "diagnostic",
+      "enabled_default": false,
+      "verified": false
     }
   ]
 }

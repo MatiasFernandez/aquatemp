@@ -49,6 +49,16 @@ def default_profile_codes() -> list[str]:
     return ["Mode", *keys, *semantic_codes]
 
 
+def class_bit_codes() -> list[str]:
+    """Bit codes requested for the heat pump class: its catalog's keys, as
+    the class adds nothing but bit codes to the default catalog."""
+    catalog = json.loads(
+        (PROFILES / "entity_description.pool_heat_pump.json").read_text()
+    )
+
+    return [item["key"] for item in catalog["entries"]]
+
+
 # Answered with an empty value and dataType in the idle recording
 UNKNOWN_CODES = {
     "F10",
@@ -104,12 +114,14 @@ async def test_requests_device_protocol_codes(api, cloud, api_type, api_profile)
 
     body = data_requests[0].kwargs["json"]
 
-    assert set(body) == {"deviceCode", "codes"}
+    # The device's product is in the heat pump class
+    assert set(body) == {"deviceCode", "codes", "bitCodes"}
     assert body["deviceCode"] == DEVICE_CODE
     # Possible bug: "Mode" leads the polled codes and is in the profile
     # too, so it is requested twice. The semantic codes follow the catalog's
     assert body["codes"] == default_profile_codes()
     assert body["codes"].count("Mode") == 2
+    assert body["bitCodes"] == class_bit_codes()
 
 
 @pytest.mark.parametrize("api_profile", [legacy_aqua_temp_profile()], ids=["legacy"])

@@ -76,6 +76,48 @@
       },
       "1245226668902080512_power": {
         "name": "Power"
+      },
+      "pool_heat_pump_sys1compstate": {
+        "name": "Compressor"
+      },
+      "pool_heat_pump_waterflowswitch": {
+        "name": "Water flow"
+      },
+      "pool_heat_pump_inletwatertempsensorfault": {
+        "name": "Inlet water temperature sensor"
+      },
+      "pool_heat_pump_outletwatertempsensorfault": {
+        "name": "Outlet water temperature sensor"
+      },
+      "pool_heat_pump_atsensorfault": {
+        "name": "Ambient temperature sensor"
+      },
+      "pool_heat_pump_emergencyswitch": {
+        "name": "Remote on/off switch"
+      },
+      "pool_heat_pump_sys1highpressureswitch": {
+        "name": "High pressure switch"
+      },
+      "pool_heat_pump_sys1lowpressureswitch": {
+        "name": "Low pressure switch"
+      },
+      "pool_heat_pump_modeswitch": {
+        "name": "Mode switch"
+      },
+      "pool_heat_pump_masterslaveswitch": {
+        "name": "Master/slave switch"
+      },
+      "1442284873216843776_emergencyswitch": {
+        "name": "Remote on/off switch"
+      },
+      "1442284873216843776_masterslaveswitch": {
+        "name": "Master/slave switch"
+      },
+      "1732565142225256450_emergencyswitch": {
+        "name": "Remote on/off switch"
+      },
+      "1732565142225256450_masterslaveswitch": {
+        "name": "Master/slave switch"
       }
     },
     "button": {
