@@ -267,18 +267,17 @@ class AquaTempConfigManager:
 
     def _load_entity_descriptions(self, product_id: str):
         device_profile = self._device_profiles.for_product(product_id)
-        catalog_id = device_profile.catalog_id
+        profile_key = _profile_key(device_profile)
 
-        # Products without a catalog of their own use the default's
-        # descriptions, see get_entity_descriptions
-        if catalog_id != product_id:
+        # Products resolving through the same files share their descriptions
+        if profile_key in self._entity_descriptions:
             return
 
         entities = build_entity_descriptions(device_profile)
 
         self._update_platforms(entities)
 
-        self._entity_descriptions[catalog_id] = entities
+        self._entity_descriptions[profile_key] = entities
 
     def _update_platforms(self, entity_descriptions):
         for entity_description in entity_descriptions:
@@ -289,9 +288,18 @@ class AquaTempConfigManager:
                 self.platforms.append(entity_description.platform)
 
     def get_entity_descriptions(self, device_profile: DeviceProfile):
-        result = self._entity_descriptions.get(device_profile.catalog_id)
+        result = self._entity_descriptions.get(_profile_key(device_profile))
 
         if result is None:
-            result = self._entity_descriptions.get(PRODUCT_ID_DEFAULT)
+            default_profile = self._device_profiles.for_product(PRODUCT_ID_DEFAULT)
+            result = self._entity_descriptions.get(_profile_key(default_profile))
 
         return result
+
+
+def _profile_key(
+    device_profile: DeviceProfile,
+) -> tuple[tuple[str, ...], tuple[str, ...]]:
+    """What identifies a resolved profile: the files of its mapping, which
+    derived entities come from, and of its catalog."""
+    return device_profile.mapping_chain, device_profile.catalog_chain
