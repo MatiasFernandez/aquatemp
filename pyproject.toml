@@ -7,7 +7,6 @@ name = "aqua-temp"
 version = "0"
 requires-python = ">=3.14.2"
 dependencies = [
-    "aiofiles",
     "aiohttp",
     "cryptography",
     "homeassistant>=2025.11.0",  # hacs.json minimum

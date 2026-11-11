@@ -1,11 +1,10 @@
 """Per-product device profiles: which protocol codes a device uses and polls."""
 
+import asyncio
 from dataclasses import dataclass
 import json
 from pathlib import Path
 from typing import Self
-
-import aiofiles
 
 from .api_profile import PROFILES_PATH
 from .consts import (
@@ -265,9 +264,14 @@ class DeviceProfiles:
         """Read the class table and every level's files from profiles_path.
 
         The class table must be there, even if empty; each level may ship a
-        mapping, a catalog, both or neither.
+        mapping, a catalog, both or neither. All the reading and resolving
+        runs in one worker thread, off the event loop.
         """
-        classes = await _load_json(profiles_path / CLASSES_FILE)
+        return await asyncio.to_thread(cls._load, profiles_path)
+
+    @classmethod
+    def _load(cls, profiles_path: Path) -> Self:
+        classes = _load_json(profiles_path / CLASSES_FILE)
 
         if classes is None:
             raise InvalidProfileError(f"{CLASSES_FILE} is missing")
@@ -278,10 +282,10 @@ class DeviceProfiles:
         class_names = list(classes) if isinstance(classes, dict) else []
 
         for level in [PRODUCT_ID_DEFAULT, *class_names, *PRODUCT_IDS]:
-            mapping = await _load_json(
+            mapping = _load_json(
                 profiles_path / f"{ProductParameter.MAPPING}.{level}.json"
             )
-            catalog = await _load_json(
+            catalog = _load_json(
                 profiles_path / f"{ProductParameter.ENTITY_DESCRIPTION}.{level}.json"
             )
 
@@ -615,17 +619,14 @@ def _check_unique(file_name: str, keys: list[str]):
         raise InvalidProfileError(f"{file_name}: {', '.join(repeated)} more than once")
 
 
-async def _load_json(file_path: Path):
+def _load_json(file_path: Path):
     """The file's contents, None if there is no such file. A file holding null
     or invalid JSON raises, rather than reading as missing."""
-    if not file_path.exists():
-        return None
-
-    async with aiofiles.open(file_path) as file:
-        json_str = await file.read()
-
     try:
-        content = json.loads(json_str)
+        content = json.loads(file_path.read_text(encoding="utf-8"))
+
+    except FileNotFoundError:
+        return None
 
     except json.JSONDecodeError as ex:
         raise InvalidProfileError(f"{file_path.name} is not valid JSON: {ex}") from ex

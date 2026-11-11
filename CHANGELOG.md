@@ -14,6 +14,7 @@ predate this fork and keep their original format.
 ### Fixed
 
 - A command sent to a device before its first update, as when an earlier device's update fails after a reload, uses the codes of the device's own product instead of the default ones. A Hitemp unit, for one, was sent the default power code
+- Read the bundled device profiles without the `aiofiles` package, which the integration used without declaring it and so relied on Home Assistant happening to include it
 
 ## [3.5.0] - 2026-11-04
 
