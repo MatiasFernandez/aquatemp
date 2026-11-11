@@ -467,6 +467,16 @@ async def test_product_reports_its_class(tmp_path):
             {"mapping.default.json": DEFAULT_MAPPING | {"fan_modes": {}}},
             'mapping.default.json: "fan_modes" must list at least one fan mode',
         ),
+        (
+            {
+                f"entity_description.{MEMBER}.json": {
+                    "inherits": "default",
+                    "entries": [{"key": "F", "request_field": "codes"}],
+                }
+            },
+            f'entity_description.{MEMBER}.json: F\'s "request_field" must be '
+            '"bitCodes" or absent',
+        ),
     ],
     ids=[
         "remove_missing_key",
@@ -498,6 +508,7 @@ async def test_product_reports_its_class(tmp_path):
         "fan_modes_removed",
         "fan_modes_emptied",
         "fan_modes_empty_in_complete_file",
+        "unknown_request_field",
     ],
 )
 async def test_invalid_profiles_fail_on_load(tmp_path, files, error):

@@ -17,6 +17,7 @@ from .mock_cloud import (
     DEVICE_CODE,
     data_untyped,
     endpoint_url,
+    legacy_aqua_temp_profile,
     load_fixture,
 )
 
@@ -28,17 +29,6 @@ LEGACY_DATA_URL = (
 
 PROFILES = Path(__file__).parents[2] / "custom_components/aqua_temp/cloud/profiles"
 DEFAULT_PROFILE = PROFILES / "entity_description.default.json"
-
-
-def legacy_aqua_temp_profile() -> ApiProfile:
-    """The Aqua Temp profile, reading from the unversioned endpoint as it used to."""
-    fields = json.loads((PROFILES / "api.aqua_temp.json").read_text())
-    fields |= {
-        "data_endpoint": "app/device/getDataByCode",
-        "data_codes": "protocalCodes",
-    }
-
-    return ApiProfile(APIType.AquaTemp, fields)
 
 
 def hi_temp_profile() -> ApiProfile:

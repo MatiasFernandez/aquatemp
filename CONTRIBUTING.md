@@ -85,6 +85,8 @@ A file is either complete, replacing everything below it, or a delta holding onl
 
 A file breaking these rules, such as a delta naming the wrong level, removing a key the level below doesn't have or listing a key twice, fails when the integration loads, and so in the tests.
 
+A catalog entry with `"request_field": "bitCodes"` is requested in the read's bit codes array rather than with the other codes: single bits such as `Sys1CompState` answer only there. Only an API type whose `api.<type>.json` names a `bit_codes` field has that array; on the others such an entry isn't requested.
+
 A catalog entity's English name is in [translations/en.json](custom_components/aqua_temp/translations/en.json) under `<level>_<key>` (lowercased, without `/`), where `<level>` is the file that defines the entry: an inherited entry uses the lower level's translation, and an entry a delta adds or replaces needs one under the delta's level.
 
 Check what a product resolves to with [utils/show-profile.py](#show-a-products-profile). A change to a profile file shows up in the [resolved-profile references](#resolved-profile-references): regenerate them and check that only the products you meant to change moved. The device diagnostics show the same for a live device.
