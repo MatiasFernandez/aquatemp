@@ -87,6 +87,7 @@ class AquaTempClimateEntity(BaseEntity, ClimateEntity, ABC):
         device_code = self.device_code
 
         hvac_mode = coordinator.get_device_hvac_mode(device_code)
+        hvac_action = coordinator.get_device_hvac_action(device_code)
         is_power_on = coordinator.get_device_power(device_code)
         fan_mode = coordinator.get_device_fan_mode(device_code)
         current_temperature = coordinator.get_device_current_temperature(device_code)
@@ -100,11 +101,13 @@ class AquaTempClimateEntity(BaseEntity, ClimateEntity, ABC):
         self._attr_min_temp = minimum_temperature
         self._attr_max_temp = maximum_temperature
         self._attr_hvac_mode = hvac_mode
+        self._attr_hvac_action = hvac_action
         self._attr_fan_mode = fan_mode
         self._attr_target_temperature = target_temperature
         self._attr_current_temperature = current_temperature
 
         _LOGGER.debug(f"_attr_hvac_mode: {self._attr_hvac_mode}")
+        _LOGGER.debug(f"_attr_hvac_action: {self._attr_hvac_action}")
         _LOGGER.debug(f"_attr_target_temperature: {self._attr_target_temperature}")
         _LOGGER.debug(f"_attr_fan_mode: {self._attr_fan_mode}")
         _LOGGER.debug(f"_attr_min_temp: {self._attr_min_temp}")

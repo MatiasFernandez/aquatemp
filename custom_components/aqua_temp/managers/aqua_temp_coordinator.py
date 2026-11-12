@@ -1,7 +1,7 @@
 from collections.abc import Awaitable
 import logging
 
-from homeassistant.components.climate import HVACMode
+from homeassistant.components.climate import HVACAction, HVACMode
 from homeassistant.core import Event
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.aiohttp_client import async_create_clientsession
@@ -259,6 +259,36 @@ class AquaTempCoordinator(DataUpdateCoordinator):
         power = self._api.get_device_power(device_code)
 
         return power
+
+    def get_device_hvac_action(self, device_code: str) -> HVACAction | None:
+        """What the heat pump is doing, worked out from its power, the
+        compressor and the mode; None without a compressor role, or when that
+        isn't enough to tell.
+
+        Running in auto is left unknown: nothing reports whether it heats or
+        cools.
+        """
+        if self.get_device_profile(device_code).compressor_parameter is None:
+            return None
+
+        if not self._api.get_device_power(device_code):
+            return HVACAction.OFF
+
+        running = self._api.get_device_compressor_running(device_code)
+
+        if running is None:
+            return None
+
+        if not running:
+            return HVACAction.IDLE
+
+        mode = self._api.get_device_hvac_mode(device_code)
+        hvac_action = {
+            Mode.HEAT: HVACAction.HEATING,
+            Mode.COOL: HVACAction.COOLING,
+        }.get(mode)
+
+        return hvac_action
 
     def is_device_offline(self, device_code: str) -> bool:
         is_offline = self._api.is_device_offline(device_code)
