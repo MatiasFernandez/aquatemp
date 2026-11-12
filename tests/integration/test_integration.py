@@ -832,14 +832,14 @@ async def test_device_diagnostics_list_its_unknown_codes(hass, entry):
 
 async def test_device_diagnostics_show_the_files_of_its_profile(hass, entry):
     # The device's product, 1132174963097280512, is in the heat pump class,
-    # which ships a catalog but no mapping
+    # whose mapping only adds the compressor role
     device = async_get_ha_device(hass, entry.entry_id, DEVICE_ID)
 
     diagnostics = await async_get_device_diagnostics(hass, entry, device)
 
     assert diagnostics["device"]["profile"] == {
         "class": "pool_heat_pump",
-        "mapping_chain": ["default"],
+        "mapping_chain": ["default", "pool_heat_pump"],
         "catalog_chain": ["default", "pool_heat_pump"],
     }
 

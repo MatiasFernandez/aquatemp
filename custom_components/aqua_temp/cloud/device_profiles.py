@@ -9,6 +9,7 @@ import aiofiles
 
 from .api_profile import PROFILES_PATH
 from .consts import (
+    CONFIG_COMPRESSOR,
     CONFIG_FAN_MODES,
     CONFIG_HVAC_MODES,
     CONFIG_HVAC_OFF,
@@ -191,6 +192,19 @@ class DeviceProfile:
         """Each wire value's fan mode."""
         return self._fan_modes_reverse
 
+    @property
+    def compressor_parameter(self) -> dict | None:
+        """The catalog entry of the code the compressor role names, None
+        without the role. Its on_value reads as running and its off_value as
+        stopped."""
+        code = self._mapping.get(CONFIG_COMPRESSOR)
+        parameter = next(
+            (parameter for parameter in self._parameters if parameter["key"] == code),
+            None,
+        )
+
+        return parameter
+
     def get_pc_key(self, key: str) -> str | None:
         """The protocol code behind a role (CONFIG_SET_*), None if unmapped."""
         protocol_code_key = self._mapping.get(key)
@@ -233,7 +247,10 @@ class DeviceProfiles:
       sends and reads them on every device) and list at least one HVAC mode and
       one fan mode. Mode names must be known ones; each HVAC mode but off needs
       a "set" string, off none, and no two modes of a table share a wire value.
-      A null on any other role means the product has no code for it.
+      A null on any other role means the product has no code for it. The
+      compressor role, when present, must name an entry of the product's
+      resolved catalog with a different, non-empty string on_value and
+      off_value.
 
     The default level must ship both kinds of file, complete. Classes are
     listed in profiles/classes.json as {"<class>": ["<product id>", ...]}; the
@@ -341,6 +358,8 @@ class _ResolvedCatalog:
 def _profile(
     product_class: str | None, mapping: _ResolvedMapping, catalog: _ResolvedCatalog
 ) -> DeviceProfile:
+    _check_compressor(mapping, catalog)
+
     profile = DeviceProfile(
         product_class,
         mapping.chain,
@@ -351,6 +370,41 @@ def _profile(
     )
 
     return profile
+
+
+def _check_compressor(mapping: _ResolvedMapping, catalog: _ResolvedCatalog):
+    """Raises if the compressor role names a code the catalog can't read as
+    running or stopped: no entry, or one without two different, non-empty
+    values. The client reads an empty answer as no answer, so an empty value
+    could never match."""
+    code = mapping.mapping.get(CONFIG_COMPRESSOR)
+
+    if code is None:
+        return
+
+    mapping_file = f"{ProductParameter.MAPPING}.{mapping.chain[-1]}.json"
+    catalog_file = f"{ProductParameter.ENTITY_DESCRIPTION}.{catalog.chain[-1]}.json"
+
+    if not isinstance(code, str):
+        raise InvalidProfileError(
+            f'{mapping_file}: "{CONFIG_COMPRESSOR}" must be the protocol code of '
+            "that role"
+        )
+
+    entry = next((entry for _, entry in catalog.entries if entry["key"] == code), None)
+
+    values = [entry.get(field) for field in ("on_value", "off_value")] if entry else []
+
+    if (
+        entry is None
+        or not all(isinstance(value, str) and value for value in values)
+        or values[0] == values[1]
+    ):
+        raise InvalidProfileError(
+            f'{mapping_file}: "{CONFIG_COMPRESSOR}" names {code}, which '
+            f"{catalog_file} doesn't list with a different, non-empty string "
+            "on_value and off_value"
+        )
 
 
 def _class_by_product(classes: dict[str, list[str]]) -> dict[str, str]:

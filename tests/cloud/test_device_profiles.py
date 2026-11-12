@@ -22,6 +22,7 @@ ROLES = [
     "current_temperature",
     "inlet_water_temperature",
     "outlet_water_temperature",
+    "compressor",
 ]
 MODE_CODES = ["target", "minimum", "maximum"]
 
@@ -104,6 +105,7 @@ DEFAULT_MAPPING = {
         "current_temperature": "T02",
         "inlet_water_temperature": "T02",
         "outlet_water_temperature": "T03",
+        "compressor": None,
     },
     "hvac_modes": {"off": None, "cool": "0", "heat": "1", "auto": "2"},
     "hvac_modes_reverse": {None: "off", "0": "cool", "1": "heat", "2": "auto"},
@@ -126,6 +128,7 @@ HITEMP_MAPPING = {
         "current_temperature": "T10",
         "inlet_water_temperature": None,
         "outlet_water_temperature": None,
+        "compressor": None,
     },
     "hvac_modes": {"off": None, "heat": "0"},
     "hvac_modes_reverse": {None: "off", "0": "heat"},
@@ -134,10 +137,15 @@ HITEMP_MAPPING = {
     "mode_codes": {"off": [None, None, None], "heat": ["R01", "T02", "T03"]},
 }
 
-# The default mapping without the water roles, reading the current
-# temperature from T2
+# The default mapping with the compressor bit the class names
+CLASS_MAPPING = DEFAULT_MAPPING | {
+    "pc_keys": DEFAULT_MAPPING["pc_keys"] | {"compressor": "Sys1CompState"}
+}
+
+# The class mapping without the water roles, reading the current temperature
+# from T2
 AQUA_TEMP_MAPPING = DEFAULT_MAPPING | {
-    "pc_keys": DEFAULT_MAPPING["pc_keys"]
+    "pc_keys": CLASS_MAPPING["pc_keys"]
     | {
         "current_temperature": "T2",
         "inlet_water_temperature": None,
@@ -181,9 +189,9 @@ SEMANTIC_CODES["pool_heat_pump"] = SEMANTIC_CODES["default"]
         (
             PEISA,
             "pool_heat_pump",
-            ("default",),
             ("default", "pool_heat_pump"),
-            DEFAULT_MAPPING,
+            ("default", "pool_heat_pump"),
+            CLASS_MAPPING,
         ),
     ],
     ids=["default", "hitemp", "aqua_temp", "unknown", "peisa"],
@@ -191,8 +199,6 @@ SEMANTIC_CODES["pool_heat_pump"] = SEMANTIC_CODES["default"]
 def test_product_resolves_to_its_profile(
     resolve, product_id, product_class, mapping_chain, catalog_chain, mapping
 ):
-    # The class ships a catalog but no mapping, so it is only in the catalog
-    # chain
     profile = resolve(product_id)
 
     assert profile == {
