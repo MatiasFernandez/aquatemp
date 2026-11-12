@@ -13,6 +13,7 @@ predate this fork and keep their original format.
 
 ### Fixed
 
+- Removed the deprecated Home Assistant constant `CONN_CLASS_LOCAL_POLL`
 - A command sent to a device before its first update, as when an earlier device's update fails after a reload, uses the codes of the device's own product instead of the default ones. A Hitemp unit, for one, was sent the default power code
 
 ## [3.5.0] - 2026-11-04
