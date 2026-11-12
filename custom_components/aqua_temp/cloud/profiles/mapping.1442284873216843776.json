@@ -4,6 +4,7 @@
   "temperature": "Set_Temp",
   "fan": "Manual-mute",
   "current_temperature": "T2",
+  "compressor": "Sys1CompState",
   "hvac_modes": {
     "off": {
       "set": null,
