@@ -70,6 +70,9 @@ CONFIG_SET_FAN = "fan"
 CONFIG_SET_CURRENT_TEMPERATURE = "current_temperature"
 CONFIG_INLET_WATER_TEMPERATURE = "inlet_water_temperature"
 CONFIG_OUTLET_WATER_TEMPERATURE = "outlet_water_temperature"
+# Optional: a code reading whether the compressor runs, through its catalog
+# entry's on_value and off_value
+CONFIG_COMPRESSOR = "compressor"
 
 PRODUCT_ID_DEFAULT = "default"
 

@@ -569,6 +569,10 @@ async def test_invalid_profiles_fail_on_load(tmp_path, files, error):
             {key: value for key, value in DEFAULT_MAPPING.items() if key != "power"},
             '"power" must be the protocol code of that role',
         ),
+        (
+            {"inherits": "default", "compressor": 1},
+            '"compressor" must be the protocol code of that role',
+        ),
     ],
     ids=[
         "unknown_hvac_mode",
@@ -583,6 +587,7 @@ async def test_invalid_profiles_fail_on_load(tmp_path, files, error):
         "temperature_role_removed",
         "fan_role_removed",
         "power_role_missing_from_complete_file",
+        "compressor_role_not_a_string",
     ],
 )
 async def test_invalid_mapping_fails_on_load_naming_the_file(tmp_path, mapping, error):
@@ -590,6 +595,75 @@ async def test_invalid_mapping_fails_on_load_naming_the_file(tmp_path, mapping, 
     write_profiles(tmp_path, {f"mapping.{MEMBER}.json": mapping})
 
     with pytest.raises(InvalidProfileError, match=f"mapping.{MEMBER}.json: .*{error}"):
+        await DeviceProfiles.load(tmp_path)
+
+
+COMPRESSOR = {
+    "key": "D",
+    "platform": "binary_sensor",
+    "request_field": "bitCodes",
+    "on_value": "1",
+    "off_value": "0",
+}
+
+
+async def test_compressor_role_reads_its_catalog_entry(tmp_path):
+    profiles = await load(
+        tmp_path,
+        {
+            "mapping.pool_heat_pump.json": {"inherits": "default", "compressor": "D"},
+            "entity_description.pool_heat_pump.json": {
+                "inherits": "default",
+                "entries": [COMPRESSOR],
+            },
+        },
+    )
+
+    assert [
+        profiles.for_product(product_id).compressor_parameter
+        for product_id in (MEMBER, OUTSIDER)
+    ] == [COMPRESSOR, None]
+
+
+@pytest.mark.parametrize(
+    "catalog",
+    [
+        pytest.param([A, B, C], id="no_entry"),
+        pytest.param(
+            [
+                A,
+                B,
+                C,
+                {key: value for key, value in COMPRESSOR.items() if key != "off_value"},
+            ],
+            id="without_off_value",
+        ),
+        pytest.param(
+            [A, B, C, COMPRESSOR | {"on_value": True}], id="on_value_not_a_string"
+        ),
+        pytest.param([A, B, C, COMPRESSOR | {"off_value": ""}], id="empty_off_value"),
+        pytest.param([A, B, C, COMPRESSOR | {"off_value": "1"}], id="same_values"),
+    ],
+)
+async def test_compressor_role_without_a_readable_entry_fails_on_load(
+    tmp_path, catalog
+):
+    # Without two different values a running compressor can't be told from a
+    # stopped one or a missing answer; the client reads "" as no answer
+    write_profiles(
+        tmp_path,
+        {
+            "mapping.pool_heat_pump.json": {"inherits": "default", "compressor": "D"},
+            f"entity_description.{MEMBER}.json": catalog,
+        },
+    )
+
+    with pytest.raises(
+        InvalidProfileError,
+        match=f'mapping.pool_heat_pump.json: "compressor" names D, which '
+        f"entity_description.{MEMBER}.json doesn't list with a different, "
+        "non-empty string on_value and off_value",
+    ):
         await DeviceProfiles.load(tmp_path)
 
 

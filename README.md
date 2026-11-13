@@ -67,15 +67,15 @@ The **Configure** dialog also has **Log session token**, for debugging the cloud
 
 Each heat pump becomes a Home Assistant device, named after its nickname in the app, with its model as reported by the cloud. It gets:
 
-| Entity           | Platform      | Description                                                                                                        |
-| ---------------- | ------------- | ------------------------------------------------------------------------------------------------------------------ |
-| (device name)    | climate       | Target temperature, HVAC mode and fan mode. The modes depend on the model (see below).                             |
-| Fault            | binary_sensor | On when the cloud reports a fault; the `fault` attribute holds its description.                                    |
-| Status           | binary_sensor | Whether the device is online. It may not update on the current Aqua Temp backend.                                  |
-| API Status       | binary_sensor | Whether the integration is logged in to the cloud.                                                                 |
-| Temperature Unit | select        | The unit Home Assistant reads the heat pump's values in. Set it to match the device; it doesn't change the device. |
-| Water ΔT         | sensor        | Outlet minus inlet water temperature, on models whose profile maps both.                                           |
-| Refresh Data     | button        | Polls the cloud now instead of waiting for the next update. Stays available after a failed update, to retry.       |
+| Entity           | Platform      | Description                                                                                                                                   |
+| ---------------- | ------------- | --------------------------------------------------------------------------------------------------------------------------------------------- |
+| (device name)    | climate       | Target temperature, HVAC mode and fan mode. The modes depend on the model (see below). On pool heat pumps, also what it is doing (see below). |
+| Fault            | binary_sensor | On when the cloud reports a fault; the `fault` attribute holds its description.                                                               |
+| Status           | binary_sensor | Whether the device is online. It may not update on the current Aqua Temp backend.                                                             |
+| API Status       | binary_sensor | Whether the integration is logged in to the cloud.                                                                                            |
+| Temperature Unit | select        | The unit Home Assistant reads the heat pump's values in. Set it to match the device; it doesn't change the device.                            |
+| Water ΔT         | sensor        | Outlet minus inlet water temperature, on models whose profile maps both.                                                                      |
+| Refresh Data     | button        | Polls the cloud now instead of waiting for the next update. Stays available after a failed update, to retry.                                  |
 
 Plus one sensor per parameter in the model's profile: temperatures, pressures, frequencies, valve positions and so on. Which profile a heat pump gets depends on its product ID:
 
@@ -87,6 +87,8 @@ Plus one sensor per parameter in the model's profile: temperatures, pressures, f
 | Any other           | Default ([parameters](custom_components/aqua_temp/cloud/profiles/entity_description.default.json)), plus the pool heat pump status bits if it is one                              | off, cool, heat, auto | auto, low      |
 
 The pool heat pump status bits are binary sensors read from the cloud's bit codes, for 30 known pool heat pump products ([`classes.json`](custom_components/aqua_temp/cloud/profiles/classes.json), [bits](custom_components/aqua_temp/cloud/profiles/entity_description.pool_heat_pump.json)). **Compressor** and **Water flow** are enabled. The other eight start disabled, under diagnostics: the temperature sensor faults, the remote on/off switch, the pressure switches, the mode switch and the master/slave switch. Only the Aqua Temp API type reads bit codes; the other API types get none of these.
+
+On the same products, the climate entity also reports what the heat pump is doing, from the compressor bit: heating or cooling while the compressor runs, idle while it is stopped and off while the heat pump is off. In auto mode it reports idle with the compressor stopped and nothing while it runs, since the cloud doesn't say whether the heat pump is heating or cooling. A defrost cycle shows as heating, or idle if the compressor stops.
 
 The integration picks up the heat pumps on the account whose product ID is on its list of known heat pumps ([`PRODUCT_IDS`](custom_components/aqua_temp/cloud/consts.py)). If none of them matches, it takes every device on the account. New heat pumps on the account show up without reloading the integration.
 
