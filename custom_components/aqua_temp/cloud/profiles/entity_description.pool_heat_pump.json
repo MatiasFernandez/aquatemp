@@ -1,0 +1,123 @@
+{
+  "inherits": "default",
+  "entries": [
+    {
+      "key": "Sys1CompState",
+      "name": "Compressor",
+      "platform": "binary_sensor",
+      "request_field": "bitCodes",
+      "device_class": "running",
+      "on_value": "1",
+      "off_value": "0",
+      "entity_category": null,
+      "verified": true
+    },
+    {
+      "key": "WaterFlowSwitch",
+      "name": "Water flow",
+      "platform": "binary_sensor",
+      "request_field": "bitCodes",
+      "device_class": "running",
+      "on_value": "0",
+      "off_value": "1",
+      "entity_category": null,
+      "verified": true
+    },
+    {
+      "key": "InletWaterTempSensorFault",
+      "name": "Inlet water temperature sensor",
+      "platform": "binary_sensor",
+      "request_field": "bitCodes",
+      "device_class": "problem",
+      "on_value": "1",
+      "off_value": "0",
+      "entity_category": "diagnostic",
+      "enabled_default": false,
+      "verified": true
+    },
+    {
+      "key": "OutletWaterTempSensorFault",
+      "name": "Outlet water temperature sensor",
+      "platform": "binary_sensor",
+      "request_field": "bitCodes",
+      "device_class": "problem",
+      "on_value": "1",
+      "off_value": "0",
+      "entity_category": "diagnostic",
+      "enabled_default": false,
+      "verified": true
+    },
+    {
+      "key": "ATSensorFault",
+      "name": "Ambient temperature sensor",
+      "platform": "binary_sensor",
+      "request_field": "bitCodes",
+      "device_class": "problem",
+      "on_value": "1",
+      "off_value": "0",
+      "entity_category": "diagnostic",
+      "enabled_default": false,
+      "verified": true
+    },
+    {
+      "key": "EmergencySwitch",
+      "name": "External stop",
+      "platform": "binary_sensor",
+      "request_field": "bitCodes",
+      "device_class": null,
+      "on_value": "1",
+      "off_value": "0",
+      "entity_category": "diagnostic",
+      "enabled_default": false,
+      "verified": true
+    },
+    {
+      "key": "Sys1HighPressureSwitch",
+      "name": "High pressure protection",
+      "platform": "binary_sensor",
+      "request_field": "bitCodes",
+      "device_class": null,
+      "on_value": "1",
+      "off_value": "0",
+      "entity_category": "diagnostic",
+      "enabled_default": false,
+      "verified": false
+    },
+    {
+      "key": "Sys1LowPressureSwitch",
+      "name": "Low pressure protection",
+      "platform": "binary_sensor",
+      "request_field": "bitCodes",
+      "device_class": null,
+      "on_value": "1",
+      "off_value": "0",
+      "entity_category": "diagnostic",
+      "enabled_default": false,
+      "verified": false
+    },
+    {
+      "key": "ModeSwitch",
+      "name": "External mode switch",
+      "platform": "binary_sensor",
+      "request_field": "bitCodes",
+      "device_class": null,
+      "on_value": "1",
+      "off_value": "0",
+      "entity_category": "diagnostic",
+      "enabled_default": false,
+      "verified": false
+    },
+    {
+      "key": "Master/SlaveSwitch",
+      "name": "Master unit",
+      "platform": "binary_sensor",
+      "request_field": "bitCodes",
+      "device_class": null,
+      "on_value": "1",
+      "off_value": "0",
+      "entity_category": "diagnostic",
+      "enabled_default": false,
+      "verified": false
+    }
+  ]
+}

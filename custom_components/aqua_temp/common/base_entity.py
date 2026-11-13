@@ -34,13 +34,15 @@ async def async_setup_base_entry(
             device_profile = coordinator.get_device_profile(device_code)
 
             entity_descriptions = config_manager.get_entity_descriptions(device_profile)
-            unknown_codes = coordinator.get_unknown_codes(device_code)
+            # Codes the device doesn't know, and bit codes its API type can't
+            # request
+            unread_codes = coordinator.get_unread_codes(device_code)
 
             entities = [
                 entity_type(entity_description, coordinator, device_code)
                 for entity_description in entity_descriptions
                 if entity_description.platform == platform
-                and unknown_codes.isdisjoint(entity_description.source_codes)
+                and unread_codes.isdisjoint(entity_description.source_codes)
             ]
 
             _LOGGER.debug(f"Setting up {platform} entities: {entities}")

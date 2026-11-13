@@ -193,6 +193,7 @@ def build_entity_descriptions(
                 state_class=(
                     None if state_class is None else SensorStateClass(state_class)
                 ),
+                entity_registry_enabled_default=data_item.get("enabled_default", True),
                 translation_key=translation_key,
                 source_codes=(key,),
             )
@@ -205,7 +206,9 @@ def build_entity_descriptions(
                 name=data_item.get("name"),
                 device_class=data_item.get("device_class"),
                 on_value=data_item.get("on_value"),
+                off_value=data_item.get("off_value"),
                 entity_category=_get_entity_category(data_item),
+                entity_registry_enabled_default=data_item.get("enabled_default", True),
                 translation_key=translation_key,
                 source_codes=(key,),
             )

@@ -61,7 +61,7 @@ If a commit only reformats code, add its full SHA to [.git-blame-ignore-revs](.g
 What the integration polls and controls on a heat pump comes from JSON files in [cloud/profiles/](custom_components/aqua_temp/cloud/profiles/). Each product gets a mapping (`mapping.<level>.json`: the code behind each role, such as mode, power and each mode's target temperature) and a catalog (`entity_description.<level>.json`: the parameters to poll, and the entity each one with a platform becomes). Both resolve through three levels, each one optional except the last:
 
 1. the product, `<product id>`
-2. its class, from [classes.json](custom_components/aqua_temp/cloud/profiles/classes.json). `pool_heat_pump` holds the 30 product ids the official app handles as one group, requesting the same 45 codes and 10 bit codes for all of them; they are inferred to be heat pumps from those codes, and pool ones from the app showing them with its swimming pool page and image. No class has a mapping or catalog file yet.
+2. its class, from [classes.json](custom_components/aqua_temp/cloud/profiles/classes.json). `pool_heat_pump` holds the 30 product ids the official app handles as one group, requesting the same 45 codes and 10 bit codes for all of them; they are inferred to be heat pumps from those codes, and pool ones from the app showing them with its swimming pool page and image. `pool_heat_pump` ships a catalog, a delta adding the bits the official app reads for the class; no class has a mapping file yet.
 3. `default`, which must have both files, complete
 
 A file is either complete, replacing everything below it, or a delta holding only its differences from the level below. A delta names the level it applies on in `inherits`: the nearest level below it with a file of its kind. For a product in a class without that file, that's `default`; once the class gets one, the product's delta fails to load until it names the class, so whoever adds the class file checks that each delta on it still holds. Prefer a delta for a product that differs from its class or `default` in a few entries, so fixes to the level below still reach it.
@@ -85,9 +85,19 @@ A file is either complete, replacing everything below it, or a delta holding onl
 
 A file breaking these rules, such as a delta naming the wrong level, removing a key the level below doesn't have or listing a key twice, fails when the integration loads, and so in the tests.
 
+A catalog entry with `"request_field": "bitCodes"` is requested in the read's bit codes array rather than with the other codes: single bits such as `Sys1CompState` answer only there. Only an API type whose `api.<type>.json` names a `bit_codes` field has that array; on the others such an entry is neither requested nor set up as an entity.
+
+Besides `key`, `name`, `platform` and `device_class`, an entry describes its entity with:
+
+- `unit_of_measurement` and `state_class`, for a sensor.
+- `on_value` and `off_value`, for a binary sensor: the value that reads as on, and the one that reads as off. With `off_value` set, any other value, a missing one included, makes the entity unavailable.
+- `entity_category`: absent puts the entity under diagnostics, `null` with the device's main entities.
+- `enabled_default`: `false` adds the entity disabled.
+- `verified`: `false` when nothing confirms what the entity shows, such as a bit whose meaning and polarity were guessed rather than seen on a device or in the official app. It doesn't change the entity; it tells whoever reads the profile.
+
 A catalog entity's English name is in [translations/en.json](custom_components/aqua_temp/translations/en.json) under `<level>_<key>` (lowercased, without `/`), where `<level>` is the file that defines the entry: an inherited entry uses the lower level's translation, and an entry a delta adds or replaces needs one under the delta's level.
 
-Check what a product resolves to with [utils/show-profile.py](#show-a-products-profile). A change to a profile file shows up in the [resolved-profile references](#resolved-profile-references): regenerate them and check that only the products you meant to change moved. The device diagnostics show the same for a live device.
+Check what a product resolves to with [utils/show-profile.py](#show-a-products-profile). A change to a profile file shows up in the [resolved-profile references](#resolved-profile-references): regenerate them and check that only the products you meant to change moved. For a live device, the diagnostics name the class and the files its profile comes from; run the script on the product id in its device data, on the version that reported it, for the rest.
 
 ## Tests
 

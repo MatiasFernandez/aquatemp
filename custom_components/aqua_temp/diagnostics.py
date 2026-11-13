@@ -163,12 +163,14 @@ def _async_device_as_dict(
 
 
 def _profile_as_dict(device_profile: DeviceProfile) -> dict[str, Any]:
-    """The device's resolved profile and the files it comes from. The class is
-    listed apart, as a chain leaves out a level without a file."""
+    """The files the device's profile comes from. The class is listed apart,
+    as a chain leaves out a level without a file.
+
+    The resolved mapping and catalog are left out: the integration's version
+    and the product id in the device data give them, through
+    utils/show-profile.py."""
     return {
         "class": device_profile.product_class,
         "mapping_chain": list(device_profile.mapping_chain),
         "catalog_chain": list(device_profile.catalog_chain),
-        "mapping": device_profile.mapping,
-        "catalog": device_profile.parameters,
     }
