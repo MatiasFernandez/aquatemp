@@ -99,6 +99,8 @@ A catalog entity's English name is in [translations/en.json](custom_components/a
 
 Check what a product resolves to with [utils/show-profile.py](#show-a-products-profile). A change to a profile file shows up in the [resolved-profile references](#resolved-profile-references): regenerate them and check that only the products you meant to change moved. For a live device, the diagnostics name the class and the files its profile comes from; run the script on the product id in its device data, on the version that reported it, for the rest.
 
+[docs/entities/](docs/entities/README.md) explains each entity to users, with how sure we are of it. A change that adds an entity, renames one or changes what it shows updates its entry there; the guidelines for those pages are in [docs/entities/AGENTS.md](docs/entities/AGENTS.md).
+
 ## Tests
 
 [pytest](https://docs.pytest.org/) runs offline against a mocked cloud ([aioresponses](https://github.com/pnuckowski/aioresponses)), driving the cloud library's real API client and profiles through a full update cycle. Any request without a registered response fails the test, so nothing reaches the real cloud.
