@@ -65,6 +65,7 @@ class ConfigData:
     def to_dict(self):
         obj = {
             CONF_USERNAME: self.username,
+            CONF_API_TYPE: self.api_type,
         }
 
         return obj

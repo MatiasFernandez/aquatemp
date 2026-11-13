@@ -20,7 +20,7 @@ from pytest_homeassistant_custom_component.common import (
 )
 
 from custom_components.aqua_temp.cloud.exceptions import OperationFailedException
-from custom_components.aqua_temp.common.consts import DOMAIN
+from custom_components.aqua_temp.common.consts import CONF_API_TYPE, DOMAIN
 from custom_components.aqua_temp.common.device_lookup import async_get_ha_device
 from custom_components.aqua_temp.diagnostics import (
     async_get_config_entry_diagnostics,
@@ -740,6 +740,12 @@ async def test_diagnostics_redact_the_account_email(hass, entry):
     for data in (entry_data, device_data):
         assert data["configuration"][CONF_USERNAME] == "**REDACTED**"
         assert "test@example.com" not in json.dumps(data, default=str)
+
+
+async def test_diagnostics_show_the_api_type(hass, entry):
+    diagnostics = await async_get_config_entry_diagnostics(hass, entry)
+
+    assert diagnostics["configuration"][CONF_API_TYPE] == "aqua_temp"
 
 
 # Made up. The device list carries the unit's secret and its owner's details
