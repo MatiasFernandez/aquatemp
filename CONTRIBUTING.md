@@ -97,7 +97,7 @@ Besides `key`, `name`, `platform` and `device_class`, an entry describes its ent
 
 A catalog entity's English name is in [translations/en.json](custom_components/aqua_temp/translations/en.json) under `<level>_<key>` (lowercased, without `/`), where `<level>` is the file that defines the entry: an inherited entry uses the lower level's translation, and an entry a delta adds or replaces needs one under the delta's level.
 
-Check what a product resolves to with [utils/show-profile.py](#show-a-products-profile). A change to a profile file shows up in the [resolved-profile references](#resolved-profile-references): regenerate them and check that only the products you meant to change moved. The device diagnostics show the same for a live device.
+Check what a product resolves to with [utils/show-profile.py](#show-a-products-profile). A change to a profile file shows up in the [resolved-profile references](#resolved-profile-references): regenerate them and check that only the products you meant to change moved. For a live device, the diagnostics name the class and the files its profile comes from; run the script on the product id in its device data, on the version that reported it, for the rest.
 
 ## Tests
 

@@ -10,7 +10,7 @@ predate this fork and keep their original format.
 ### Added
 
 - Binary sensors for the status bits the official app reads on Aqua Temp pool heat pumps: Compressor and Water flow, and, added disabled under diagnostics, the inlet, outlet and ambient temperature sensor faults, the external stop, the high and low pressure protections, the external mode switch and the master unit. Hitemp and old Aqua Temp accounts don't get them: their endpoints can't read these bits
-- The downloaded diagnostics show each device's profile: its product class, the profile files its mapping and parameter list come from, and what they resolve to. The log line binding a device to its profile names the same files
+- The downloaded diagnostics show each device's profile: its product class and the profile files its mapping and parameter list come from. The log line binding a device to its profile names the same files
 - The downloaded diagnostics show the account's API type
 
 ### Fixed
