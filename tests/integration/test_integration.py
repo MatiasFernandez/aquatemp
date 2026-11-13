@@ -830,7 +830,7 @@ async def test_device_diagnostics_list_its_unknown_codes(hass, entry):
     assert diagnostics["device"]["unknown_codes"] == sorted(UNKNOWN_CODES)
 
 
-async def test_device_diagnostics_show_its_resolved_profile(hass, entry):
+async def test_device_diagnostics_show_the_files_of_its_profile(hass, entry):
     # The device's product, 1132174963097280512, is in the heat pump class,
     # which ships a catalog but no mapping
     device = async_get_ha_device(hass, entry.entry_id, DEVICE_ID)
@@ -841,8 +841,6 @@ async def test_device_diagnostics_show_its_resolved_profile(hass, entry):
         "class": "pool_heat_pump",
         "mapping_chain": ["default"],
         "catalog_chain": ["default", "pool_heat_pump"],
-        "mapping": json.loads((PROFILES / "mapping.default.json").read_text()),
-        "catalog": device_catalog(),
     }
 
 
@@ -871,13 +869,12 @@ async def test_device_diagnostics_show_its_profile_before_its_first_update(
     device = async_get_ha_device(hass, config_entry.entry_id, OTHER_DEVICE_ID)
 
     diagnostics = await async_get_device_diagnostics(hass, config_entry, device)
-    profile = diagnostics["device"]["profile"]
 
-    assert (profile["class"], profile["mapping_chain"], profile["catalog_chain"]) == (
-        None,
-        [HITEMP],
-        [HITEMP],
-    )
+    assert diagnostics["device"]["profile"] == {
+        "class": None,
+        "mapping_chain": [HITEMP],
+        "catalog_chain": [HITEMP],
+    }
 
 
 def status_entity_id(hass: HomeAssistant) -> str:
