@@ -24,6 +24,7 @@ predate this fork and keep their original format.
 - Hitemp heat pumps (product 1245226668902080512), such as the EvoHeat EVO270, show and change their power and mode. The profile read power from `MO6` and the mode from `mode_real`, which these units don't report, so the thermostat always showed off; it now uses `Power` and `Mode`, as the HiTemp app does ([radical-squared/aquatemp#123](https://github.com/radical-squared/aquatemp/issues/123), [#130](https://github.com/radical-squared/aquatemp/issues/130), [#103](https://github.com/radical-squared/aquatemp/issues/103); the mapping from [radical-squared/aquatemp#110](https://github.com/radical-squared/aquatemp/pull/110)). Heat is the Intelligent mode, and the new auto is Eco
 - The Hitemp thermostat's range is the target temperature's own, as the cloud reports it with each value, instead of the tank's bottom and top temperatures. A mode whose profile maps no limit codes uses the target's range the same way
 - A mode the profile doesn't map, such as a Hitemp unit's Hybrid or Fast Heating, shows the thermostat's mode as unknown instead of stopping it updating
+- On Home Assistant 2026.11 and later, the thermostat uses the climate entity's new `native_` temperature names, so it no longer logs deprecation warnings for the old ones, which stop working in 2027.11. Older releases keep using the old names
 
 ## [3.5.0] - 2026-11-04
 

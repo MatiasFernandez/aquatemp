@@ -19,6 +19,16 @@ from .managers.aqua_temp_coordinator import AquaTempCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 
+# Home Assistant 2026.11 renamed the climate temperature shorthands with a
+# native_ prefix; the old names log a warning there and stop working in 2027.11.
+# Releases before it, down to hacs.json's minimum, only have the old names. Drop
+# the old ones once that minimum reaches 2026.11
+_NATIVE_NAMES = hasattr(ClimateEntity, "native_target_temperature")
+_PREFIX = "_attr_native_" if _NATIVE_NAMES else "_attr_"
+ATTR_TEMPERATURE_UNIT = f"{_PREFIX}temperature_unit"
+ATTR_CURRENT_TEMPERATURE = f"{_PREFIX}current_temperature"
+ATTR_TARGET_TEMPERATURE = f"{_PREFIX}target_temperature"
+
 
 async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities
@@ -62,7 +72,11 @@ class AquaTempClimateEntity(BaseEntity, ClimateEntity, ABC):
         self._attr_hvac_mode = HVACMode.OFF
         self._attr_fan_mode = FAN_AUTO
 
-        self._attr_temperature_unit = coordinator.get_temperature_unit(device_code)
+        setattr(
+            self,
+            ATTR_TEMPERATURE_UNIT,
+            coordinator.get_temperature_unit(device_code),
+        )
 
     async def async_set_temperature(self, **kwargs):
         """Set new target temperature."""
@@ -145,12 +159,12 @@ class AquaTempClimateEntity(BaseEntity, ClimateEntity, ABC):
         self._attr_hvac_mode = hvac_mode
         self._attr_hvac_action = hvac_action
         self._attr_fan_mode = fan_mode
-        self._attr_target_temperature = target_temperature
-        self._attr_current_temperature = current_temperature
+        setattr(self, ATTR_TARGET_TEMPERATURE, target_temperature)
+        setattr(self, ATTR_CURRENT_TEMPERATURE, current_temperature)
 
         _LOGGER.debug(f"_attr_hvac_mode: {self._attr_hvac_mode}")
         _LOGGER.debug(f"_attr_hvac_action: {self._attr_hvac_action}")
-        _LOGGER.debug(f"_attr_target_temperature: {self._attr_target_temperature}")
+        _LOGGER.debug(f"target_temperature: {target_temperature}")
         _LOGGER.debug(f"_attr_fan_mode: {self._attr_fan_mode}")
         _LOGGER.debug(f"min_temp: {self.min_temp}")
         _LOGGER.debug(f"max_temp: {self.max_temp}")

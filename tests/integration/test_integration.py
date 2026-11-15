@@ -458,6 +458,16 @@ async def test_climate_without_a_compressor_code_reports_no_action(hass, entry):
     assert "hvac_action" not in state.attributes
 
 
+@cloud_with(POWERED_ON)
+async def test_climate_uses_no_deprecated_temperature_names(hass, config_entry, caplog):
+    # Home Assistant 2026.11 logs "... the deprecated <class>.<name>, use
+    # <native name> instead" for the old temperature names, and drops them in
+    # 2027.11. Releases before 2026.11 have no native names and log nothing
+    await set_up(hass, config_entry)
+
+    assert "the deprecated AquaTempClimateEntity" not in caplog.text
+
+
 @cloud_with(RESPONSES | {DATA: data_with(Power="1", Mode="3")})
 async def test_climate_mode_the_profile_does_not_map_is_unknown(hass, entry):
     # Hitemp units report Hybrid as 3 and Fast Heating as 4, which no HVAC
