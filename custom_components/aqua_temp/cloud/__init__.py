@@ -13,6 +13,7 @@ from .exceptions import (
     InvalidTokenError,
     LoginError,
     OperationFailedException,
+    SetpointNotCheckedError,
 )
 from .modes import FanMode, Mode
 
@@ -37,4 +38,5 @@ __all__ = [
     "LoginError",
     "Mode",
     "OperationFailedException",
+    "SetpointNotCheckedError",
 ]

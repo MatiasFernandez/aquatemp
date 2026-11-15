@@ -31,6 +31,6 @@ docs: |-
   "off" value: off is Set Power `"0"`. The integration sends `Set_Temp` with
   the current target first, then `Mode`, in one `param` list, and leaves out
   the `Mode` entry when the mapping gives both the same code. The
-  `Set_Temp` entry is left out, and only `Mode` sent, when the current
-  target is unknown or doesn't read as a setpoint (see Set Target
-  Temperature).
+  `Set_Temp` entry is left out, and only the profile's mode entry sent,
+  when the current target is unknown or doesn't read as a setpoint (see
+  Set Target Temperature).

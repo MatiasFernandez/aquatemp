@@ -130,6 +130,9 @@ def heat_setpoint(target: str, minimum: str, maximum: str, **values) -> dict:
 NOT_A_SETPOINT = {
     "range inverted": heat_setpoint("0.5", "35.0", "27.0"),
     "target outside its range": heat_setpoint("0.5", "15.0", "35.0"),
+    # Every comparison with NaN is false, so it would pass any range check
+    "limit not a number": heat_setpoint("28.0", "nan", "35.0"),
+    "target not a number": heat_setpoint("nan", "15.0", "35.0"),
 }
 # The current target can't go along with a mode change when there is none
 NO_TARGET_TO_SEND = NOT_A_SETPOINT | {
@@ -165,6 +168,7 @@ async def test_set_temperature_is_sent_when_the_device_reports_no_limits(
 ):
     await heat_pump.set_temperature(DEVICE_CODE, 30.5)
 
+    assert [endpoint for endpoint, _ in wire] == [CONTROL]
     assert_sent(wire[0][1], control(("R02", 30.5), ("Set_Temp", 30.5)))
 
 

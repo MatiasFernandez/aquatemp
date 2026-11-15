@@ -7,6 +7,7 @@ from dataclasses import dataclass, field
 import hashlib
 import json
 import logging
+import math
 import sys
 import unicodedata
 
@@ -1234,6 +1235,15 @@ class AquaTempAPI:
 
         if code is None:
             return f"{hvac_mode} has no target code"
+
+        # Every comparison with NaN is false, so it would pass the checks below
+        if any(
+            value is not None and not math.isfinite(value)
+            for value in (current, minimum, maximum, temperature)
+        ):
+            return (
+                f"{code} or its limits aren't numbers: {current}, {minimum}-{maximum}"
+            )
 
         if minimum is not None and maximum is not None and minimum > maximum:
             return f"the minimum of {code}, {minimum}, is above its maximum, {maximum}"

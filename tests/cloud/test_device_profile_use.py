@@ -161,7 +161,7 @@ async def test_set_temperature_is_refused_against_the_hitemp_water_temperatures(
     heat_pumps, wire
 ):
     # Possible bug: the limits are the water temperatures, not R01's range
-    with pytest.raises(SetpointNotCheckedError):
+    with pytest.raises(SetpointNotCheckedError, match="R01 holds 27.0, outside"):
         await heat_pumps.set_temperature(HITEMP_DEVICE_CODE, 26.5)
 
     assert wire == []

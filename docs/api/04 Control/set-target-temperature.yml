@@ -42,9 +42,11 @@ docs: |-
   device's profile and mode.
 
   Nothing is sent when the target code doesn't read as a setpoint: the
-  mode's limits are the wrong way round, or the target's current value or
-  the new one is outside them. Limits the device doesn't report don't stop
-  a write. On a Planet Pool TEP0002, heat's `R02` holds the hysteresis
-  (0.5) and `R10`/`R11` read 35/27, so a write there would overwrite it.
+  mode has no target code (as `off`), a reading isn't a number, the mode's
+  limits are the wrong way round, or the target's current value or the new
+  one is outside them. Limits the device doesn't report don't stop a write.
+  A Planet Pool TEP0002 owner reported heat's `R02` holding the hysteresis
+  (0.5) with `R10`/`R11` at 35/27, so a write there overwrote it
+  (radical-squared/aquatemp#122; not probed here).
   Hitemp's limits are mapped to `T02`/`T03`, water temperatures, so its
   `R01` usually reads as outside them and isn't written.
