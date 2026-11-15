@@ -139,8 +139,11 @@ async def test_unload_leaves_the_entities_unavailable(hass, api_type, cloud):
 
     assert entry.state is ConfigEntryState.NOT_LOADED
     assert entry.entry_id not in hass.data[DOMAIN]
+    # Disabled entities have no state to leave
     assert {
-        hass.states.get(entity.entity_id).state for entity in entities(hass, entry)
+        hass.states.get(entity.entity_id).state
+        for entity in entities(hass, entry)
+        if not entity.disabled
     } == {"unavailable"}
 
 

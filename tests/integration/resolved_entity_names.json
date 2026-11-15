@@ -3,35 +3,6 @@
     {
       "products": [
         "default",
-        "1132174963097280512",
-        "1656269521923575808",
-        "1663080854333558784",
-        "1596427678569979904",
-        "1674238226096406528",
-        "1650063968998252544",
-        "1668781858447085568",
-        "1186904563333062656",
-        "1158905952238313472",
-        "1732565142225256450",
-        "1548963836789501952",
-        "1669159229372477440",
-        "1650758828508766208",
-        "1845987289788989441",
-        "1245644363707658240",
-        "1411880504755519488",
-        "1580015159123103744",
-        "1723968101434449921",
-        "1747074936915042306",
-        "1747077846280486914",
-        "1752888899863797762",
-        "1777261505886740482",
-        "1811606097627443201",
-        "1821729460190392321",
-        "1833329364592959490",
-        "1855893688663838722",
-        "1905164506956177410",
-        "2034832864020103169",
-        "2039970527406370818",
         null,
         "1000000000000000000"
       ],
@@ -1312,13 +1283,963 @@
     },
     {
       "products": [
+        "1132174963097280512",
+        "1656269521923575808",
+        "1663080854333558784",
+        "1596427678569979904",
+        "1674238226096406528",
+        "1650063968998252544",
+        "1668781858447085568",
+        "1186904563333062656",
+        "1158905952238313472",
+        "1732565142225256450",
+        "1548963836789501952",
+        "1669159229372477440",
+        "1650758828508766208",
+        "1845987289788989441",
+        "1245644363707658240",
+        "1411880504755519488",
+        "1580015159123103744",
+        "1723968101434449921",
+        "1747074936915042306",
+        "1747077846280486914",
+        "1752888899863797762",
+        "1777261505886740482",
+        "1811606097627443201",
+        "1821729460190392321",
+        "1833329364592959490",
+        "1855893688663838722",
+        "1905164506956177410",
+        "2034832864020103169",
+        "2039970527406370818"
+      ],
+      "entities": [
+        {
+          "platform": "binary_sensor",
+          "key": "ATSensorFault",
+          "name": "Ambient temperature sensor"
+        },
+        {
+          "platform": "binary_sensor",
+          "key": "EmergencySwitch",
+          "name": "External stop"
+        },
+        {
+          "platform": "binary_sensor",
+          "key": "InletWaterTempSensorFault",
+          "name": "Inlet water temperature sensor"
+        },
+        {
+          "platform": "binary_sensor",
+          "key": "Master/SlaveSwitch",
+          "name": "Master unit"
+        },
+        {
+          "platform": "binary_sensor",
+          "key": "ModeSwitch",
+          "name": "External mode switch"
+        },
+        {
+          "platform": "binary_sensor",
+          "key": "OutletWaterTempSensorFault",
+          "name": "Outlet water temperature sensor"
+        },
+        {
+          "platform": "binary_sensor",
+          "key": "Power",
+          "name": "Power"
+        },
+        {
+          "platform": "binary_sensor",
+          "key": "Sys1CompState",
+          "name": "Compressor"
+        },
+        {
+          "platform": "binary_sensor",
+          "key": "Sys1HighPressureSwitch",
+          "name": "High pressure protection"
+        },
+        {
+          "platform": "binary_sensor",
+          "key": "Sys1LowPressureSwitch",
+          "name": "Low pressure protection"
+        },
+        {
+          "platform": "binary_sensor",
+          "key": "WaterFlowSwitch",
+          "name": "Water flow"
+        },
+        {
+          "platform": "binary_sensor",
+          "key": "api_status",
+          "name": "API Status"
+        },
+        {
+          "platform": "binary_sensor",
+          "key": "device_status",
+          "name": "Status"
+        },
+        {
+          "platform": "binary_sensor",
+          "key": "is_fault",
+          "name": "Fault"
+        },
+        {
+          "platform": "button",
+          "key": "refresh_data",
+          "name": "Refresh Data"
+        },
+        {
+          "platform": "climate",
+          "key": "Mode",
+          "name": null
+        },
+        {
+          "platform": "select",
+          "key": "temperature_unit",
+          "name": "Temperature Unit"
+        },
+        {
+          "platform": "sensor",
+          "key": "D01",
+          "name": "Stat Defrosting Temp [D01]"
+        },
+        {
+          "platform": "sensor",
+          "key": "D01-bar",
+          "name": "Start setp. [D01-bar]"
+        },
+        {
+          "platform": "sensor",
+          "key": "D02",
+          "name": "End Defrosting Temp [D02]"
+        },
+        {
+          "platform": "sensor",
+          "key": "D03",
+          "name": "Defrosting Cycle [D03]"
+        },
+        {
+          "platform": "sensor",
+          "key": "D04",
+          "name": "Max. Duration [D04]"
+        },
+        {
+          "platform": "sensor",
+          "key": "D06",
+          "name": "Defrost type [D06]"
+        },
+        {
+          "platform": "sensor",
+          "key": "D07",
+          "name": "Out Temp when Defrost [D07]"
+        },
+        {
+          "platform": "sensor",
+          "key": "D08",
+          "name": "Defrost Coil Temp. Deviation [D08]"
+        },
+        {
+          "platform": "sensor",
+          "key": "D08-bar",
+          "name": "Compensation offset [D08-bar]"
+        },
+        {
+          "platform": "sensor",
+          "key": "D09",
+          "name": "Defrost out Temp. Deviation [D09]"
+        },
+        {
+          "platform": "sensor",
+          "key": "D10",
+          "name": "Defrost ending coil temp. [D10]"
+        },
+        {
+          "platform": "sensor",
+          "key": "D10-bar",
+          "name": "Defrost ending pressure. [D10-bar]"
+        },
+        {
+          "platform": "sensor",
+          "key": "E01",
+          "name": "EEV Mode [E01]"
+        },
+        {
+          "platform": "sensor",
+          "key": "E02",
+          "name": "Super Heat [E02]"
+        },
+        {
+          "platform": "sensor",
+          "key": "E03",
+          "name": "Init. Place [E03]"
+        },
+        {
+          "platform": "sensor",
+          "key": "E04",
+          "name": "Min. Place [E04]"
+        },
+        {
+          "platform": "sensor",
+          "key": "E05",
+          "name": "Defrost Place [E05]"
+        },
+        {
+          "platform": "sensor",
+          "key": "E06",
+          "name": "Cooling Place [E06]"
+        },
+        {
+          "platform": "sensor",
+          "key": "E07",
+          "name": "EEV exhaust set temp. [E07]"
+        },
+        {
+          "platform": "sensor",
+          "key": "E09",
+          "name": "EEV step proportion value [E09]"
+        },
+        {
+          "platform": "sensor",
+          "key": "E10",
+          "name": "EEV step integral value [E10]"
+        },
+        {
+          "platform": "sensor",
+          "key": "E11",
+          "name": "EEV step differential value [E11]"
+        },
+        {
+          "platform": "sensor",
+          "key": "E12",
+          "name": "Super heatcompen. differ. [E12]"
+        },
+        {
+          "platform": "sensor",
+          "key": "F01",
+          "name": "Speed [F01]"
+        },
+        {
+          "platform": "sensor",
+          "key": "F02",
+          "name": "Max. cool [F02]"
+        },
+        {
+          "platform": "sensor",
+          "key": "F02-bar",
+          "name": "Cooling high speed pressure [F02-bar]"
+        },
+        {
+          "platform": "sensor",
+          "key": "F03",
+          "name": "Min. cool [F03]"
+        },
+        {
+          "platform": "sensor",
+          "key": "F03-bar",
+          "name": "Cooling low speed pressure [F03-bar]"
+        },
+        {
+          "platform": "sensor",
+          "key": "F04",
+          "name": "Stop cool [F04]"
+        },
+        {
+          "platform": "sensor",
+          "key": "F04-bar",
+          "name": "Cooling motor off pressure [F04-bar]"
+        },
+        {
+          "platform": "sensor",
+          "key": "F05",
+          "name": "Max. heat [F05]"
+        },
+        {
+          "platform": "sensor",
+          "key": "F05-bar",
+          "name": "Heating high speed pressure [F05-bar]"
+        },
+        {
+          "platform": "sensor",
+          "key": "F06",
+          "name": "Min. heat [F06]"
+        },
+        {
+          "platform": "sensor",
+          "key": "F06-bar",
+          "name": "Heating low speed pressure [F06-bar]"
+        },
+        {
+          "platform": "sensor",
+          "key": "F07",
+          "name": "Stop heat [F07]"
+        },
+        {
+          "platform": "sensor",
+          "key": "F07-bar",
+          "name": "Heating motor off pressure [F07-bar]"
+        },
+        {
+          "platform": "sensor",
+          "key": "F10",
+          "name": "Ctrl. probe [F10]"
+        },
+        {
+          "platform": "sensor",
+          "key": "F11",
+          "name": "Heating Max. Duty Ratio [F11]"
+        },
+        {
+          "platform": "sensor",
+          "key": "F11-r",
+          "name": "Fan Motor Heat Max. Speed [F11-r]"
+        },
+        {
+          "platform": "sensor",
+          "key": "F12",
+          "name": "Cooling Fan Duty Ratio [F12]"
+        },
+        {
+          "platform": "sensor",
+          "key": "F12-r",
+          "name": "Cooling Fan Motor Speed [F12-r]"
+        },
+        {
+          "platform": "sensor",
+          "key": "F13",
+          "name": "Heating Min. fan duty ratio [F13]"
+        },
+        {
+          "platform": "sensor",
+          "key": "F13-r",
+          "name": "Fan Motor Min. Speed in Heating [F13-r]"
+        },
+        {
+          "platform": "sensor",
+          "key": "F14",
+          "name": "Timer Mute Start [F14]"
+        },
+        {
+          "platform": "sensor",
+          "key": "F15",
+          "name": "Timer Mute End [F15]"
+        },
+        {
+          "platform": "sensor",
+          "key": "F16",
+          "name": "Duty Ratio of Mute Mode [F16]"
+        },
+        {
+          "platform": "sensor",
+          "key": "F16-r",
+          "name": "Mute Mode Speed [F16-r]"
+        },
+        {
+          "platform": "sensor",
+          "key": "F17",
+          "name": "Timer Mute ON/OFF [F17]"
+        },
+        {
+          "platform": "sensor",
+          "key": "F18",
+          "name": "Manual Fan motor Speed [F18]"
+        },
+        {
+          "platform": "sensor",
+          "key": "F19",
+          "name": "AC Fan Rated Duty Ratio [F19]"
+        },
+        {
+          "platform": "sensor",
+          "key": "F19-r",
+          "name": "DC/EC Fan Rated Speed [F19-r]"
+        },
+        {
+          "platform": "sensor",
+          "key": "F20",
+          "name": "PWM Detect/Antifreeze Temp. [F20]"
+        },
+        {
+          "platform": "sensor",
+          "key": "H01",
+          "name": "Power Down Memory [H01]"
+        },
+        {
+          "platform": "sensor",
+          "key": "H02",
+          "name": "Mode Type [H02]"
+        },
+        {
+          "platform": "sensor",
+          "key": "H03",
+          "name": "Temperature Unit [H03]"
+        },
+        {
+          "platform": "sensor",
+          "key": "H06",
+          "name": "Heating Min. frequency [H06]"
+        },
+        {
+          "platform": "sensor",
+          "key": "H07",
+          "name": "Cooling Min. frequency [H07]"
+        },
+        {
+          "platform": "sensor",
+          "key": "H08",
+          "name": "Heating Max frequency [H08]"
+        },
+        {
+          "platform": "sensor",
+          "key": "H09",
+          "name": "Cooling Max frequency [H09]"
+        },
+        {
+          "platform": "sensor",
+          "key": "H10",
+          "name": "Delay off time [H10]"
+        },
+        {
+          "platform": "sensor",
+          "key": "H11",
+          "name": "Auto mode restarting time [H11]"
+        },
+        {
+          "platform": "sensor",
+          "key": "H12",
+          "name": "Compressor type [H12]"
+        },
+        {
+          "platform": "sensor",
+          "key": "H13",
+          "name": "Comp. Defrost Frequency [H13]"
+        },
+        {
+          "platform": "sensor",
+          "key": "H14",
+          "name": "Frequency Cycle of 0.2℃ [H14]"
+        },
+        {
+          "platform": "sensor",
+          "key": "H15",
+          "name": "Comp. Overcurren Protect [H15]"
+        },
+        {
+          "platform": "sensor",
+          "key": "H16",
+          "name": "Refrigerant Type [H16]"
+        },
+        {
+          "platform": "sensor",
+          "key": "H17",
+          "name": "Cool start Compen. Low temp. [H17]"
+        },
+        {
+          "platform": "sensor",
+          "key": "H18",
+          "name": "Cool stop Compen. Low temp. [H18]"
+        },
+        {
+          "platform": "sensor",
+          "key": "H19",
+          "name": "Cool Max. Frequency low temp. [H19]"
+        },
+        {
+          "platform": "sensor",
+          "key": "H20",
+          "name": "Cool start Compen. high temp. [H20]"
+        },
+        {
+          "platform": "sensor",
+          "key": "H21",
+          "name": "Cool stop Compen. High temp. [H21]"
+        },
+        {
+          "platform": "sensor",
+          "key": "H22",
+          "name": "Cool stop Frequency high temp. [H22]"
+        },
+        {
+          "platform": "sensor",
+          "key": "H23",
+          "name": "Heat start Compen.low temp. [H23]"
+        },
+        {
+          "platform": "sensor",
+          "key": "H24",
+          "name": "Heat stop Compen.low temp. [H24]"
+        },
+        {
+          "platform": "sensor",
+          "key": "H25",
+          "name": "Heat Max.frequency low temp [H25]"
+        },
+        {
+          "platform": "sensor",
+          "key": "H26",
+          "name": "Heat start Compen.high temp. [H26]"
+        },
+        {
+          "platform": "sensor",
+          "key": "H27",
+          "name": "Heat stop Compen.high temp. [H27]"
+        },
+        {
+          "platform": "sensor",
+          "key": "H28",
+          "name": "Heat Max.frequency high temp. [H28]"
+        },
+        {
+          "platform": "sensor",
+          "key": "H29",
+          "name": "Max. Pressure Sensor Value [H29]"
+        },
+        {
+          "platform": "sensor",
+          "key": "H30",
+          "name": "Min. Pressure Sensor Value [H30]"
+        },
+        {
+          "platform": "sensor",
+          "key": "H31",
+          "name": "Ambient temp. before commpen. [H31]"
+        },
+        {
+          "platform": "sensor",
+          "key": "H32",
+          "name": "Ambient temp. after commpen. [H32]"
+        },
+        {
+          "platform": "sensor",
+          "key": "H33",
+          "name": "Max. Frequency silent comp. [H33]"
+        },
+        {
+          "platform": "sensor",
+          "key": "H34",
+          "name": "Comp. stop. [H34]"
+        },
+        {
+          "platform": "sensor",
+          "key": "H35",
+          "name": "Temp Difference of Start Freq. [H35]"
+        },
+        {
+          "platform": "sensor",
+          "key": "H36",
+          "name": "Start Frequency [H36]"
+        },
+        {
+          "platform": "sensor",
+          "key": "H37",
+          "name": "Unit Address [H37]"
+        },
+        {
+          "platform": "sensor",
+          "key": "H38",
+          "name": "Pressure Measurement [H38]"
+        },
+        {
+          "platform": "sensor",
+          "key": "H39",
+          "name": "Resonance 1 [H39]"
+        },
+        {
+          "platform": "sensor",
+          "key": "H40",
+          "name": "Resonance 2 [H40]"
+        },
+        {
+          "platform": "sensor",
+          "key": "H41",
+          "name": "Resonance 3 [H41]"
+        },
+        {
+          "platform": "sensor",
+          "key": "H42",
+          "name": "Fast Test Mode [H42]"
+        },
+        {
+          "platform": "sensor",
+          "key": "H43",
+          "name": "Dual Coil [H43]"
+        },
+        {
+          "platform": "sensor",
+          "key": "O01",
+          "name": "Compressor [O01]"
+        },
+        {
+          "platform": "sensor",
+          "key": "O02",
+          "name": "High fan [O02]"
+        },
+        {
+          "platform": "sensor",
+          "key": "O03",
+          "name": "Low fan [O03]"
+        },
+        {
+          "platform": "sensor",
+          "key": "O04",
+          "name": "Circulate pump [O04]"
+        },
+        {
+          "platform": "sensor",
+          "key": "O05",
+          "name": "4-way valve [O05]"
+        },
+        {
+          "platform": "sensor",
+          "key": "O06",
+          "name": "Exp. Valve [O06]"
+        },
+        {
+          "platform": "sensor",
+          "key": "O07",
+          "name": "Comp. Output frequency [O07]"
+        },
+        {
+          "platform": "sensor",
+          "key": "O08",
+          "name": "Compressor current [O08]"
+        },
+        {
+          "platform": "sensor",
+          "key": "O09",
+          "name": "IPM Temp. [O09]"
+        },
+        {
+          "platform": "sensor",
+          "key": "P01",
+          "name": "Mode [P01]"
+        },
+        {
+          "platform": "sensor",
+          "key": "P02",
+          "name": "Interval [P02]"
+        },
+        {
+          "platform": "sensor",
+          "key": "P03",
+          "name": "Duration [P03]"
+        },
+        {
+          "platform": "sensor",
+          "key": "P04",
+          "name": "Advance [P04]"
+        },
+        {
+          "platform": "sensor",
+          "key": "P05",
+          "name": "Water pump filtration [P05]"
+        },
+        {
+          "platform": "sensor",
+          "key": "P06",
+          "name": "Water Pump Filtration start Time1 [P06]"
+        },
+        {
+          "platform": "sensor",
+          "key": "P07",
+          "name": "Water Pump Filtration End Time1 [P07]"
+        },
+        {
+          "platform": "sensor",
+          "key": "P08",
+          "name": "Water Pump Filtration start Time2 [P08]"
+        },
+        {
+          "platform": "sensor",
+          "key": "P09",
+          "name": "Water Pump Filtration End Time 2 [P09]"
+        },
+        {
+          "platform": "sensor",
+          "key": "R01",
+          "name": "Cooling set [R01]"
+        },
+        {
+          "platform": "sensor",
+          "key": "R02",
+          "name": "Heating set [R02]"
+        },
+        {
+          "platform": "sensor",
+          "key": "R03",
+          "name": "Auto. Set [R03]"
+        },
+        {
+          "platform": "sensor",
+          "key": "R04",
+          "name": "Temp Difference [R04]"
+        },
+        {
+          "platform": "sensor",
+          "key": "R05",
+          "name": "Power Off Temp Difference [R05]"
+        },
+        {
+          "platform": "sensor",
+          "key": "R08",
+          "name": "Min. cool [R08]"
+        },
+        {
+          "platform": "sensor",
+          "key": "R09",
+          "name": "Max. cool [R09]"
+        },
+        {
+          "platform": "sensor",
+          "key": "R10",
+          "name": "Min. heat [R10]"
+        },
+        {
+          "platform": "sensor",
+          "key": "R11",
+          "name": "Max. heat [R11]"
+        },
+        {
+          "platform": "sensor",
+          "key": "R12",
+          "name": "Power on Difference [R12]"
+        },
+        {
+          "platform": "sensor",
+          "key": "S01",
+          "name": "HP switch [S01]"
+        },
+        {
+          "platform": "sensor",
+          "key": "S02",
+          "name": "LP switch [S02]"
+        },
+        {
+          "platform": "sensor",
+          "key": "S03",
+          "name": "Flow switch [S03]"
+        },
+        {
+          "platform": "sensor",
+          "key": "S04",
+          "name": "Remote switch [S04]"
+        },
+        {
+          "platform": "sensor",
+          "key": "S05",
+          "name": "Mode switch [S05]"
+        },
+        {
+          "platform": "sensor",
+          "key": "S06",
+          "name": "Master/Slave switch [S06]"
+        },
+        {
+          "platform": "sensor",
+          "key": "T01",
+          "name": "Suction Temp. [T01]"
+        },
+        {
+          "platform": "sensor",
+          "key": "T02",
+          "name": "Inlet water Temp. [T02]"
+        },
+        {
+          "platform": "sensor",
+          "key": "T03",
+          "name": "Outlet water Temp. [T03]"
+        },
+        {
+          "platform": "sensor",
+          "key": "T04",
+          "name": "Coil 1 Temp. [T04]"
+        },
+        {
+          "platform": "sensor",
+          "key": "T05",
+          "name": "Ambient Temp. [T05]"
+        },
+        {
+          "platform": "sensor",
+          "key": "T06",
+          "name": "Exhaust Temp. [T06]"
+        },
+        {
+          "platform": "sensor",
+          "key": "T07",
+          "name": "Compressor current Detect [T07]"
+        },
+        {
+          "platform": "sensor",
+          "key": "T08",
+          "name": "AC Fan Output [T08]"
+        },
+        {
+          "platform": "sensor",
+          "key": "T09",
+          "name": "Flow Rate Input [T09]"
+        },
+        {
+          "platform": "sensor",
+          "key": "T10",
+          "name": "Pressure Sensor [T10]"
+        },
+        {
+          "platform": "sensor",
+          "key": "T11",
+          "name": "Super heat [T11]"
+        },
+        {
+          "platform": "sensor",
+          "key": "T12",
+          "name": "Target speed of fan motor [T12]"
+        },
+        {
+          "platform": "sensor",
+          "key": "T13",
+          "name": "Over heat after commpen. [T13]"
+        },
+        {
+          "platform": "sensor",
+          "key": "T14",
+          "name": "Inverter plate AC voltage [T14]"
+        },
+        {
+          "platform": "sensor",
+          "key": "T15",
+          "name": "Antifreeze Temp. [T15]"
+        },
+        {
+          "platform": "sensor",
+          "key": "T16",
+          "name": "EC Fan motor Speed [T16]"
+        },
+        {
+          "platform": "sensor",
+          "key": "T17",
+          "name": "Speed of fan motor1 [T17]"
+        },
+        {
+          "platform": "sensor",
+          "key": "T18",
+          "name": "Speed of fan motor2 [T18]"
+        },
+        {
+          "platform": "sensor",
+          "key": "T19",
+          "name": "Buses voltage [T19]"
+        },
+        {
+          "platform": "sensor",
+          "key": "T20",
+          "name": "Limited Frequency Protect State [T20]"
+        },
+        {
+          "platform": "sensor",
+          "key": "T21",
+          "name": "Frequency Reduction Protect State [T21]"
+        },
+        {
+          "platform": "sensor",
+          "key": "T22",
+          "name": "Coil 2 Temp. [T22]"
+        },
+        {
+          "platform": "sensor",
+          "key": "T23",
+          "name": "driver board running state 1 [T23]"
+        },
+        {
+          "platform": "sensor",
+          "key": "T24",
+          "name": "driver board running state 2 [T24]"
+        },
+        {
+          "platform": "sensor",
+          "key": "T25",
+          "name": "driver board running state 3 [T25]"
+        },
+        {
+          "platform": "sensor",
+          "key": "T26",
+          "name": "driver board running state 4 [T26]"
+        },
+        {
+          "platform": "sensor",
+          "key": "T27",
+          "name": "driver board running state 5 [T27]"
+        },
+        {
+          "platform": "sensor",
+          "key": "T28",
+          "name": "Target frequency [T28]"
+        },
+        {
+          "platform": "sensor",
+          "key": "water_delta_t",
+          "name": "Water ΔT"
+        }
+      ]
+    },
+    {
+      "products": [
         "1442284873216843776"
       ],
       "entities": [
         {
           "platform": "binary_sensor",
+          "key": "ATSensorFault",
+          "name": "Ambient temperature sensor"
+        },
+        {
+          "platform": "binary_sensor",
+          "key": "EmergencySwitch",
+          "name": "External stop"
+        },
+        {
+          "platform": "binary_sensor",
+          "key": "InletWaterTempSensorFault",
+          "name": "Inlet water temperature sensor"
+        },
+        {
+          "platform": "binary_sensor",
+          "key": "Master/SlaveSwitch",
+          "name": "Master unit"
+        },
+        {
+          "platform": "binary_sensor",
+          "key": "ModeSwitch",
+          "name": "External mode switch"
+        },
+        {
+          "platform": "binary_sensor",
+          "key": "OutletWaterTempSensorFault",
+          "name": "Outlet water temperature sensor"
+        },
+        {
+          "platform": "binary_sensor",
           "key": "Power",
           "name": "Power"
+        },
+        {
+          "platform": "binary_sensor",
+          "key": "Sys1CompState",
+          "name": "Compressor"
+        },
+        {
+          "platform": "binary_sensor",
+          "key": "Sys1HighPressureSwitch",
+          "name": "High pressure protection"
+        },
+        {
+          "platform": "binary_sensor",
+          "key": "Sys1LowPressureSwitch",
+          "name": "Low pressure protection"
+        },
+        {
+          "platform": "binary_sensor",
+          "key": "WaterFlowSwitch",
+          "name": "Water flow"
         },
         {
           "platform": "binary_sensor",

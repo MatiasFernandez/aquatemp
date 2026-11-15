@@ -20,6 +20,7 @@ from custom_components.aqua_temp.cloud.device_profiles import DeviceProfiles
 from custom_components.aqua_temp.cloud.endpoints import Endpoints
 
 FIXTURES = Path(__file__).parent / "fixtures"
+PROFILES = Path(__file__).parents[2] / "custom_components/aqua_temp/cloud/profiles"
 
 DEVICE_CODE = "000000000001"
 
@@ -28,6 +29,11 @@ DEVICE_CODE = "000000000001"
 # under test
 DATA = "app/device/v5/getDataByCode"
 DATA_IDLE = "get_data_by_code.v5-idle"
+# The same unit heating, compressor running
+DATA_HEATING = "get_data_by_code.v5-heating"
+
+# The unversioned endpoint, which has no bit codes array
+LEGACY_DATA = "app/device/getDataByCode"
 
 # What the cloud answers unless a test says otherwise, every time it is asked.
 # getDataByCode is left out: tests serve it themselves.
@@ -81,6 +87,16 @@ def cloud_with(responses: dict):
     Each value is what cloud_responses takes.
     """
     return pytest.mark.parametrize("cloud_responses", [responses])
+
+
+def legacy_aqua_temp_profile() -> ApiProfile:
+    """The Aqua Temp profile, reading from the unversioned endpoint as it used
+    to, which has no bit codes array."""
+    fields = json.loads((PROFILES / "api.aqua_temp.json").read_text())
+    fields |= {"data_endpoint": LEGACY_DATA, "data_codes": "protocalCodes"}
+    del fields["bit_codes"]
+
+    return ApiProfile(APIType.AquaTemp, fields)
 
 
 def endpoint_url(api_profile: ApiProfile, endpoint: str) -> str:

@@ -35,6 +35,11 @@ CATALOG_DELTA_REMOVE = "remove"
 CATALOG_DELTA_ENTRIES = "entries"
 CATALOG_DELTA_FIELDS = {INHERITS, CATALOG_DELTA_REMOVE, CATALOG_DELTA_ENTRIES}
 
+# A catalog entry's request field: absent for the codes array, or the bit codes
+# array, which answers for single bits that the codes array doesn't know
+REQUEST_FIELD = "request_field"
+REQUEST_FIELD_BIT_CODES = "bitCodes"
+
 # The roles the client sends or reads on every device, so each needs a code
 REQUIRED_ROLES = (
     CONFIG_SET_POWER,
@@ -125,15 +130,34 @@ class DeviceProfile:
 
     @property
     def poll_codes(self) -> list[str]:
-        """The codes to request on each fetch: "Mode", then every catalog key.
+        """The codes to request on each fetch in the codes array: "Mode", then
+        every catalog key but the bit codes.
 
         "Mode" leads even where the catalog lists it, and even for Hitemp,
         whose mode role is mode_real.
         """
         codes = [POLL_CODE_MODE]
-        codes.extend(parameter.get("key") for parameter in self._parameters)
+        codes.extend(
+            parameter["key"]
+            for parameter in self._parameters
+            if not _is_bit_code(parameter)
+        )
 
         return codes
+
+    @property
+    def bit_codes(self) -> list[str]:
+        """The catalog keys to request in the bit codes array, in catalog order.
+
+        Each names a single bit, which answers only through that array.
+        """
+        bit_codes = [
+            parameter["key"]
+            for parameter in self._parameters
+            if _is_bit_code(parameter)
+        ]
+
+        return bit_codes
 
     @property
     def semantic_codes(self) -> dict[str, str]:
@@ -596,12 +620,24 @@ def _check_inherits(
 
 
 def _check_entries(file_name: str, entries: list):
-    """Raises unless every catalog entry is an object with a string key."""
+    """Raises unless every catalog entry is an object with a string key, and
+    names a known request field if it names one."""
     for entry in entries:
         if not isinstance(entry, dict) or not isinstance(entry.get("key"), str):
             raise InvalidProfileError(
                 f"{file_name}: every entry must be an object with a key"
             )
+
+        if REQUEST_FIELD in entry and not _is_bit_code(entry):
+            raise InvalidProfileError(
+                f'{file_name}: {entry["key"]}\'s "{REQUEST_FIELD}" must be '
+                f'"{REQUEST_FIELD_BIT_CODES}" or absent'
+            )
+
+
+def _is_bit_code(entry: dict) -> bool:
+    """Whether the catalog entry is requested in the bit codes array."""
+    return entry.get(REQUEST_FIELD) == REQUEST_FIELD_BIT_CODES
 
 
 def _is_list_of_strings(value) -> bool:

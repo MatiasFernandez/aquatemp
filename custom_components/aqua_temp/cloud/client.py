@@ -532,6 +532,7 @@ class AquaTempAPI:
         data_endpoint = self._api_profile.data_endpoint
         param_device_code = self._api_profile.get(APIParam.DeviceCode)
         param_data_codes = self._api_profile.get(APIParam.DataCodes)
+        param_bit_codes = self._api_profile.get(APIParam.BitCodes)
         param_object_result = self._api_profile.get(APIParam.ObjectResult)
         param_error_msg = self._api_profile.get(APIParam.ErrorMessage)
         param_error_code = self._api_profile.get(APIParam.ErrorCode)
@@ -541,13 +542,24 @@ class AquaTempAPI:
             param_data_codes: codes,
         }
 
+        # Only on an API type with a field for them. They are answered in the
+        # same list as the codes, so they are read the same way
+        bit_codes = [
+            code for code in device_profile.bit_codes if code not in unknown_codes
+        ]
+
+        if param_bit_codes is not None and bit_codes:
+            data[param_bit_codes] = bit_codes
+
         data_response = await self._post_request(data_endpoint, data)
         error_msg = data_response.get(param_error_msg)
 
         object_result_items = data_response.get(param_object_result, [])
 
         if error_msg == "Success":
-            self._record_unknown_codes(device_code, object_result_items, semantic_codes)
+            self._record_unknown_codes(
+                device_code, object_result_items, codes, semantic_codes
+            )
 
             if codes and not object_result_items:
                 self._warn_empty_read(device_code, data_endpoint, param_data_codes)
@@ -580,6 +592,7 @@ class AquaTempAPI:
         self,
         device_code: str,
         object_result_items: list,
+        requested_codes: list[str],
         semantic_codes: dict[str, str],
     ):
         """Note the codes the device doesn't know, once, from its first answer.
@@ -601,9 +614,14 @@ class AquaTempAPI:
             item["code"] for item in coded_items if _is_answered_unknown(item)
         )
 
-        # Every code unknown looks like a backend hiccup rather than codes
-        # this device lacks
-        if len(unknown_codes) == len({item["code"] for item in coded_items}):
+        # Every plain code unknown looks like a backend hiccup rather than
+        # codes this device lacks. The bit codes don't count: they answer
+        # without a type, so a known one would hide the hiccup. In that case
+        # nothing is recorded, bit codes included, as an answer that can't be
+        # trusted for the codes isn't trusted for them either
+        plain_items = [item for item in coded_items if item["code"] in requested_codes]
+
+        if plain_items and all(_is_answered_unknown(item) for item in plain_items):
             _LOGGER.debug(
                 f"Device {device_code} answered every code as unknown, skipping none"
             )
@@ -1088,6 +1106,18 @@ class AquaTempAPI:
 
         return unknown_codes
 
+    def get_unread_codes(self, device_code: str) -> frozenset[str]:
+        """Codes of the device's catalog the client doesn't read: those the
+        device doesn't know, and its bit codes on an API type without a field
+        to request them."""
+        unread_codes = self.get_unknown_codes(device_code)
+
+        if self._api_profile.get(APIParam.BitCodes) is None:
+            bit_codes = self._get_device_profile(device_code).bit_codes
+            unread_codes |= frozenset(bit_codes)
+
+        return unread_codes
+
     def _set_device_profile(self, device_code: str, product_id: str):
         device_profile = self._device_profiles.for_product(product_id)
 
@@ -1100,6 +1130,15 @@ class AquaTempAPI:
             f"Mapping: {' → '.join(device_profile.mapping_chain)}, "
             f"Catalog: {' → '.join(device_profile.catalog_chain)}"
         )
+
+        if (
+            device_profile.bit_codes
+            and self._api_profile.get(APIParam.BitCodes) is None
+        ):
+            _LOGGER.debug(
+                f"Device {device_code}: this API type has no field to request bit "
+                f"codes, so they are not read: {sorted(device_profile.bit_codes)}"
+            )
 
     def _get_device_profile(self, device_code: str) -> DeviceProfile:
         device_profile = self._device_profiles_by_code.get(device_code)

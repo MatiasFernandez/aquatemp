@@ -55,6 +55,7 @@ def resolve_with_profiles(device_profiles: DeviceProfiles, product_id: str) -> d
             for mode in profile.hvac_modes
         },
         "poll_codes": profile.poll_codes,
+        "bit_codes": profile.bit_codes,
         "semantic_codes": profile.semantic_codes,
     }
 
@@ -65,20 +66,32 @@ def read_catalog(catalog_id: str) -> list | dict:
     return json.loads(catalog.read_text(encoding="utf-8"))
 
 
-def catalog_keys(catalog_id: str) -> list[str]:
-    """The keys of a catalog file, read from the file itself. A delta on default
-    keeps default's keys but those it removes, then adds the keys it brings."""
+def catalog_entries(catalog_id: str) -> list[dict]:
+    """The entries of a catalog file, read from the file itself. A delta keeps
+    the entries of the level it inherits but those it removes, replacing those
+    it brings again in place, then adds the others it brings."""
     catalog = read_catalog(catalog_id)
 
     if isinstance(catalog, list):
-        return [item["key"] for item in catalog]
+        return catalog
 
-    inherited = catalog_keys(catalog["inherits"])
+    inherited = catalog_entries(catalog["inherits"])
+    inherited_keys = {item["key"] for item in inherited}
     removed = set(catalog.get("remove", []))
-    added = [item["key"] for item in catalog.get("entries", [])]
+    added = {item["key"]: item for item in catalog.get("entries", [])}
 
-    return [key for key in inherited if key not in removed] + [
-        key for key in added if key not in inherited
+    return [
+        added.get(item["key"], item) for item in inherited if item["key"] not in removed
+    ] + [item for key, item in added.items() if key not in inherited_keys]
+
+
+def polled_keys(catalog_id: str, bit_codes: bool) -> list[str]:
+    """The catalog's keys requested in the bit codes array, or those that
+    aren't."""
+    return [
+        item["key"]
+        for item in catalog_entries(catalog_id)
+        if (item.get("request_field") == "bitCodes") == bit_codes
     ]
 
 
@@ -148,6 +161,8 @@ SEMANTIC_CODES = {
     HITEMP: {},
     AQUA_TEMP: {},
 }
+# The class adds bit codes only, which have no semantic code
+SEMANTIC_CODES["pool_heat_pump"] = SEMANTIC_CODES["default"]
 
 
 @pytest.mark.parametrize(
@@ -159,18 +174,25 @@ SEMANTIC_CODES = {
             AQUA_TEMP,
             "pool_heat_pump",
             (AQUA_TEMP,),
-            ("default", AQUA_TEMP),
+            ("default", "pool_heat_pump", AQUA_TEMP),
             AQUA_TEMP_MAPPING,
         ),
         (UNKNOWN, None, ("default",), ("default",), DEFAULT_MAPPING),
-        (PEISA, "pool_heat_pump", ("default",), ("default",), DEFAULT_MAPPING),
+        (
+            PEISA,
+            "pool_heat_pump",
+            ("default",),
+            ("default", "pool_heat_pump"),
+            DEFAULT_MAPPING,
+        ),
     ],
     ids=["default", "hitemp", "aqua_temp", "unknown", "peisa"],
 )
 def test_product_resolves_to_its_profile(
     resolve, product_id, product_class, mapping_chain, catalog_chain, mapping
 ):
-    # No class file ships, so the class adds nothing to either chain
+    # The class ships a catalog but no mapping, so it is only in the catalog
+    # chain
     profile = resolve(product_id)
 
     assert profile == {
@@ -180,6 +202,7 @@ def test_product_resolves_to_its_profile(
         **mapping,
         # Possible bug: "Mode" leads even where the catalog lists it, and
         # even for Hitemp, whose mode role is mode_real
-        "poll_codes": ["Mode", *catalog_keys(catalog_chain[-1])],
+        "poll_codes": ["Mode", *polled_keys(catalog_chain[-1], bit_codes=False)],
+        "bit_codes": polled_keys(catalog_chain[-1], bit_codes=True),
         "semantic_codes": SEMANTIC_CODES[catalog_chain[-1]],
     }

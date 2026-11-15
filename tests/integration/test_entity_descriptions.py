@@ -110,3 +110,55 @@ def test_translation_key_names_the_level_defining_the_entry():
         "T02": f"{member}_t02",
         "Set/Temp": f"{member}_settemp",
     }
+
+
+def catalog_descriptions(catalog: list[dict]) -> dict:
+    """The descriptions a default catalog of these entries sets up, by key."""
+    mapping = json.loads((PROFILES / "mapping.default.json").read_text())
+    profiles = DeviceProfiles({"default": mapping}, {"default": catalog})
+    keys = {entry["key"] for entry in catalog}
+
+    return {
+        description.key: description
+        for description in build_entity_descriptions(profiles.for_product("default"))
+        if description.key in keys
+    }
+
+
+def test_catalog_entry_can_start_its_entity_disabled():
+    descriptions = catalog_descriptions(
+        [
+            {"key": "T01", "platform": "sensor"},
+            {"key": "T02", "platform": "sensor", "enabled_default": False},
+            {"key": "S01", "platform": "binary_sensor"},
+            {"key": "S02", "platform": "binary_sensor", "enabled_default": False},
+        ]
+    )
+
+    enabled = {
+        key: description.entity_registry_enabled_default
+        for key, description in descriptions.items()
+    }
+
+    assert enabled == {"T01": True, "T02": False, "S01": True, "S02": False}
+
+
+def test_binary_sensor_takes_its_values_from_the_catalog():
+    descriptions = catalog_descriptions(
+        [
+            {"key": "S01", "platform": "binary_sensor", "on_value": "1"},
+            {
+                "key": "S02",
+                "platform": "binary_sensor",
+                "on_value": "0",
+                "off_value": "1",
+            },
+        ]
+    )
+
+    values = {
+        key: (description.on_value, description.off_value)
+        for key, description in descriptions.items()
+    }
+
+    assert values == {"S01": ("1", None), "S02": ("0", "1")}

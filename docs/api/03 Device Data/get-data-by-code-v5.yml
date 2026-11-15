@@ -24,7 +24,15 @@ settings:
 
 docs: |-
   The versioned variant of Get Data By Code, with a second array for single
-  bits. The integration doesn't call it.
+  bits.
+
+  **From the integration.** Aqua Temp accounts read here; the other API
+  types read Get Data By Code. Every poll sends the codes of the device's
+  profile in `codes`, and the catalog entries marked `"request_field":
+  "bitCodes"` in `bitCodes`, leaving out of each the codes an earlier answer
+  marked as unknown. `bitCodes` is left out when the profile has none to
+  ask for. Codes and bits come back in the same `objectResult` list and are
+  read the same way.
 
   **Probed (2026-09).**
 

@@ -26,9 +26,13 @@ docs: |-
   `protocol_codes` environment variable to change what you ask for.
   `protocalCodes` is the API's own spelling.
 
-  **From the integration.** Every poll sends the codes of the device's
-  profile in one request, leaving out the codes an earlier answer marked as
-  unknown. `objectResult` is a list of `{code, value, ...}`.
+  **From the integration.** Hi Temp accounts and old Aqua Temp accounts
+  read here; Aqua Temp accounts read Get Data By Code (v5). Every poll sends
+  the codes of the device's profile in one request, leaving out the codes an
+  earlier answer marked as unknown. Catalog entries marked
+  `"request_field": "bitCodes"` are left out of the request, as this endpoint
+  has no such array, and get no entity here. `objectResult` is a list of
+  `{code, value, ...}`.
 
   **Probed (2026-09 to 2026-10).**
 

@@ -1590,6 +1590,96 @@
       "rangeEnd": "",
       "tmJson": null,
       "dataTypeAi": "num"
+    },
+    {
+      "code": "Sys1HighPressureSwitch",
+      "value": "0",
+      "dataType": null,
+      "rangeStart": "0",
+      "rangeEnd": "1",
+      "tmJson": null,
+      "dataTypeAi": null
+    },
+    {
+      "code": "Sys1LowPressureSwitch",
+      "value": "0",
+      "dataType": null,
+      "rangeStart": "0",
+      "rangeEnd": "1",
+      "tmJson": null,
+      "dataTypeAi": null
+    },
+    {
+      "code": "WaterFlowSwitch",
+      "value": "1",
+      "dataType": null,
+      "rangeStart": "0",
+      "rangeEnd": "1",
+      "tmJson": null,
+      "dataTypeAi": null
+    },
+    {
+      "code": "EmergencySwitch",
+      "value": "0",
+      "dataType": null,
+      "rangeStart": "0",
+      "rangeEnd": "1",
+      "tmJson": null,
+      "dataTypeAi": null
+    },
+    {
+      "code": "ModeSwitch",
+      "value": "0",
+      "dataType": null,
+      "rangeStart": "0",
+      "rangeEnd": "1",
+      "tmJson": null,
+      "dataTypeAi": null
+    },
+    {
+      "code": "Master/SlaveSwitch",
+      "value": "0",
+      "dataType": null,
+      "rangeStart": "0",
+      "rangeEnd": "1",
+      "tmJson": null,
+      "dataTypeAi": null
+    },
+    {
+      "code": "Sys1CompState",
+      "value": "0",
+      "dataType": null,
+      "rangeStart": "0",
+      "rangeEnd": "1",
+      "tmJson": null,
+      "dataTypeAi": null
+    },
+    {
+      "code": "InletWaterTempSensorFault",
+      "value": "0",
+      "dataType": null,
+      "rangeStart": "0",
+      "rangeEnd": "1",
+      "tmJson": null,
+      "dataTypeAi": null
+    },
+    {
+      "code": "OutletWaterTempSensorFault",
+      "value": "0",
+      "dataType": null,
+      "rangeStart": "0",
+      "rangeEnd": "1",
+      "tmJson": null,
+      "dataTypeAi": null
+    },
+    {
+      "code": "ATSensorFault",
+      "value": "0",
+      "dataType": null,
+      "rangeStart": "0",
+      "rangeEnd": "1",
+      "tmJson": null,
+      "dataTypeAi": null
     }
   ],
   "isReusltSuc": true
