@@ -19,7 +19,7 @@ dependencies = [
 dev = [
     # Unreleased fix for aiohttp 3.14 (pnuckowski/aioresponses#288); back to a release once it ships
     "aioresponses @ git+https://github.com/agners/aioresponses@8f40e0db2eed16621607ecfc857168240c795755",
-    "mutmut>=3.8.0",
+    "mutmut>=3.8.1",
     "pre-commit>=4",
     # Pins homeassistant, pytest, pytest-asyncio and pytest-cov exactly: the latest
     # stable Home Assistant, which Dependabot moves. The oldest supported one is
