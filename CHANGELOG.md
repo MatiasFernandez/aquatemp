@@ -18,6 +18,9 @@ predate this fork and keep their original format.
 
 - Removed the deprecated Home Assistant constant `CONN_CLASS_LOCAL_POLL`
 - A command sent to a device before its first update, as when an earlier device's update fails after a reload, uses the codes of the device's own product instead of the default ones. A Hitemp unit, for one, was sent the default power code
+- Setting the temperature no longer writes to a code that doesn't read as a setpoint. On some heat pumps the code the profile maps as the mode's target holds another setting: on a Planet Pool TEP0002, heat's R02 is the hysteresis, and writing a temperature to it stopped the compressor starting ([radical-squared/aquatemp#122](https://github.com/radical-squared/aquatemp/issues/122), [#90](https://github.com/radical-squared/aquatemp/issues/90)). The temperature isn't sent, and the action fails with an error saying why, when the mode's limits are the wrong way round, when the target's current value is outside them, or when the new value is outside them
+- Changing the mode no longer sends the current target temperature with it when that target is unknown, which was sent as an empty value, or doesn't read as a setpoint as above; only the mode is sent
+- The thermostat uses Home Assistant's default range, 7 to 35 °C, when the device reports no limits or limits the wrong way round. An unknown limit made every set temperature action fail ([radical-squared/aquatemp#94](https://github.com/radical-squared/aquatemp/issues/94))
 
 ## [3.5.0] - 2026-11-04
 

@@ -46,6 +46,8 @@ class AquaTempClimateEntity(BaseEntity, ClimateEntity, ABC):
         """Initialize the climate entity."""
         super().__init__(entity_description, coordinator, device_code)
 
+        self._warned_range = False
+
         self._enable_turn_on_off_backwards_compatibility = False
 
         self._attr_supported_features = (
@@ -98,8 +100,30 @@ class AquaTempClimateEntity(BaseEntity, ClimateEntity, ABC):
         if not is_power_on:
             hvac_mode = HVACMode.OFF
 
-        self._attr_min_temp = minimum_temperature
-        self._attr_max_temp = maximum_temperature
+        if (
+            minimum_temperature is None
+            or maximum_temperature is None
+            or minimum_temperature > maximum_temperature
+        ):
+            # Home Assistant's default range instead: a None limit fails every
+            # set_temperature call, and an inverted one leaves no valid value
+            for attribute in ("_attr_min_temp", "_attr_max_temp"):
+                if hasattr(self, attribute):
+                    delattr(self, attribute)
+
+            if not self._warned_range:
+                self._warned_range = True
+
+                _LOGGER.warning(
+                    f"Device {device_code} reports no usable target temperature "
+                    f"range (minimum {minimum_temperature}, maximum "
+                    f"{maximum_temperature}), using Home Assistant's default range"
+                )
+
+        else:
+            self._attr_min_temp = minimum_temperature
+            self._attr_max_temp = maximum_temperature
+            self._warned_range = False
         self._attr_hvac_mode = hvac_mode
         self._attr_hvac_action = hvac_action
         self._attr_fan_mode = fan_mode
@@ -110,7 +134,7 @@ class AquaTempClimateEntity(BaseEntity, ClimateEntity, ABC):
         _LOGGER.debug(f"_attr_hvac_action: {self._attr_hvac_action}")
         _LOGGER.debug(f"_attr_target_temperature: {self._attr_target_temperature}")
         _LOGGER.debug(f"_attr_fan_mode: {self._attr_fan_mode}")
-        _LOGGER.debug(f"_attr_min_temp: {self._attr_min_temp}")
-        _LOGGER.debug(f"_attr_max_temp: {self._attr_max_temp}")
+        _LOGGER.debug(f"min_temp: {self.min_temp}")
+        _LOGGER.debug(f"max_temp: {self.max_temp}")
 
         self.async_write_ha_state()

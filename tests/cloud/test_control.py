@@ -15,6 +15,7 @@ from custom_components.aqua_temp.cloud.exceptions import (
     DeviceOfflineError,
     InvalidTokenError,
     OperationFailedException,
+    SetpointNotCheckedError,
 )
 
 from .mock_cloud import DATA, DATA_IDLE, DEVICE_CODE, cloud_with, data_with
@@ -106,6 +107,79 @@ async def test_set_temperature_writes_mode_target_and_set_temp(heat_pump, wire):
     # Possible bug: the mode's target code and Set_Temp, written together
     assert [endpoint for endpoint, _ in wire] == [CONTROL]
     assert_sent(wire[0][1], control(("R02", 26.5), ("Set_Temp", 26.5)))
+
+
+def heat_setpoint(target: str, minimum: str, maximum: str, **values) -> dict:
+    """The recording powered on in heat, with heat's target and limits replaced
+    under both the profile's codes and the semantic codes that win over them."""
+    return data_with(
+        Power="1",
+        R02=target,
+        SetHeatTargetTemp=target,
+        R10=minimum,
+        SetHeatMinTargetTemp=minimum,
+        R11=maximum,
+        SetHeatMaxTargetTemp=maximum,
+        **values,
+    )
+
+
+# A Planet Pool TEP0002 answers heat's codes with the hysteresis in R02 and its
+# limits the wrong way round (radical-squared/aquatemp#122): a write to R02
+# there stops the compressor starting
+NOT_A_SETPOINT = {
+    "range inverted": heat_setpoint("0.5", "35.0", "27.0"),
+    "target outside its range": heat_setpoint("0.5", "15.0", "35.0"),
+}
+# The current target can't go along with a mode change when there is none
+NO_TARGET_TO_SEND = NOT_A_SETPOINT | {
+    "target unknown": heat_setpoint("", "15.0", "35.0"),
+}
+
+
+@pytest.mark.parametrize(
+    "cloud_responses",
+    [RESPONSES | {DATA: data} for data in NOT_A_SETPOINT.values()],
+    ids=list(NOT_A_SETPOINT),
+)
+async def test_set_temperature_is_not_sent_to_a_code_that_does_not_read_as_a_setpoint(
+    heat_pump, wire
+):
+    with pytest.raises(SetpointNotCheckedError):
+        await heat_pump.set_temperature(DEVICE_CODE, 30.5)
+
+    assert wire == []
+
+
+@cloud_with(RESPONSES | {DATA: heat_setpoint("28.0", "15.0", "35.0")})
+async def test_set_temperature_outside_the_range_is_not_sent(heat_pump, wire):
+    with pytest.raises(SetpointNotCheckedError):
+        await heat_pump.set_temperature(DEVICE_CODE, 40.0)
+
+    assert wire == []
+
+
+@cloud_with(RESPONSES | {DATA: heat_setpoint("28.0", "", "")})
+async def test_set_temperature_is_sent_when_the_device_reports_no_limits(
+    heat_pump, wire
+):
+    await heat_pump.set_temperature(DEVICE_CODE, 30.5)
+
+    assert_sent(wire[0][1], control(("R02", 30.5), ("Set_Temp", 30.5)))
+
+
+@pytest.mark.parametrize(
+    "cloud_responses",
+    [RESPONSES | {DATA: data} for data in NO_TARGET_TO_SEND.values()],
+    ids=list(NO_TARGET_TO_SEND),
+)
+async def test_hvac_mode_change_sends_only_the_mode_when_the_target_does_not_read_as_a_setpoint(
+    heat_pump, wire
+):
+    await heat_pump.set_hvac_mode(DEVICE_CODE, "cool")
+
+    assert [endpoint for endpoint, _ in wire] == [CONTROL]
+    assert_sent(wire[0][1], control(("Mode", "0")))
 
 
 @pytest.mark.parametrize(("fan_mode", "value"), [("auto", "0"), ("low", "1")])

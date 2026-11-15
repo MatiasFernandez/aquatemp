@@ -15,6 +15,7 @@ from ..cloud.exceptions import (
     DeviceNotRespondingError,
     DeviceOfflineError,
     LoginError,
+    SetpointNotCheckedError,
 )
 from ..cloud.modes import FanMode, Mode
 from ..common.consts import (
@@ -210,6 +211,13 @@ class AquaTempCoordinator(DataUpdateCoordinator):
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
                 translation_key="device_not_responding",
+            ) from ex
+
+        except SetpointNotCheckedError as ex:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="setpoint_not_checked",
+                translation_placeholders={"reason": ex.reason},
             ) from ex
 
         finally:

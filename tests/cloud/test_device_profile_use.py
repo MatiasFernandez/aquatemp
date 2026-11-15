@@ -12,6 +12,7 @@ from pathlib import Path
 import pytest
 
 from custom_components.aqua_temp.cloud.client import DeviceMeta
+from custom_components.aqua_temp.cloud.exceptions import SetpointNotCheckedError
 
 from .mock_cloud import DATA, DATA_IDLE, DEVICE_CODE, cloud_with, data_with
 
@@ -148,6 +149,25 @@ async def test_device_meta_comes_from_its_device_list_entry(heat_pumps):
     )
 
 
+# Hitemp's profile maps heat's limits to T02 and T03, water temperatures (12.5
+# and 14.0 recorded), so the recorded R01, 27.0, reads as outside them and
+# isn't written. These limits bracket it, to see the codes a write goes to
+HITEMP_LIMITS_AROUND_R01 = RESPONSES | {
+    DATA: with_hitemp_codes(data_with(T10="21.5", T02="20.0", T03="30.0"))
+}
+
+
+async def test_set_temperature_is_refused_against_the_hitemp_water_temperatures(
+    heat_pumps, wire
+):
+    # Possible bug: the limits are the water temperatures, not R01's range
+    with pytest.raises(SetpointNotCheckedError):
+        await heat_pumps.set_temperature(HITEMP_DEVICE_CODE, 26.5)
+
+    assert wire == []
+
+
+@cloud_with(HITEMP_LIMITS_AROUND_R01)
 async def test_set_temperature_writes_the_device_codes(heat_pumps, wire):
     await heat_pumps.set_temperature(HITEMP_DEVICE_CODE, 26.5)
 
@@ -174,6 +194,7 @@ async def test_set_temperature_writes_the_device_codes(heat_pumps, wire):
     ]
 
 
+@cloud_with(HITEMP_LIMITS_AROUND_R01)
 async def test_set_hvac_mode_writes_the_device_codes(heat_pumps, wire):
     await heat_pumps.set_hvac_mode(HITEMP_DEVICE_CODE, "heat")
 

@@ -67,5 +67,25 @@ class DeviceOfflineError(Exception):
         return result
 
 
+class SetpointNotCheckedError(Exception):
+    """The temperature wasn't sent: the code the profile maps as the mode's
+    target doesn't read as a setpoint within its limits.
+
+    On some products a mapped target code holds another setting; heat's R02
+    is the hysteresis on a Planet Pool TEP0002, and writing a temperature to
+    it stops the compressor starting.
+    """
+
+    reason: str
+
+    def __init__(self, reason: str):
+        self.reason = reason
+
+    def __str__(self):
+        result = f"The temperature wasn't sent: {self.reason}"
+
+        return result
+
+
 class InvalidProfileError(Exception):
     """A device profile file, or the class table, breaks the layering rules."""

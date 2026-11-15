@@ -30,4 +30,7 @@ docs: |-
   **From the integration.** `"0"` cool, `"1"` heat, `"2"` auto. There is no
   "off" value: off is Set Power `"0"`. The integration sends `Set_Temp` with
   the current target first, then `Mode`, in one `param` list, and leaves out
-  the `Mode` entry when the mapping gives both the same code.
+  the `Mode` entry when the mapping gives both the same code. The
+  `Set_Temp` entry is left out, and only `Mode` sent, when the current
+  target is unknown or doesn't read as a setpoint (see Set Target
+  Temperature).

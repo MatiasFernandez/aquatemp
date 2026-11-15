@@ -973,6 +973,9 @@
     },
     "device_offline": {
       "message": "The heat pump is offline, so it can't be controlled."
+    },
+    "setpoint_not_checked": {
+      "message": "The temperature wasn't changed: {reason}. On some heat pumps the code mapped as the target holds another setting, such as the hysteresis, so it isn't written while its values look wrong."
     }
   }
 }

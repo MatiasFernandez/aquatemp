@@ -543,11 +543,40 @@ async def test_climate_reports_temperatures_while_powered_off(hass, entry):
 async def test_climate_temperatures_the_device_does_not_know_are_empty(hass, entry):
     state = hass.states.get(climate_entity_id(hass))
 
+    # Unknown limits fall back to Home Assistant's defaults, 7 and 35 °C: a
+    # None limit fails every set_temperature call (radical-squared/aquatemp#94)
     assert temperatures(state) == {
         "current_temperature": None,
         "temperature": None,
-        "min_temp": None,
-        "max_temp": None,
+        "min_temp": 7.0,
+        "max_temp": 35.0,
+    }
+
+
+# A Planet Pool TEP0002's heat limits, R10 35.0 above R11 27.0, with the
+# hysteresis in R02 (radical-squared/aquatemp#122)
+INVERTED_HEAT_RANGE = RESPONSES | {
+    DATA: data_with(
+        Power="1",
+        R02="0.5",
+        SetHeatTargetTemp="0.5",
+        R10="35.0",
+        SetHeatMinTargetTemp="35.0",
+        R11="27.0",
+        SetHeatMaxTargetTemp="27.0",
+    )
+}
+
+
+@cloud_with(INVERTED_HEAT_RANGE)
+async def test_climate_range_falls_back_to_the_defaults_when_inverted(hass, entry):
+    state = hass.states.get(climate_entity_id(hass))
+
+    assert temperatures(state) == {
+        "current_temperature": 12.5,
+        "temperature": 0.5,
+        "min_temp": 7.0,
+        "max_temp": 35.0,
     }
 
 
@@ -736,6 +765,19 @@ async def test_control_the_device_did_not_acknowledge_fails_with_a_clear_error(
         await set_temperature(hass, 26.5)
 
     assert failure.value.translation_key == "device_not_responding"
+
+
+@cloud_with(INVERTED_HEAT_RANGE)
+async def test_setpoint_that_does_not_read_as_one_is_not_written(hass, entry, wire):
+    wire.clear()
+
+    with pytest.raises(HomeAssistantError) as failure:
+        await set_temperature(hass, 30.5)
+
+    assert (failure.value.translation_key, CONTROL in [e for e, _ in wire]) == (
+        "setpoint_not_checked",
+        False,
+    )
 
 
 @cloud_with(POWERED_ON | {CONTROL: "synthetic/error_generic"})

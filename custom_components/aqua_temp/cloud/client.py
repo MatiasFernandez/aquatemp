@@ -48,6 +48,7 @@ from .exceptions import (
     InvalidTokenError,
     LoginError,
     OperationFailedException,
+    SetpointNotCheckedError,
 )
 from .modes import FanMode, Mode
 
@@ -322,7 +323,16 @@ class AquaTempAPI:
             await self._set_hvac_mode(device_code, hvac_mode)
 
     async def set_temperature(self, device_code: str, temperature: float):
-        """Set the target temperature of the device's current mode."""
+        """Set the target temperature of the device's current mode.
+
+        Raises SetpointNotCheckedError, sending nothing, unless the mode's
+        target code reads as a setpoint and temperature is within its limits.
+        """
+        reason = self._setpoint_problem(device_code, temperature)
+
+        if reason is not None:
+            raise SetpointNotCheckedError(reason)
+
         hvac_mode = self.get_device_hvac_mode(device_code)
         target_temperature_pc = self._get_target_temperature_protocol_code(
             device_code, hvac_mode
@@ -397,15 +407,27 @@ class AquaTempAPI:
         param_device_code = self._api_profile.get(APIParam.DeviceCode)
         param_protocol_code = self._api_profile.get(APIParam.ProtocolCode)
 
-        set_target_temp = {
-            param_device_code: device_code,
-            param_protocol_code: set_temp_pc_key,
-            DEVICE_CONTROL_VALUE: target_temperature,
-        }
+        # The current target goes along only when it reads as a setpoint: on
+        # some products the mapped target code holds another setting, and an
+        # unknown one would be sent as None
+        reason = self._setpoint_problem(device_code, target_temperature)
 
-        control_params.append(set_target_temp)
+        if reason is None:
+            set_target_temp = {
+                param_device_code: device_code,
+                param_protocol_code: set_temp_pc_key,
+                DEVICE_CONTROL_VALUE: target_temperature,
+            }
 
-        if mode_pc_key != set_temp_pc_key:
+            control_params.append(set_target_temp)
+
+        else:
+            _LOGGER.warning(
+                f"Setting {hvac_mode} on device {device_code} without its "
+                f"target temperature: {reason}"
+            )
+
+        if mode_pc_key != set_temp_pc_key or not control_params:
             set_mode = {
                 param_device_code: device_code,
                 param_protocol_code: mode_pc_key,
@@ -1184,6 +1206,48 @@ class AquaTempAPI:
             device_profile = self._device_profiles.for_product(product_id)
 
         return device_profile
+
+    def _setpoint_problem(
+        self, device_code: str, temperature: float | None
+    ) -> str | None:
+        """Why temperature mustn't be written as the current mode's target,
+        or None when it may.
+
+        A profile maps each mode's target and limits to codes, and on some
+        products a mapped target code holds another setting: heat's R02 is the
+        hysteresis on a Planet Pool TEP0002, whose R10/R11 read 35/27. A write
+        is refused on evidence of that: limits the wrong way round, or a
+        current value outside them. Limits the device doesn't report are no
+        such evidence (Hitemp's profile maps none it polls), so they only rule
+        out a None temperature.
+        """
+        hvac_mode = self.get_device_hvac_mode(device_code)
+        code = self._get_target_temperature_protocol_code(device_code, hvac_mode)
+        current = self.get_device_target_temperature(device_code)
+        minimum = self.get_device_minimum_temperature(device_code)
+        maximum = self.get_device_maximum_temperature(device_code)
+
+        def outside(value: float) -> bool:
+            return (minimum is not None and value < minimum) or (
+                maximum is not None and value > maximum
+            )
+
+        if code is None:
+            return f"{hvac_mode} has no target code"
+
+        if minimum is not None and maximum is not None and minimum > maximum:
+            return f"the minimum of {code}, {minimum}, is above its maximum, {maximum}"
+
+        if current is not None and outside(current):
+            return f"{code} holds {current}, outside its limits {minimum}-{maximum}"
+
+        if temperature is None:
+            return f"{code} has no value to send"
+
+        if outside(temperature):
+            return f"{temperature} is outside the limits of {code}, {minimum}-{maximum}"
+
+        return None
 
     def _get_target_temperature_protocol_code(self, device_code: str, hvac_mode: Mode):
         target_temperature_pc = self._get_device_profile(
