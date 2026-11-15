@@ -13,6 +13,7 @@ predate this fork and keep their original format.
 - The climate entity of an Aqua Temp pool heat pump reports what it is doing (heating, cooling, idle or off) from whether the compressor runs, so the card and history no longer show it heating while the compressor is stopped. In auto mode it follows the official app's rule: heating while the auto target temperature is above the inlet water temperature, cooling otherwise. Not for Hitemp and old Aqua Temp accounts, which can't read the compressor bit
 - The downloaded diagnostics show each device's profile: its product class and the profile files its mapping and parameter list come from. The log line binding a device to its profile names the same files
 - The downloaded diagnostics show the account's API type
+- A Compressor speed sensor: the compressor's output frequency as a percentage of the maximum it is set to reach while heating or while cooling. 0% while stopped; in auto mode it uses the heating or cooling maximum by whether the auto target temperature is above the inlet water temperature, as the official app does. Hitemp units don't get it, and neither does a unit that reads no maximum or whose compressor type reads 0, as in the official app for the latter; in a mode whose maximum is missing or 0 it is unknown while the compressor runs
 
 ### Fixed
 

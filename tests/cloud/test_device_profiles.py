@@ -23,6 +23,10 @@ ROLES = [
     "inlet_water_temperature",
     "outlet_water_temperature",
     "compressor",
+    "compressor_frequency",
+    "heating_max_frequency",
+    "cooling_max_frequency",
+    "compressor_type",
 ]
 MODE_CODES = ["target", "minimum", "maximum"]
 
@@ -106,6 +110,10 @@ DEFAULT_MAPPING = {
         "inlet_water_temperature": "T02",
         "outlet_water_temperature": "T03",
         "compressor": None,
+        "compressor_frequency": "O07",
+        "heating_max_frequency": "H08",
+        "cooling_max_frequency": "H09",
+        "compressor_type": "H12",
     },
     "hvac_modes": {"off": None, "cool": "0", "heat": "1", "auto": "2"},
     "hvac_modes_reverse": {None: "off", "0": "cool", "1": "heat", "2": "auto"},
@@ -129,6 +137,11 @@ HITEMP_MAPPING = {
         "inlet_water_temperature": None,
         "outlet_water_temperature": None,
         "compressor": None,
+        # Its O07 is the expansion valve's position, not a frequency
+        "compressor_frequency": None,
+        "heating_max_frequency": None,
+        "cooling_max_frequency": None,
+        "compressor_type": None,
     },
     "hvac_modes": {"off": None, "heat": "0"},
     "hvac_modes_reverse": {None: "off", "0": "heat"},

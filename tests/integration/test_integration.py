@@ -160,9 +160,12 @@ BIT_CODES = {
 }
 
 
-def expected_unique_ids(skipped: set[str] = frozenset()) -> set[str]:
+def expected_unique_ids(
+    skipped: set[str] = frozenset(), reads_a_maximum_frequency: bool = True
+) -> set[str]:
     """Built-in entities, the device catalog's sensors and binary sensors but
-    those for skipped codes, and Water ΔT."""
+    those for skipped codes, Water ΔT, and Compressor speed when the device
+    reads a maximum frequency."""
     catalog = device_catalog()
 
     entities = [
@@ -174,6 +177,10 @@ def expected_unique_ids(skipped: set[str] = frozenset()) -> set[str]:
         ("button", "refresh_data"),
         ("sensor", "water_delta_t"),
     ]
+
+    if reads_a_maximum_frequency:
+        entities.append(("sensor", "compressor_speed"))
+
     entities.extend(
         (item["platform"], item["key"])
         for item in catalog
@@ -248,8 +255,11 @@ async def test_device_gets_its_catalog_entities(hass, entry):
     }
 )
 async def test_api_type_without_bit_codes_skips_their_entities(hass, entry):
-    # The old Aqua Temp API type reads an endpoint without the bit codes array
-    assert entry_unique_ids(hass, entry) == expected_unique_ids(skipped=BIT_CODES)
+    # The old Aqua Temp API type reads an endpoint without the bit codes array.
+    # The synthetic response has no maximum frequency
+    assert entry_unique_ids(hass, entry) == expected_unique_ids(
+        skipped=BIT_CODES, reads_a_maximum_frequency=False
+    )
 
 
 async def test_codes_the_device_does_not_know_get_no_entity(hass, entry):
@@ -263,8 +273,11 @@ async def test_codes_the_device_does_not_know_get_no_entity(hass, entry):
 
 
 @cloud_with(RESPONSES | {DATA: data_untyped()})
-async def test_every_code_unknown_skips_no_entity(hass, entry):
-    assert entry_unique_ids(hass, entry) == expected_unique_ids()
+async def test_every_code_unknown_skips_no_catalog_entity(hass, entry):
+    # Compressor speed needs a maximum frequency the device reads
+    assert entry_unique_ids(hass, entry) == expected_unique_ids(
+        reads_a_maximum_frequency=False
+    )
 
 
 async def test_water_delta_t_is_created(hass, entry):
