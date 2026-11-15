@@ -5,6 +5,7 @@ Entities on the [pool heat pump products](README.md#which-page-applies-to-your-h
 | Entity                                                              | Topic                  | Confidence |
 | ------------------------------------------------------------------- | ---------------------- | ---------- |
 | [Ambient temperature sensor](#ambient-temperature-sensor)           | Faults and protections | Verified   |
+| [Climate entity](#climate-entity)                                   | Operation              | Verified   |
 | [Compressor](#compressor)                                           | Operation              | Verified   |
 | [External mode switch](#external-mode-switch)                       | Wired inputs           | Unknown    |
 | [External stop](#external-stop)                                     | Wired inputs           | Verified   |
@@ -16,6 +17,20 @@ Entities on the [pool heat pump products](README.md#which-page-applies-to-your-h
 | [Water flow](#water-flow)                                           | Operation              | Verified   |
 
 ## Operation
+
+### Climate entity
+
+Climate · enabled · **Verified**
+
+Home Assistant shows it under the device's name. It holds the target temperature, mode and fan mode. On Aqua Temp API type accounts it also populates `hvac_action` to show what the heat pump is doing, from the [Compressor](#compressor): heating or cooling while the compressor runs, idle while it is stopped, off while the heat pump is off. In auto mode it shows idle with the compressor stopped and nothing while it runs, since the cloud doesn't say whether it is heating or cooling. A defrost cycle shows as heating, or idle if the compressor stops.
+
+<details><summary>How we know</summary>
+
+What it is doing comes from the compressor bit, verified as described under [Compressor](#compressor), and the mode the heat pump is set to. The cloud reports no separate heating, cooling or defrost state.
+
+Code: the compressor role in the profile's mapping ([mapping.pool_heat_pump.json](../../custom_components/aqua_temp/cloud/profiles/mapping.pool_heat_pump.json)) names `Sys1CompState`; its catalog entry's on and off values read as running and stopped.
+
+</details>
 
 ### Compressor
 
