@@ -51,8 +51,8 @@
         "1245226668902080512"
       ],
       "mapping": {
-        "mode": "mode_real",
-        "power": "MO6",
+        "mode": "Mode",
+        "power": "Power",
         "temperature": "R01",
         "fan": "M17",
         "current_temperature": "T10",
@@ -66,8 +66,14 @@
           "heat": {
             "set": "0",
             "target": "R01",
-            "minimum": "T02",
-            "maximum": "T03"
+            "minimum": null,
+            "maximum": null
+          },
+          "auto": {
+            "set": "2",
+            "target": "R01",
+            "minimum": null,
+            "maximum": null
           }
         },
         "fan_modes": {

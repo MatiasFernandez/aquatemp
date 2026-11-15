@@ -12,9 +12,8 @@ from pathlib import Path
 import pytest
 
 from custom_components.aqua_temp.cloud.client import DeviceMeta
-from custom_components.aqua_temp.cloud.exceptions import SetpointNotCheckedError
 
-from .mock_cloud import DATA, DATA_IDLE, DEVICE_CODE, cloud_with, data_with
+from .mock_cloud import DATA, DEVICE_CODE, cloud_with, data_with
 
 # Literal on purpose: the expected values must not come from the config under test
 CONTROL = "app/device/control"
@@ -30,22 +29,29 @@ HITEMP_CATALOG = (
 
 
 def with_hitemp_codes(data: dict) -> dict:
-    """data plus the Hitemp mode, power and fan codes: powered on, heat, high.
+    """data plus the Hitemp fan code, high.
 
-    The cloud only returns these when asked, and the Hitemp catalog doesn't
-    ask for them; see test_hitemp_mode_is_never_polled.
+    The cloud only returns it when asked, and the Hitemp catalog doesn't ask
+    for it; see test_hitemp_fan_is_never_polled.
     """
-    data["objectResult"].extend(
-        {"code": code, "value": value}
-        for code, value in [("mode_real", "0"), ("MO6", "1"), ("M17", "2")]
-    )
+    data["objectResult"].append({"code": "M17", "value": "2"})
 
     return data
 
 
+def with_range(data: dict, code: str, start: str, end: str) -> dict:
+    """data with code's rangeStart and rangeEnd replaced."""
+    [item] = [item for item in data["objectResult"] if item["code"] == code]
+    item |= {"rangeStart": start, "rangeEnd": end}
+
+    return data
+
+
+# Powered on in Mode 0: cool on the default profile, and Intelligent, heat, on
+# the Hitemp one, whose Mode 1 isn't a mode (radical-squared/aquatemp#123, #127)
 RESPONSES = {
     SHARED_APPECT: "synthetic/device_list_shared",
-    DATA: with_hitemp_codes(data_with(T10="21.5")),
+    DATA: with_hitemp_codes(data_with(T10="21.5", Power="1", Mode="0")),
     CONTROL: "synthetic/control_success",
 }
 
@@ -82,25 +88,26 @@ async def test_each_device_reads_its_profile_codes(heat_pumps):
         device_code: state(heat_pumps, device_code)
         for device_code in (DEVICE_CODE, HITEMP_DEVICE_CODE)
     } == {
-        # Power 0, Mode 1, Manual-mute 0, T02 12.5, heat's R02, R10, R11
+        # Power 1, Mode 0, Manual-mute 0, T02 12.5, cool's R01, R08, R09
         DEVICE_CODE: {
-            "power": False,
-            "hvac_mode": "heat",
+            "power": True,
+            "hvac_mode": "cool",
             "fan_mode": "auto",
             "current": 12.5,
-            "target": 28.0,
-            "minimum": 15.0,
+            "target": 27.0,
+            "minimum": 8.0,
             "maximum": 35.0,
         },
-        # MO6 1, mode_real 0, M17 2, T10 21.5, heat's R01, T02, T03
+        # Power 1, Mode 0, M17 2, T10 21.5, heat's R01 and its own range,
+        # 8.00-35.00 recorded: the profile maps heat no limit codes
         HITEMP_DEVICE_CODE: {
             "power": True,
             "hvac_mode": "heat",
             "fan_mode": "high",
             "current": 21.5,
             "target": 27.0,
-            "minimum": 12.5,
-            "maximum": 14.0,
+            "minimum": 8.0,
+            "maximum": 35.0,
         },
     }
 
@@ -120,8 +127,7 @@ async def test_each_device_polls_its_catalog_codes(api, wire):
     assert hitemp_request["codes"] == ["Mode", *hitemp_codes]
 
 
-@cloud_with(RESPONSES | {DATA: DATA_IDLE})
-async def test_hitemp_mode_is_never_polled(api, wire):
+async def test_hitemp_fan_is_never_polled(api, wire):
     await api.update()
 
     [hitemp_request] = [
@@ -129,17 +135,26 @@ async def test_hitemp_mode_is_never_polled(api, wire):
         for endpoint, body in wire
         if endpoint == DATA and body["deviceCode"] == HITEMP_DEVICE_CODE
     ]
-    # Possible bug: mode_real, MO6 and M17 are not in the Hitemp catalog, so
-    # they are never requested. A missing mode matches off's null wire value
-    assert not {"mode_real", "MO6", "M17"} & set(hitemp_request["codes"])
+    # Possible bug: M17 is not in the Hitemp catalog, so it is never requested
+    assert "M17" not in hitemp_request["codes"]
+
+
+@cloud_with(
+    RESPONSES
+    | {DATA: with_range(data_with(Power="1", Mode="2", R01="55.0"), "R01", "38", "70")}
+)
+async def test_hitemp_eco_reads_as_auto_with_the_target_range(api):
+    await api.update()
+
+    # Mode 2 is Eco on an EvoHeat EVO270 (radical-squared/aquatemp#110, #123)
     assert state(api, HITEMP_DEVICE_CODE) == {
-        "power": False,
-        "hvac_mode": "off",
+        "power": True,
+        "hvac_mode": "auto",
         "fan_mode": None,
         "current": 0.0,
-        "target": None,
-        "minimum": None,
-        "maximum": None,
+        "target": 55.0,
+        "minimum": 38.0,
+        "maximum": 70.0,
     }
 
 
@@ -149,25 +164,6 @@ async def test_device_meta_comes_from_its_device_list_entry(heat_pumps):
     )
 
 
-# Hitemp's profile maps heat's limits to T02 and T03, water temperatures (12.5
-# and 14.0 recorded), so the recorded R01, 27.0, reads as outside them and
-# isn't written. These limits bracket it, to see the codes a write goes to
-HITEMP_LIMITS_AROUND_R01 = RESPONSES | {
-    DATA: with_hitemp_codes(data_with(T10="21.5", T02="20.0", T03="30.0"))
-}
-
-
-async def test_set_temperature_is_refused_against_the_hitemp_water_temperatures(
-    heat_pumps, wire
-):
-    # Possible bug: the limits are the water temperatures, not R01's range
-    with pytest.raises(SetpointNotCheckedError, match="R01 holds 27.0, outside"):
-        await heat_pumps.set_temperature(HITEMP_DEVICE_CODE, 26.5)
-
-    assert wire == []
-
-
-@cloud_with(HITEMP_LIMITS_AROUND_R01)
 async def test_set_temperature_writes_the_device_codes(heat_pumps, wire):
     await heat_pumps.set_temperature(HITEMP_DEVICE_CODE, 26.5)
 
@@ -194,7 +190,6 @@ async def test_set_temperature_writes_the_device_codes(heat_pumps, wire):
     ]
 
 
-@cloud_with(HITEMP_LIMITS_AROUND_R01)
 async def test_set_hvac_mode_writes_the_device_codes(heat_pumps, wire):
     await heat_pumps.set_hvac_mode(HITEMP_DEVICE_CODE, "heat")
 
@@ -210,7 +205,7 @@ async def test_set_hvac_mode_writes_the_device_codes(heat_pumps, wire):
                     },
                     {
                         "deviceCode": HITEMP_DEVICE_CODE,
-                        "protocolCode": "mode_real",
+                        "protocolCode": "Mode",
                         "value": "0",
                     },
                 ]
@@ -222,7 +217,8 @@ async def test_set_hvac_mode_writes_the_device_codes(heat_pumps, wire):
 async def test_hvac_off_powers_off_with_the_device_code(heat_pumps, wire):
     await heat_pumps.set_hvac_mode(HITEMP_DEVICE_CODE, "off")
 
-    # Possible bug: the profile's code is "MO6", sent lowercased
+    # Possible bug: the profile's code is "Power", sent lowercased; units on
+    # the Hitemp API answered to it (radical-squared/aquatemp#110)
     assert wire == [
         (
             CONTROL,
@@ -230,7 +226,7 @@ async def test_hvac_off_powers_off_with_the_device_code(heat_pumps, wire):
                 "param": [
                     {
                         "deviceCode": HITEMP_DEVICE_CODE,
-                        "protocolCode": "mo6",
+                        "protocolCode": "power",
                         "value": "0",
                     }
                 ]
@@ -242,9 +238,10 @@ async def test_hvac_off_powers_off_with_the_device_code(heat_pumps, wire):
 async def test_command_before_the_first_update_uses_the_device_codes(api, wire):
     wire.clear()
 
-    await api.set_hvac_mode(HITEMP_DEVICE_CODE, "off")
+    await api.set_fan_mode(HITEMP_DEVICE_CODE, "high")
 
-    # The Hitemp power code, not the default profile's "Power"
+    # The Hitemp fan code and value, not the default profile's Manual-mute,
+    # which has no high
     assert wire == [
         (
             CONTROL,
@@ -252,8 +249,8 @@ async def test_command_before_the_first_update_uses_the_device_codes(api, wire):
                 "param": [
                     {
                         "deviceCode": HITEMP_DEVICE_CODE,
-                        "protocolCode": "mo6",
-                        "value": "0",
+                        "protocolCode": "M17",
+                        "value": "2",
                     }
                 ]
             },

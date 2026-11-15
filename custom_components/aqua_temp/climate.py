@@ -88,14 +88,32 @@ class AquaTempClimateEntity(BaseEntity, ClimateEntity, ABC):
         coordinator = self.local_coordinator
         device_code = self.device_code
 
-        hvac_mode = coordinator.get_device_hvac_mode(device_code)
-        hvac_action = coordinator.get_device_hvac_action(device_code)
         is_power_on = coordinator.get_device_power(device_code)
         fan_mode = coordinator.get_device_fan_mode(device_code)
         current_temperature = coordinator.get_device_current_temperature(device_code)
-        target_temperature = coordinator.get_device_target_temperature(device_code)
-        minimum_temperature = coordinator.get_device_minimum_temperature(device_code)
-        maximum_temperature = coordinator.get_device_maximum_temperature(device_code)
+
+        try:
+            hvac_mode = coordinator.get_device_hvac_mode(device_code)
+
+        except ValueError:
+            # A mode the profile doesn't map, such as a Hitemp unit's Hybrid
+            # (3) or Fast Heating (4): no HVAC mode, and no mode to pick the
+            # target and limit codes by
+            hvac_mode = None
+            hvac_action = None
+            target_temperature = None
+            minimum_temperature = None
+            maximum_temperature = None
+
+        else:
+            hvac_action = coordinator.get_device_hvac_action(device_code)
+            target_temperature = coordinator.get_device_target_temperature(device_code)
+            minimum_temperature = coordinator.get_device_minimum_temperature(
+                device_code
+            )
+            maximum_temperature = coordinator.get_device_maximum_temperature(
+                device_code
+            )
 
         if not is_power_on:
             hvac_mode = HVACMode.OFF

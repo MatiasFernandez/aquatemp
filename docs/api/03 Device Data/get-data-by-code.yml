@@ -32,7 +32,9 @@ docs: |-
   earlier answer marked as unknown. Catalog entries marked
   `"request_field": "bitCodes"` are left out of the request, as this endpoint
   has no such array, and get no entity here. `objectResult` is a list of
-  `{code, value, ...}`.
+  `{code, value, ...}`. It keeps each code's `rangeStart`/`rangeEnd` when
+  both are numbers in order, and uses the target's as the thermostat's limits
+  for a mode whose profile maps no limit codes (Hitemp's).
 
   **Probed (2026-09 to 2026-10).**
 

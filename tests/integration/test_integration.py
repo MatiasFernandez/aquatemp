@@ -458,6 +458,16 @@ async def test_climate_without_a_compressor_code_reports_no_action(hass, entry):
     assert "hvac_action" not in state.attributes
 
 
+@cloud_with(RESPONSES | {DATA: data_with(Power="1", Mode="3")})
+async def test_climate_mode_the_profile_does_not_map_is_unknown(hass, entry):
+    # Hitemp units report Hybrid as 3 and Fast Heating as 4, which no HVAC
+    # mode stands for (radical-squared/aquatemp#127). The thermostat stays up
+    # and shows the mode as unknown
+    state = hass.states.get(climate_entity_id(hass))
+
+    assert (state.state, state.attributes["current_temperature"]) == ("unknown", 12.5)
+
+
 def temperatures(state) -> dict:
     return {
         attribute: state.attributes[attribute]

@@ -121,8 +121,8 @@ DEFAULT_MAPPING = {
 
 HITEMP_MAPPING = {
     "pc_keys": {
-        "mode": "mode_real",
-        "power": "MO6",
+        "mode": "Mode",
+        "power": "Power",
         "temperature": "R01",
         "fan": "M17",
         "current_temperature": "T10",
@@ -130,11 +130,16 @@ HITEMP_MAPPING = {
         "outlet_water_temperature": None,
         "compressor": None,
     },
-    "hvac_modes": {"off": None, "heat": "0"},
-    "hvac_modes_reverse": {None: "off", "0": "heat"},
+    "hvac_modes": {"off": None, "heat": "0", "auto": "2"},
+    "hvac_modes_reverse": {None: "off", "0": "heat", "2": "auto"},
     "fan_modes": {"off": "0", "low": "1", "high": "2"},
     "fan_modes_reverse": {"0": "off", "1": "low", "2": "high"},
-    "mode_codes": {"off": [None, None, None], "heat": ["R01", "T02", "T03"]},
+    # No limit codes: the target's own range from the cloud stands in
+    "mode_codes": {
+        "off": [None, None, None],
+        "heat": ["R01", None, None],
+        "auto": ["R01", None, None],
+    },
 }
 
 # The default mapping with the compressor bit the class names

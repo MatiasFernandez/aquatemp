@@ -84,6 +84,22 @@ def _is_answered_unknown(item: dict) -> bool:
     return item.get("dataType") == ""
 
 
+def _code_range(item: dict) -> tuple[float, float] | None:
+    """The item's own bounds from rangeStart and rangeEnd, or None unless both
+    are numbers in order. The old API's items carry neither."""
+    try:
+        start = float(item["rangeStart"])
+        end = float(item["rangeEnd"])
+
+    except (KeyError, TypeError, ValueError):
+        return None
+
+    if start > end:
+        return None
+
+    return start, end
+
+
 @dataclass(frozen=True)
 class Credentials:
     """The account's login; the password goes on the wire MD5-hashed."""
@@ -145,6 +161,8 @@ class AquaTempAPI:
         self._device_profiles_by_code = {}
         self._unknown_codes = {}
         self._devices_read_empty = set()
+        # Per device, each code's own bounds, from rangeStart and rangeEnd
+        self._code_ranges: dict[str, dict[str, tuple[float, float]]] = {}
         self._disagreeing_codes = set()
         self._login_details = None
 
@@ -599,6 +617,11 @@ class AquaTempAPI:
 
                 self._devices[device_code][code] = value
 
+                code_range = _code_range(object_result_item)
+
+                if code_range is not None:
+                    self._code_ranges.setdefault(device_code, {})[code] = code_range
+
             self._resolve_semantic_codes(
                 device_code, semantic_codes, object_result_items
             )
@@ -1019,6 +1042,14 @@ class AquaTempAPI:
 
         return current_temperature
 
+    def _target_range(self, device_code: str) -> tuple[float, float] | None:
+        """The current mode's target code's own bounds from the cloud, for a
+        mode whose profile maps no limit codes (Hitemp's)."""
+        hvac_mode = self.get_device_hvac_mode(device_code)
+        code = self._get_target_temperature_protocol_code(device_code, hvac_mode)
+
+        return self._code_ranges.get(device_code, {}).get(code)
+
     def get_device_minimum_temperature(self, device_code: str) -> float | None:
         device_data = self.get_device_data(device_code)
 
@@ -1026,6 +1057,11 @@ class AquaTempAPI:
         key = self._get_device_profile(device_code).get_hvac_mode_pc_key(
             hvac_mode, CONFIG_HVAC_MINIMUM
         )
+
+        if key is None:
+            target_range = self._target_range(device_code)
+
+            return None if target_range is None else target_range[0]
 
         temperature = device_data.get(key)
 
@@ -1045,6 +1081,11 @@ class AquaTempAPI:
         key = self._get_device_profile(device_code).get_hvac_mode_pc_key(
             hvac_mode, CONFIG_HVAC_MAXIMUM
         )
+
+        if key is None:
+            target_range = self._target_range(device_code)
+
+            return None if target_range is None else target_range[1]
 
         temperature = device_data.get(key)
 
