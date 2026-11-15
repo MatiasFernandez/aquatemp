@@ -15,11 +15,24 @@
           "password": "If a password longer than 16 characters fails here but works in the app, enter only its first 16 characters: the app may have kept only those when the account was created.",
           "api_type": "Aqua Temp for the current Aqua Temp app, HiTemp for the HiTemp app. Aqua Temp (<=1.5.8) is the legacy backend of app versions up to 1.5.8; only try it if the others fail."
         }
+      },
+      "reauth_confirm": {
+        "title": "Log in to Aqua Temp again",
+        "description": "The cloud rejected the stored login for {username}. Enter the account's current password.\n\nThe cloud allows one login per account, so logging in here logs the app out.",
+        "data": {
+          "password": "Password"
+        },
+        "data_description": {
+          "password": "If a password longer than 16 characters fails here but works in the app, enter only its first 16 characters: the app may have kept only those when the account was created."
+        }
       }
     },
     "error": {
       "invalid_credentials": "Invalid credentials",
       "corrupted_encryption_key": "Corrupted encryption key, please follow steps in {invalid_token_url}"
+    },
+    "abort": {
+      "reauth_successful": "The new password works. Aqua Temp is loading again."
     }
   },
   "options": {

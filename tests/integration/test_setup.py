@@ -3,6 +3,7 @@ entry's options, and data stored by older versions."""
 
 from datetime import timedelta
 import logging
+from unittest.mock import AsyncMock, patch
 
 from cryptography.fernet import Fernet
 import pytest
@@ -12,17 +13,17 @@ from pytest_homeassistant_custom_component.common import (
 )
 
 from custom_components.aqua_temp.common.consts import CONF_API_TYPE, DOMAIN
-from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, EVENT_HOMEASSISTANT_START
+from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
+from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import CoreState, HomeAssistant
 from homeassistant.helpers import entity_registry as er
-from homeassistant.helpers.update_coordinator import REQUEST_REFRESH_DEFAULT_COOLDOWN
 from tests.cloud.mock_cloud import DATA, DATA_IDLE, cloud_with
 
 from .conftest import add_entry
 
 # Literal on purpose: the expected values must not come from the config under test
 LOGIN = "app/user/login"
+DATA_V1 = "app/device/getDataByCode"
 CONFIG_STORE = "aqua_temp.config.json"
 LEGACY_KEY_STORE = ".aqua_temp"
 
@@ -74,14 +75,59 @@ def entry_with_password(hass: HomeAssistant, api_type: str, password: str):
     return entry
 
 
+def reauth_flows(hass: HomeAssistant, entry: MockConfigEntry) -> list:
+    return list(entry.async_get_active_flows(hass, {SOURCE_REAUTH}))
+
+
 @cloud_with(RESPONSES | {LOGIN: "synthetic/login_rejected"})
-async def test_rejected_login_fails_setup(hass, api_type, cloud):
+async def test_rejected_login_fails_setup_and_asks_to_log_in_again(
+    hass, api_type, cloud
+):
     entry = await add_entry(hass, api_type)
 
     await set_up(hass, entry)
 
-    assert entry.state is ConfigEntryState.SETUP_ERROR
+    assert (entry.state, len(reauth_flows(hass, entry))) == (
+        ConfigEntryState.SETUP_ERROR,
+        1,
+    )
     assert entities(hass, entry) == []
+
+
+@cloud_with(RESPONSES | {LOGIN: 500})
+async def test_cloud_failing_at_setup_retries_the_setup_later(hass, api_type, cloud):
+    entry = await add_entry(hass, api_type)
+
+    await set_up(hass, entry)
+
+    assert (entry.state, reauth_flows(hass, entry)) == (
+        ConfigEntryState.SETUP_RETRY,
+        [],
+    )
+    assert entities(hass, entry) == []
+
+
+@cloud_with(
+    RESPONSES
+    | {
+        LOGIN: [
+            "synthetic/login",
+            "synthetic/login_rejected",
+            "synthetic/login_rejected",
+        ],
+        DATA: [DATA_IDLE, "synthetic/error_token_expired"],
+    }
+)
+async def test_login_rejected_while_running_asks_to_log_in_again(
+    hass, api_type, cloud, freezer
+):
+    entry = await add_entry(hass, api_type)
+    await set_up(hass, entry)
+
+    with patch("custom_components.aqua_temp.cloud.client.sleep", new=AsyncMock()):
+        await tick(hass, freezer, 300)
+
+    assert len(reauth_flows(hass, entry)) == 1
 
 
 async def test_password_the_key_cannot_decrypt_fails_setup(hass, api_type, cloud, wire):
@@ -115,18 +161,15 @@ async def test_cloud_error_at_setup_retries_on_the_first_update(
     assert entities(hass, entry) != []
 
 
-async def test_setup_before_start_waits_for_home_assistant(hass, api_type, cloud, wire):
+async def test_setup_before_start_polls_right_away(hass, api_type, cloud, wire):
+    # Setup checks the login and reads the devices itself, so a failure shows
+    # as a setup retry or a request to log in again instead of later
     hass.set_state(CoreState.not_running)
     entry = await add_entry(hass, api_type)
 
     await set_up(hass, entry)
-    requests_before_start = list(wire)
-
-    hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
-    await hass.async_block_till_done()
 
     assert entry.state is ConfigEntryState.LOADED
-    assert requests_before_start == []
     assert wire[0][0] == LOGIN
     assert entities(hass, entry) != []
 
@@ -138,7 +181,6 @@ async def test_unload_leaves_the_entities_unavailable(hass, api_type, cloud):
     assert await hass.config_entries.async_unload(entry.entry_id)
 
     assert entry.state is ConfigEntryState.NOT_LOADED
-    assert entry.entry_id not in hass.data[DOMAIN]
     # Disabled entities have no state to leave
     assert {
         hass.states.get(entity.entity_id).state
@@ -191,6 +233,8 @@ async def test_password_hash_is_not_logged_at_debug(hass, api_type, cloud, caplo
     assert "dfb450efddbb5387197c84460623675b" not in caplog.text
 
 
+# Hitemp accounts read from the unversioned getDataByCode
+@cloud_with(RESPONSES | {DATA_V1: "get_data_by_code.idle"})
 @pytest.mark.parametrize("legacy_api_type", ["1", "2"])
 async def test_legacy_api_type_sets_up(hass, cloud, wire, legacy_api_type):
     """Older versions stored the API type as a number: 1 Aqua Temp, 2 Hitemp,
@@ -276,10 +320,8 @@ async def test_device_is_polled_at_the_polling_interval(
     hass, api_type, cloud, wire, freezer, options, interval
 ):
     entry = await add_entry(hass, api_type, options=options)
+    # The interval counts from the poll setup makes
     await set_up(hass, entry)
-    # Setup leaves a refresh waiting for the cooldown; the interval counts
-    # from that one
-    await tick(hass, freezer, REQUEST_REFRESH_DEFAULT_COOLDOWN)
     wire.clear()
 
     await tick(hass, freezer, interval - 5)
