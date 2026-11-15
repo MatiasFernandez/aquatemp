@@ -24,7 +24,7 @@ dev = [
     # Pins homeassistant, pytest, pytest-asyncio and pytest-cov exactly: the latest
     # stable Home Assistant, which Dependabot moves. The oldest supported one is
     # tested from its own project, tests/floor/
-    "pytest-homeassistant-custom-component==0.13.374",
+    "pytest-homeassistant-custom-component==0.13.375",
 ]
 
 [tool.uv]
