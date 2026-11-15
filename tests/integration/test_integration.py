@@ -34,6 +34,7 @@ from homeassistant.helpers.update_coordinator import REQUEST_REFRESH_DEFAULT_COO
 from homeassistant.util import dt as dt_util, slugify
 from tests.cloud.mock_cloud import (
     DATA,
+    DATA_HEATING,
     DATA_IDLE,
     DEVICE_CODE,
     cloud_with,
@@ -408,6 +409,53 @@ async def test_climate_reports_the_device_mode(hass, entry):
 
     assert state.state == "heat"
     assert state.attributes["fan_mode"] == "auto"
+
+
+def powered_on_with(**values) -> dict:
+    return RESPONSES | {DATA: data_with(Power="1", **values)}
+
+
+@pytest.mark.parametrize(
+    ("cloud_responses", "expected"),
+    [
+        # Recorded Power 0, Sys1CompState 0
+        pytest.param(RESPONSES, "off", id="powered_off"),
+        # Recorded Power 1, Mode 1 (heat), Sys1CompState 1
+        pytest.param(RESPONSES | {DATA: DATA_HEATING}, "heating", id="heating"),
+        pytest.param(
+            powered_on_with(Mode="0", Sys1CompState="1"), "cooling", id="cooling"
+        ),
+        pytest.param(powered_on_with(Sys1CompState="0"), "idle", id="heat_stopped"),
+        pytest.param(
+            powered_on_with(Mode="2", Sys1CompState="0"), "idle", id="auto_stopped"
+        ),
+        # Nothing tells whether it heats or cools
+        pytest.param(
+            powered_on_with(Mode="2", Sys1CompState="1"), None, id="auto_running"
+        ),
+        pytest.param(powered_on_with(Sys1CompState=""), None, id="compressor_unknown"),
+    ],
+)
+async def test_climate_reports_what_the_compressor_does(hass, entry, expected):
+    state = hass.states.get(climate_entity_id(hass))
+
+    assert state.attributes.get("hvac_action") == expected
+
+
+def device_list_of(product_id: str) -> dict:
+    payload = device_list()
+    payload["objectResult"][0]["productId"] = product_id
+
+    return payload
+
+
+@cloud_with(RESPONSES | {DEVICE_LIST: device_list_of("1245226668902080512")})
+async def test_climate_without_a_compressor_code_reports_no_action(hass, entry):
+    # 1245226668902080512 is outside the heat pump class, whose mapping names
+    # the compressor bit
+    state = hass.states.get(climate_entity_id(hass))
+
+    assert "hvac_action" not in state.attributes
 
 
 def temperatures(state) -> dict:
@@ -832,14 +880,14 @@ async def test_device_diagnostics_list_its_unknown_codes(hass, entry):
 
 async def test_device_diagnostics_show_the_files_of_its_profile(hass, entry):
     # The device's product, 1132174963097280512, is in the heat pump class,
-    # which ships a catalog but no mapping
+    # whose mapping only adds the compressor role
     device = async_get_ha_device(hass, entry.entry_id, DEVICE_ID)
 
     diagnostics = await async_get_device_diagnostics(hass, entry, device)
 
     assert diagnostics["device"]["profile"] == {
         "class": "pool_heat_pump",
-        "mapping_chain": ["default"],
+        "mapping_chain": ["default", "pool_heat_pump"],
         "catalog_chain": ["default", "pool_heat_pump"],
     }
 

@@ -1064,6 +1064,35 @@ class AquaTempAPI:
 
         return is_on
 
+    def get_device_compressor_running(self, device_code: str) -> bool | None:
+        """Whether the compressor runs, through the profile's compressor role.
+
+        None when the profile has no such role, or the device answered neither
+        the role's on value nor its off value. Compared as text, ignoring case,
+        as the binary sensor of the same code does, so the two agree.
+        """
+        parameter = self._get_device_profile(device_code).compressor_parameter
+
+        if parameter is None:
+            return None
+
+        device_data = self.get_device_data(device_code) or {}
+        value = device_data.get(parameter["key"])
+
+        if value is None:
+            return None
+
+        reading = str(value).lower()
+        running = None
+
+        if reading == parameter["on_value"].lower():
+            running = True
+
+        elif reading == parameter["off_value"].lower():
+            running = False
+
+        return running
+
     def is_device_offline(self, device_code: str) -> bool:
         """Whether the last poll found the device offline.
 
