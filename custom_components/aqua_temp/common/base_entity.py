@@ -28,7 +28,7 @@ async def async_setup_base_entry(
             return
 
         try:
-            coordinator = hass.data[DOMAIN][entry.entry_id]
+            coordinator = entry.runtime_data
 
             config_manager = coordinator.config_manager
             device_profile = coordinator.get_device_profile(device_code)
@@ -50,7 +50,8 @@ async def async_setup_base_entry(
 
             _LOGGER.debug(f"Setting up {platform} entities: {entities}")
 
-            async_add_entities(entities, True)
+            # No update before adding: that would poll the cloud once per entity
+            async_add_entities(entities)
 
         except Exception as ex:
             exc_type, exc_obj, tb = sys.exc_info()
@@ -59,6 +60,12 @@ async def async_setup_base_entry(
             _LOGGER.error(
                 f"Failed to initialize {platform}, Error: {ex}, Line: {line_number}"
             )
+
+    # The first poll runs before the platforms are set up, announcing the
+    # devices it found to no one; a device found by a later poll arrives
+    # through the signal
+    for device_code in entry.runtime_data.announced_devices:
+        _async_handle_device(entry.entry_id, device_code)
 
     for add_component_signal in ADD_COMPONENT_SIGNALS:
         entry.async_on_unload(
@@ -99,6 +106,14 @@ class BaseEntity(CoordinatorEntity[AquaTempCoordinator]):
 
         self._data = {}
         self._device_code = device_code
+
+    async def async_added_to_hass(self) -> None:
+        """Show the last poll's values from the start: an entity created after
+        it, as all are at setup, would otherwise wait for the next one."""
+        await super().async_added_to_hass()
+
+        if self.coordinator.data is not None:
+            self._handle_coordinator_update()
 
     @property
     def available(self) -> bool:

@@ -32,6 +32,33 @@ from .password_manager import PasswordManager
 _LOGGER = logging.getLogger(__name__)
 
 
+async def async_check_login(
+    hass: HomeAssistant,
+    config_manager: AquaTempConfigManager,
+    request_timeout: int,
+) -> None:
+    """Log in with the initialized config manager's credentials and read the
+    devices; raises LoginError when the cloud rejects them."""
+    # A flow runs outside config entry setup, so HA would only detach an
+    # auto-cleaned session at shutdown, keeping one per submission until then.
+    # Detach it here instead; close() would act on HA's shared connector.
+    session = async_create_clientsession(hass, auto_cleanup=False)
+
+    try:
+        api = AquaTempAPI(
+            session,
+            config_manager.credentials,
+            config_manager.api_profile,
+            config_manager.device_profiles,
+            request_timeout=request_timeout,
+        )
+
+        await api.initialize(True)
+
+    finally:
+        session.detach()
+
+
 class IntegrationFlowManager:
     _hass: HomeAssistant
     _entry: ConfigEntry | None
@@ -92,27 +119,11 @@ class IntegrationFlowManager:
             try:
                 await self._config_manager.initialize(user_input)
 
-                # A flow runs outside config entry setup, so HA would only
-                # detach an auto-cleaned session at shutdown, keeping one per
-                # submission until then. Detach it here instead; close() would
-                # act on HA's shared connector.
-                session = async_create_clientsession(self._hass, auto_cleanup=False)
-
-                try:
-                    api = AquaTempAPI(
-                        session,
-                        self._config_manager.credentials,
-                        self._config_manager.api_profile,
-                        self._config_manager.device_profiles,
-                        request_timeout=user_input.get(
-                            CONF_REQUEST_TIMEOUT, API_REQUEST_TIMEOUT
-                        ),
-                    )
-
-                    await api.initialize(True)
-
-                finally:
-                    session.detach()
+                await async_check_login(
+                    self._hass,
+                    self._config_manager,
+                    user_input.get(CONF_REQUEST_TIMEOUT, API_REQUEST_TIMEOUT),
+                )
 
                 _LOGGER.debug("User inputs are valid")
 

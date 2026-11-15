@@ -1,15 +1,13 @@
 import logging
-import sys
 
 from cryptography.fernet import InvalidToken
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import EVENT_HOMEASSISTANT_START
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryError
 from homeassistant.helpers import config_validation as cv
 
-from .cloud.exceptions import LoginError
-from .common.consts import DEFAULT_NAME, DOMAIN, INVALID_TOKEN_SECTION
+from .common.consts import DOMAIN, INVALID_TOKEN_SECTION
 from .managers.aqua_temp_config_manager import AquaTempConfigManager
 from .managers.aqua_temp_coordinator import AquaTempCoordinator
 from .managers.password_manager import PasswordManager
@@ -18,62 +16,52 @@ _LOGGER = logging.getLogger(__name__)
 
 CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
+type AquaTempConfigEntry = ConfigEntry[AquaTempCoordinator]
+
 
 async def async_setup(_hass, _config):
     return True
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
-    """Set up a Shinobi Video component."""
-    initialized = False
+async def async_setup_entry(hass: HomeAssistant, entry: AquaTempConfigEntry) -> bool:
+    """Set up an Aqua Temp account: log in, read its devices, then the platforms.
+
+    The first poll runs here, so a rejected login asks the user to log in again
+    (ConfigEntryAuthFailed) and a cloud or network failure retries the setup
+    later (ConfigEntryNotReady), both raised by the coordinator.
+    """
+    entry_config = dict(entry.data)
 
     try:
-        entry_config = {key: entry.data[key] for key in entry.data}
-
         await PasswordManager.decrypt(hass, entry_config, entry.entry_id)
 
-        config_manager = AquaTempConfigManager(hass, entry)
-        await config_manager.initialize(entry_config)
-
-        is_initialized = config_manager.is_initialized
-
-        if is_initialized:
-            coordinator = AquaTempCoordinator(hass, config_manager)
-
-            hass.data.setdefault(DOMAIN, {})[entry.entry_id] = coordinator
-
-            entry.async_on_unload(entry.add_update_listener(async_update_listener))
-
-            if hass.is_running:
-                await coordinator.initialize()
-
-            else:
-                hass.bus.async_listen_once(
-                    EVENT_HOMEASSISTANT_START, coordinator.on_home_assistant_start
-                )
-
-            _LOGGER.info("Finished loading integration")
-
-        initialized = is_initialized
-
-    except InvalidToken:
-        _LOGGER.error(
+    except InvalidToken as ex:
+        raise ConfigEntryError(
             "Corrupted password or encryption key, "
-            f"please follow steps in {INVALID_TOKEN_SECTION}"
-        )
+            f"please follow the steps in {INVALID_TOKEN_SECTION}"
+        ) from ex
 
-    except LoginError:
-        _LOGGER.error(f"Failed to login {DEFAULT_NAME} API, cannot log integration")
+    config_manager = AquaTempConfigManager(hass, entry)
+    await config_manager.initialize(entry_config)
 
-    except Exception as ex:
-        exc_type, exc_obj, tb = sys.exc_info()
-        line_number = tb.tb_lineno
+    if not config_manager.is_initialized:
+        return False
 
-        _LOGGER.error(
-            f"Failed to load {DEFAULT_NAME}, error: {ex}, line: {line_number}"
-        )
+    coordinator = AquaTempCoordinator(hass, config_manager, entry)
 
-    return initialized
+    await coordinator.async_config_entry_first_refresh()
+
+    entry.runtime_data = coordinator
+
+    entry.async_on_unload(entry.add_update_listener(async_update_listener))
+
+    await hass.config_entries.async_forward_entry_setups(
+        entry, config_manager.platforms
+    )
+
+    _LOGGER.info("Finished loading integration")
+
+    return True
 
 
 async def async_update_listener(hass: HomeAssistant, entry: ConfigEntry) -> None:
@@ -83,25 +71,14 @@ async def async_update_listener(hass: HomeAssistant, entry: ConfigEntry) -> None
     await hass.config_entries.async_reload(entry.entry_id)
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
-    """Unload a config entry.
-
-    Uses async_unload_platforms (instead of looping async_forward_entry_unload)
-    so we don't ValueError when a platform was never loaded — which happens if
-    the previous setup raised before async_forward_entry_setups ran (e.g. a DNS
-    timeout in coordinator.initialize).
-    """
+async def async_unload_entry(hass: HomeAssistant, entry: AquaTempConfigEntry) -> bool:
+    """Unload a config entry."""
     _LOGGER.info(f"Unloading {DOMAIN} integration, Entry ID: {entry.entry_id}")
 
-    coordinator: AquaTempCoordinator = hass.data[DOMAIN][entry.entry_id]
+    coordinator = entry.runtime_data
 
     await coordinator.config_manager.remove(entry.entry_id)
 
-    platforms = coordinator.config_manager.platforms
-
-    unload_ok = await hass.config_entries.async_unload_platforms(entry, platforms)
-
-    if unload_ok:
-        del hass.data[DOMAIN][entry.entry_id]
-
-    return unload_ok
+    return await hass.config_entries.async_unload_platforms(
+        entry, coordinator.config_manager.platforms
+    )
