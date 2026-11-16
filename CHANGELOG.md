@@ -7,6 +7,8 @@ predate this fork and keep their original format.
 
 ## [Unreleased]
 
+## [3.6.0] - 2026-11-16
+
 ### Added
 
 - Binary sensors for the status bits the official app reads on Aqua Temp pool heat pumps: Compressor and Water flow, and, added disabled under diagnostics, the inlet, outlet and ambient temperature sensor faults, the external stop, the high and low pressure protections, the external mode switch and the master unit. Hitemp and old Aqua Temp accounts don't get them: their endpoints can't read these bits
@@ -392,7 +394,8 @@ As result of that process, you need to re-setup the integration.
 - Simplified `climate` component to include just its functionality without additional attributes (moved to dedicated components)
 - Add mapping of more Protocol Codes (Parameters) for later support of more sensors/binary_sensors
 
-[Unreleased]: https://github.com/MatiasFernandez/aquatemp/compare/v3.5.0...HEAD
+[Unreleased]: https://github.com/MatiasFernandez/aquatemp/compare/v3.6.0...HEAD
+[3.6.0]: https://github.com/MatiasFernandez/aquatemp/compare/v3.5.0...v3.6.0
 [3.5.0]: https://github.com/MatiasFernandez/aquatemp/compare/v3.4.2...v3.5.0
 [3.4.2]: https://github.com/MatiasFernandez/aquatemp/compare/v3.4.1...v3.4.2
 [3.4.1]: https://github.com/MatiasFernandez/aquatemp/compare/v3.4.0...v3.4.1
