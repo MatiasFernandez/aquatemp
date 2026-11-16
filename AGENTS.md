@@ -31,6 +31,6 @@ uv run --project tests/floor --locked pytest       # oldest supported Home Assis
 
 Open one only when the person you work with asks. Fill in [.github/pull_request_template.md](.github/pull_request_template.md) and keep it short:
 
-- **Manual testing** is what someone actually checked by hand: in Home Assistant, the app, or against the cloud. Don't describe the automated tests or restate the diff. If nobody ran the change in Home Assistant, say so; never fill in "Tested on" with a setup that wasn't used.
+- **Manual testing** is what someone actually checked by hand: in Home Assistant, the app, or against the cloud. Don't describe the automated tests or restate the diff. If nobody ran the change in Home Assistant, say so; never fill in "Tested on" with a setup that wasn't used. When a change touches how a heat pump is read or controlled, point the person you work with to [docs/testing-in-home-assistant.md](docs/testing-in-home-assistant.md#test-your-own-change) so they can try it on their own heat pump first.
 - **Notes for reviewers** holds what the diff doesn't show: decisions and why, context from the app or the device. Describe what the change does; don't list what was left as it was or options that came up while working on it. Mention a ruled-out alternative only when a reviewer would likely suggest it. Leave it out if there is none.
 - **AI use** says what the AI did and what the person did, in a sentence or two. Attribution trailers or a "Generated with" footer don't count as that.

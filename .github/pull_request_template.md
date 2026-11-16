@@ -8,6 +8,7 @@
      The automated tests are in the diff; no need to describe them.
      If this changes how a heat pump is read or controlled: how you ran it and what you saw. If you
      couldn't, say so: someone with a matching heat pump may be asked to try it.
+     docs/testing-in-home-assistant.md shows how to install your branch on Home Assistant.
      Docs, CI and refactors need no device test. -->
 
 **Evidence:** <!-- screenshots, diagnostics, log excerpts: drag files here -->
