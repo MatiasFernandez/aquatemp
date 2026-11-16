@@ -134,6 +134,9 @@
       "water_delta_t": {
         "name": "Water \u0394T"
       },
+      "compressor_speed": {
+        "name": "Compressor speed"
+      },
       "default_mode": {
         "name": "Mode"
       },

@@ -16,9 +16,9 @@ Other heat pumps aren't documented yet.
 
 Each entry starts with the entity's type, whether it is enabled by default, the API type it needs if not every one gets it, and how sure we are of what it means:
 
-- **Verified**: the official Aqua Temp app shows or acts on it the same way, or we've watched the value change on a real unit.
-- **Inferred**: worked out from vendor documentation or the name the cloud gives it. The entry says from what.
-- **Unknown**: the integration reads it, but we don't know what its values mean on these units.
+- **Verified**: the entry says only what we observed: the official Aqua Temp app shows or acts on the value the same way, or we've watched it change on a real unit. On an entity holding several values, such as the climate entity, a narrower part resting on our reading is marked as ours in the text.
+- **Inferred**: the entry states a conclusion we drew ourselves, from the app's behaviour, vendor documentation, the name the cloud gives the value or other products. The evidence is real, but nobody has confirmed the conclusion and it could be wrong. The entry says which part is our reading and what it rests on.
+- **Unknown**: the integration reads it, but we have no basis for what its values mean on these units, so the entity shows the raw value.
 
 An entry marked **Aqua Temp API type only** is created only on accounts using the Aqua Temp API type, shown in the device's diagnostics. The other API types can't ask the cloud for its value, so on them the entity doesn't appear.
 

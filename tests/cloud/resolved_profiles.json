@@ -14,6 +14,10 @@
         "current_temperature": "T02",
         "inlet_water_temperature": "T02",
         "outlet_water_temperature": "T03",
+        "compressor_frequency": "O07",
+        "heating_max_frequency": "H08",
+        "cooling_max_frequency": "H09",
+        "compressor_type": "H12",
         "hvac_modes": {
           "off": {
             "set": null,
@@ -117,6 +121,10 @@
         "current_temperature": "T02",
         "inlet_water_temperature": "T02",
         "outlet_water_temperature": "T03",
+        "compressor_frequency": "O07",
+        "heating_max_frequency": "H08",
+        "cooling_max_frequency": "H09",
+        "compressor_type": "H12",
         "hvac_modes": {
           "off": {
             "set": null,
@@ -161,6 +169,10 @@
         "fan": "Manual-mute",
         "current_temperature": "T2",
         "compressor": "Sys1CompState",
+        "compressor_frequency": "O07",
+        "heating_max_frequency": "H08",
+        "cooling_max_frequency": "H09",
+        "compressor_type": "H12",
         "hvac_modes": {
           "off": {
             "set": null,

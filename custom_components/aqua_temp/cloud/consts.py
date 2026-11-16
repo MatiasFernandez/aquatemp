@@ -73,6 +73,14 @@ CONFIG_OUTLET_WATER_TEMPERATURE = "outlet_water_temperature"
 # Optional: a code reading whether the compressor runs, through its catalog
 # entry's on_value and off_value
 CONFIG_COMPRESSOR = "compressor"
+# Optional: the compressor's output frequency, and the highest frequency it is
+# set to reach while heating and while cooling, each a catalog entry
+CONFIG_COMPRESSOR_FREQUENCY = "compressor_frequency"
+CONFIG_HEATING_MAX_FREQUENCY = "heating_max_frequency"
+CONFIG_COOLING_MAX_FREQUENCY = "cooling_max_frequency"
+# Optional: the compressor's type, a catalog entry. Reading 0, the device gets no
+# Compressor speed sensor
+CONFIG_COMPRESSOR_TYPE = "compressor_type"
 
 PRODUCT_ID_DEFAULT = "default"
 

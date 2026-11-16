@@ -34,6 +34,14 @@ def cloud_responses() -> dict:
     return RESPONSES
 
 
+def is_registered(hass: HomeAssistant, platform: str, key: str) -> bool:
+    unique_id = slugify(f"{DOMAIN}_{platform}_{key}_{DEVICE_CODE}")
+
+    return (
+        er.async_get(hass).async_get_entity_id(platform, DOMAIN, unique_id) is not None
+    )
+
+
 def state_of(hass: HomeAssistant, platform: str, key: str):
     unique_id = slugify(f"{DOMAIN}_{platform}_{key}_{DEVICE_CODE}")
     entity_id = er.async_get(hass).async_get_entity_id(platform, DOMAIN, unique_id)
@@ -56,6 +64,65 @@ async def test_water_delta_t_is_outlet_minus_inlet(hass, entry):
 @cloud_with({DATA: data_with(T03="", OutletWaterTemp="")})
 async def test_water_delta_t_without_an_input_is_unknown(hass, entry):
     assert state_of(hass, "sensor", "water_delta_t").state == "unknown"
+
+
+# Recorded heating max frequency H08 80 and cooling max H09 65; Mode 1 heats,
+# 0 cools and 2 is auto
+@pytest.mark.parametrize(
+    ("cloud_responses", "expected"),
+    [
+        # Recorded O07 80 while heating
+        pytest.param({DATA: DATA_HEATING}, "100.0", id="heating"),
+        pytest.param({DATA: data_with(Mode="0", O07="52")}, "80.0", id="cooling"),
+        # The compressor can run past the maximum, as while defrosting
+        pytest.param({DATA: data_with(O07="88")}, "110.0", id="past_the_maximum"),
+        # Recorded auto target R03 27.0 above the inlet T02 12.5: heating, H08
+        pytest.param({DATA: data_with(Mode="2", O07="40")}, "50.0", id="auto_heating"),
+        pytest.param(
+            {DATA: data_with(Mode="2", O07="52", T02="30.0", InletWaterTemp="30.0")},
+            "80.0",
+            id="auto_cooling",
+        ),
+    ],
+)
+async def test_compressor_speed_is_the_frequency_share_of_the_mode_maximum(
+    hass, entry, expected
+):
+    assert state_of(hass, "sensor", "compressor_speed").state == expected
+
+
+@pytest.mark.parametrize(
+    "cloud_responses",
+    [
+        # Recorded O07 0
+        pytest.param(RESPONSES, id="heat"),
+        pytest.param({DATA: data_with(Mode="2")}, id="auto"),
+    ],
+)
+async def test_stopped_compressor_has_no_speed(hass, entry):
+    assert state_of(hass, "sensor", "compressor_speed").state == "0.0"
+
+
+@pytest.mark.parametrize(
+    "cloud_responses",
+    [
+        # Without the auto target, nothing tells whether auto heats or cools, so
+        # which maximum applies
+        pytest.param(
+            {DATA: data_with(Mode="2", O07="40", R03="")}, id="auto_without_target"
+        ),
+        pytest.param(
+            {DATA: data_with(Mode="2", O07="40", T02="", InletWaterTemp="")},
+            id="auto_without_inlet",
+        ),
+        pytest.param({DATA: data_with(O07="")}, id="no_frequency"),
+        pytest.param({DATA: data_with(O07="40", H08="")}, id="no_maximum"),
+        pytest.param({DATA: data_with(O07="40", H08="0")}, id="zero_maximum"),
+        pytest.param({DATA: data_with(O07="40", H08="inf")}, id="maximum_not_finite"),
+    ],
+)
+async def test_compressor_speed_is_unknown_without_its_inputs(hass, entry):
+    assert state_of(hass, "sensor", "compressor_speed").state == "unknown"
 
 
 @pytest.mark.parametrize(
@@ -87,6 +154,52 @@ def data_without(code: str) -> dict:
     ]
 
     return data
+
+
+# Recorded compressor type H12 45
+@pytest.mark.parametrize(
+    "cloud_responses",
+    [
+        pytest.param({DATA: data_with(H12="0")}, id="zero"),
+        pytest.param({DATA: data_with(H12="0.0")}, id="zero_with_decimals"),
+    ],
+)
+async def test_no_compressor_speed_for_a_compressor_type_of_zero(hass, entry):
+    assert not is_registered(hass, "sensor", "compressor_speed")
+
+
+@pytest.mark.parametrize(
+    "cloud_responses",
+    [
+        pytest.param(RESPONSES, id="recorded"),
+        pytest.param({DATA: data_with(H12="1")}, id="other_value"),
+        pytest.param({DATA: data_with(H12="")}, id="empty"),
+        pytest.param({DATA: data_without("H12")}, id="missing"),
+    ],
+)
+async def test_compressor_speed_exists_unless_the_compressor_type_is_zero(hass, entry):
+    assert is_registered(hass, "sensor", "compressor_speed")
+
+
+# Recorded heating max frequency H08 80 and cooling max H09 65
+@pytest.mark.parametrize(
+    ("cloud_responses", "expected"),
+    [
+        pytest.param({DATA: data_with(O07="40", H09="")}, "50.0", id="heating"),
+        pytest.param(
+            {DATA: data_with(Mode="0", O07="40", H09="")}, "unknown", id="cooling"
+        ),
+    ],
+)
+async def test_compressor_speed_with_only_the_heating_maximum_read(
+    hass, entry, expected
+):
+    assert state_of(hass, "sensor", "compressor_speed").state == expected
+
+
+@cloud_with({DATA: data_with(H08="", H09="")})
+async def test_no_compressor_speed_when_no_maximum_is_read(hass, entry):
+    assert not is_registered(hass, "sensor", "compressor_speed")
 
 
 def device_list_of(product_id: str) -> dict:

@@ -38,11 +38,14 @@ async def async_setup_base_entry(
             # request
             unread_codes = coordinator.get_unread_codes(device_code)
 
+            device_data = coordinator.get_device_data(device_code) or {}
+
             entities = [
                 entity_type(entity_description, coordinator, device_code)
                 for entity_description in entity_descriptions
                 if entity_description.platform == platform
                 and unread_codes.isdisjoint(entity_description.source_codes)
+                and entity_description.include_if(device_data)
             ]
 
             _LOGGER.debug(f"Setting up {platform} entities: {entities}")

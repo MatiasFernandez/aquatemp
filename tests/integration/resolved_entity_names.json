@@ -819,6 +819,11 @@
         },
         {
           "platform": "sensor",
+          "key": "compressor_speed",
+          "name": "Compressor speed"
+        },
+        {
+          "platform": "sensor",
           "key": "water_delta_t",
           "name": "Water ΔT"
         }
@@ -2176,6 +2181,11 @@
         },
         {
           "platform": "sensor",
+          "key": "compressor_speed",
+          "name": "Compressor speed"
+        },
+        {
+          "platform": "sensor",
           "key": "water_delta_t",
           "name": "Water ΔT"
         }
@@ -3045,6 +3055,11 @@
           "platform": "sensor",
           "key": "T9",
           "name": "Flow Rate Input [T9]"
+        },
+        {
+          "platform": "sensor",
+          "key": "compressor_speed",
+          "name": "Compressor speed"
         }
       ]
     }

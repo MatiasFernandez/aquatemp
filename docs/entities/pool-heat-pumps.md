@@ -7,6 +7,8 @@ Entities on the [pool heat pump products](README.md#which-page-applies-to-your-h
 | [Ambient temperature sensor](#ambient-temperature-sensor)           | Faults and protections | Verified   |
 | [Climate entity](#climate-entity)                                   | Operation              | Verified   |
 | [Compressor](#compressor)                                           | Operation              | Verified   |
+| [Compressor speed](#compressor-speed)                               | Operation              | Inferred   |
+| [Compressor type](#compressor-type)                                 | Operation              | Inferred   |
 | [External mode switch](#external-mode-switch)                       | Wired inputs           | Unknown    |
 | [External stop](#external-stop)                                     | Wired inputs           | Verified   |
 | [High pressure protection](#high-pressure-protection)               | Faults and protections | Inferred   |
@@ -22,13 +24,15 @@ Entities on the [pool heat pump products](README.md#which-page-applies-to-your-h
 
 Climate · enabled · **Verified**
 
-Home Assistant shows it under the device's name. It holds the target temperature, mode and fan mode. On Aqua Temp API type accounts it also populates `hvac_action` to show what the heat pump is doing, from the [Compressor](#compressor): heating or cooling while the compressor runs, idle while it is stopped, off while the heat pump is off. In auto mode it shows idle with the compressor stopped and nothing while it runs, since the cloud doesn't say whether it is heating or cooling. A defrost cycle shows as heating, or idle if the compressor stops.
+Home Assistant shows it under the device's name. It holds the target temperature, mode and fan mode. On Aqua Temp API type accounts it also populates `hvac_action` to show what the heat pump is doing, from the [Compressor](#compressor): heating or cooling while the compressor runs, idle while it is stopped, off while the heat pump is off. In auto mode it shows idle with the compressor stopped. While it runs, it shows heating when the auto target temperature is above the inlet water temperature and cooling when it is at or below, which is our reading of the official app's rule, and nothing if either temperature is missing. A defrost cycle shows as heating, or idle if the compressor stops.
 
 <details><summary>How we know</summary>
 
 What it is doing comes from the compressor bit, verified as described under [Compressor](#compressor), and the mode the heat pump is set to. The cloud reports no separate heating, cooling or defrost state.
 
-Code: the compressor role in the profile's mapping ([mapping.pool_heat_pump.json](../../custom_components/aqua_temp/cloud/profiles/mapping.pool_heat_pump.json)) names `Sys1CompState`; its catalog entry's on and off values read as running and stopped.
+In auto mode the official app picks heating or cooling by comparing the auto target with the inlet water temperature. Its code hides which comparison it makes; we read it as heating when the target is above the inlet, which is why equal temperatures show cooling. That reading hasn't been checked against the app or a unit.
+
+Code: the compressor role in the profile's mapping ([mapping.pool_heat_pump.json](../../custom_components/aqua_temp/cloud/profiles/mapping.pool_heat_pump.json)) names `Sys1CompState`; its catalog entry's on and off values read as running and stopped. In auto mode it also reads the auto target (`R03`) and the inlet water temperature (`T02`). The profile of product `1442284873216843776` names no inlet water temperature code, so there it shows nothing while running in auto mode.
 
 </details>
 
@@ -43,6 +47,38 @@ On while the compressor runs. Off while the heat pump is on but idle, for exampl
 The official app shows "Standby" when this value is 0 and "Running" when it is 1 on fixed-speed units. Recorded responses agree: 0 while idle ([get_data_by_code.v5-idle.json](../../tests/cloud/fixtures/aqua_temp/get_data_by_code.v5-idle.json)), 1 while heating ([get_data_by_code.v5-heating.json](../../tests/cloud/fixtures/aqua_temp/get_data_by_code.v5-heating.json)).
 
 Code: `Sys1CompState`, on for 1.
+
+</details>
+
+### Compressor speed
+
+Sensor · enabled · **Inferred**
+
+How hard the compressor is working, as a percentage of the highest speed it is set to reach in the current mode: 0% while stopped, 100% at its maximum. It can go past 100%, for example while defrosting. In auto mode it uses the heating maximum while the auto target temperature is above the inlet water temperature and the cooling one when it is at or below, our reading of the official app's rule; unknown if either temperature is missing. Unknown while running in a mode whose maximum the heat pump doesn't report or reports as 0. Not created when it reports neither maximum, or when the controller's compressor type setting reads 0.
+
+<details><summary>How we know</summary>
+
+The compressor's speed is its output frequency. The profile names the parameters "Comp. Output frequency", "Heating Max frequency" and "Cooling Max frequency". Recorded responses agree for heating: output frequency 0 while idle ([get_data_by_code.v5-idle.json](../../tests/cloud/fixtures/aqua_temp/get_data_by_code.v5-idle.json)), and 80, the heating maximum, while heating far below the target ([get_data_by_code.v5-heating.json](../../tests/cloud/fixtures/aqua_temp/get_data_by_code.v5-heating.json)). No cooling response has been recorded.
+
+The maximum is the configured one, not the limit in force: other parameters can lower it, such as the silent mode maximum, so the speed may stay below 100% even when the compressor runs as fast as it is allowed.
+
+The official app shows the speed only when the compressor type setting is not 0, and shows Running or Standby text otherwise, so the sensor is not created for a unit reading 0. A missing or unreadable value doesn't count as 0, as in the app. 0 most likely means a fixed-speed compressor, where a percentage means nothing and the [Compressor](#compressor) sensor already tells whether it runs; that is unconfirmed, and no unit reading 0 has been recorded: the recorded units read 45.
+
+Code: `O07` divided by `H08` in heat mode or `H09` in cool mode, or by the direction auto mode takes (see the [Climate entity](#climate-entity)), read through the mapping's `compressor_frequency`, `heating_max_frequency` and `cooling_max_frequency` roles. Left out when the device reads neither `H08` nor `H09` as a number, or when `H12` ("Compressor type"), read through the `compressor_type` role, is 0, when the entities are set up. A maximum the device doesn't report leaves the speed unknown in its mode. Product `1442284873216843776`'s profile names no inlet water temperature code, so there the speed is always unknown while running in auto mode. While the compressor runs, a maximum of 0 is unknown too (stopped shows 0%); the official app shows 0% for it and has no handling for a missing one, so we show no number that could be wrong.
+
+</details>
+
+### Compressor type
+
+Sensor · enabled, diagnostic · **Inferred**
+
+A number the controller keeps for the type of compressor fitted, most likely set when the unit is commissioned rather than a control. We read 0 as a fixed-speed compressor and any other number as an inverter one; that is our reading, unconfirmed, and what each non-zero number means is unknown. It decides whether [Compressor speed](#compressor-speed) is created. This is what the code means on the Aqua Temp API type. The HiTemp app uses `H12` for a different parameter, so on a HiTemp account this entity, if it appears, is probably misnamed and none of the above applies to it.
+
+<details><summary>How we know</summary>
+
+What we observed: the official app only checks whether the value is 0. At 0 it shows "Running" or "Standby" text for the compressor, at any other value the speed as a percentage, which is why [Compressor speed](#compressor-speed) isn't created for a unit reading 0. Reading 0 as fixed-speed is our own conclusion from that behaviour: a percentage means nothing for a compressor that only runs or stops. No source lists the values. The cloud describes the parameter as a number from 0 to 100, which looks like a compressor or driver model number rather than a list of options, and the heat pump's fault texts say to check that it matches the hardware. The recorded units read 45 ([get_data_by_code.v5-idle.json](../../tests/cloud/fixtures/aqua_temp/get_data_by_code.v5-idle.json)); no unit reading 0 has been recorded. The HiTemp app's `H12` and the PHNIX PC1001 manual's `H12` are different parameters, so the meaning above is only for the Aqua Temp API type, which is the one the official Aqua Temp app and the recorded units use. What the HiTemp app's `H12` is hasn't been worked out, and we haven't checked whether this entity is created on HiTemp accounts.
+
+Code: `H12`, shown as the raw number; the profile's `compressor_type` role names it. Read from the same request as the other parameters.
 
 </details>
 
