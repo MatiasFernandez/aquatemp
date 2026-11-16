@@ -4,14 +4,24 @@ Bug reports are as valuable as code: the maintainer has a single heat pump, so t
 
 ## Pull requests
 
-Pull requests are welcome, also from heat pump owners who don't usually write code: a change you have run on your own heat pump is worth a lot here, even if an AI tool helped you write it. Before opening one:
+Pull requests are welcome, also from heat pump owners who don't usually write code, even if an AI tool helped you write it. Before opening one:
 
 - Add or update tests for the change wherever possible. The suite runs offline against a mocked cloud (see [Tests](#tests)), so a new profile or a fix for a model usually needs only a fixture and a test. If something can't be tested, say why in the PR.
 - Run the [quality checks](#quality-checks) and both test runs; CI runs the same.
 - Add user-facing changes to [CHANGELOG.md](CHANGELOG.md) (see [Changelog and releases](#changelog-and-releases)).
 - Keep each PR to one change.
 
-Fill in the [pull request template](.github/pull_request_template.md): why the change is needed, what you tested by hand and on which setup (ideally in your own Home Assistant, on your heat pump), and anything a reviewer can't get from the diff, such as decisions you took and why.
+Fill in the [pull request template](.github/pull_request_template.md): why the change is needed, what you tested by hand and on which setup, and anything a reviewer can't get from the diff, such as decisions you took and why.
+
+### Testing on a real heat pump
+
+If your change alters how the integration behaves with a heat pump, or what its entities show, please run it in your own Home Assistant, on your heat pump, before opening the PR. It's the most useful thing you can add to it:
+
+- **Why:** the maintainer has one heat pump, so a change for another model can't be checked here without your help.
+- **When it isn't needed:** docs, CI, tooling and refactors that don't change behavior need no device test.
+- **If you can't test it:** say so in the PR. It can still be merged, but it may wait for an owner of a matching model to try it, or take longer because the review has to be thorough enough to make sure nothing breaks.
+- **Evidence makes merging easier:** a screenshot of the entities, the diagnostics file, a log excerpt with debug logging on, ideally before and after the change. See [Logs and diagnostics](README.md#logs-and-diagnostics) for how to get them, and check logs for your email and tokens before posting them.
+- **How to test:** delete the `aqua_temp` folder in your Home Assistant configuration's `custom_components/` so no file the change removed or renamed stays behind, then copy your `custom_components/aqua_temp` folder in its place, for example with the Samba share or the Terminal & SSH add-on, then restart Home Assistant. To go back, redownload your version in HACS, which replaces the whole folder, then restart Home Assistant.
 
 AI tools are welcome. Say in the PR what they did and what you did yourself; a tool name or a `Co-Authored-By` line alone doesn't tell a reviewer much. Make sure you have run the change and understand it, and answer review questions in your own words.
 
