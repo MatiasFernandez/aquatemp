@@ -265,8 +265,8 @@ class AquaTempCoordinator(DataUpdateCoordinator):
         compressor and the mode; None without a compressor role, or when that
         isn't enough to tell.
 
-        Running in auto is left unknown: nothing reports whether it heats or
-        cools.
+        Running in auto, it heats or cools by the official app's rule, from the
+        auto target and the inlet water temperature; unknown without them.
         """
         if self.get_device_profile(device_code).compressor_parameter is None:
             return None
@@ -283,6 +283,10 @@ class AquaTempCoordinator(DataUpdateCoordinator):
             return HVACAction.IDLE
 
         mode = self._api.get_device_hvac_mode(device_code)
+
+        if mode == Mode.AUTO:
+            mode = self._api.get_device_auto_mode_direction(device_code)
+
         hvac_action = {
             Mode.HEAT: HVACAction.HEATING,
             Mode.COOL: HVACAction.COOLING,

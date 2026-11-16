@@ -22,13 +22,15 @@ Entities on the [pool heat pump products](README.md#which-page-applies-to-your-h
 
 Climate · enabled · **Verified**
 
-Home Assistant shows it under the device's name. It holds the target temperature, mode and fan mode. On Aqua Temp API type accounts it also populates `hvac_action` to show what the heat pump is doing, from the [Compressor](#compressor): heating or cooling while the compressor runs, idle while it is stopped, off while the heat pump is off. In auto mode it shows idle with the compressor stopped and nothing while it runs, since the cloud doesn't say whether it is heating or cooling. A defrost cycle shows as heating, or idle if the compressor stops.
+Home Assistant shows it under the device's name. It holds the target temperature, mode and fan mode. On Aqua Temp API type accounts it also populates `hvac_action` to show what the heat pump is doing, from the [Compressor](#compressor): heating or cooling while the compressor runs, idle while it is stopped, off while the heat pump is off. In auto mode it shows idle with the compressor stopped. While it runs, it shows heating when the auto target temperature is above the inlet water temperature and cooling when it is at or below, which is our reading of the official app's rule, and nothing if either temperature is missing. A defrost cycle shows as heating, or idle if the compressor stops.
 
 <details><summary>How we know</summary>
 
 What it is doing comes from the compressor bit, verified as described under [Compressor](#compressor), and the mode the heat pump is set to. The cloud reports no separate heating, cooling or defrost state.
 
-Code: the compressor role in the profile's mapping ([mapping.pool_heat_pump.json](../../custom_components/aqua_temp/cloud/profiles/mapping.pool_heat_pump.json)) names `Sys1CompState`; its catalog entry's on and off values read as running and stopped.
+In auto mode the official app picks heating or cooling by comparing the auto target with the inlet water temperature. Its code hides which comparison it makes; we read it as heating when the target is above the inlet, which is why equal temperatures show cooling. That reading hasn't been checked against the app or a unit.
+
+Code: the compressor role in the profile's mapping ([mapping.pool_heat_pump.json](../../custom_components/aqua_temp/cloud/profiles/mapping.pool_heat_pump.json)) names `Sys1CompState`; its catalog entry's on and off values read as running and stopped. In auto mode it also reads the auto target (`R03`) and the inlet water temperature (`T02`). The profile of product `1442284873216843776` names no inlet water temperature code, so there it shows nothing while running in auto mode.
 
 </details>
 

@@ -19,6 +19,7 @@ from aiohttp import (
 
 from .api_profile import ApiProfile
 from .api_types import DEVICE_LISTS, DEVICE_REQUEST_PARAMETERS, APIParam
+from .auto_mode import auto_mode_direction
 from .consts import (
     API_MAX_ATTEMPTS,
     API_REQUEST_TIMEOUT,
@@ -1092,6 +1093,13 @@ class AquaTempAPI:
             running = False
 
         return running
+
+    def get_device_auto_mode_direction(self, device_code: str) -> Mode | None:
+        """Whether the device running in auto mode heats or cools; see
+        auto_mode_direction. None when it can't be told."""
+        device_data = self.get_device_data(device_code) or {}
+
+        return auto_mode_direction(self._get_device_profile(device_code), device_data)
 
     def is_device_offline(self, device_code: str) -> bool:
         """Whether the last poll found the device offline.

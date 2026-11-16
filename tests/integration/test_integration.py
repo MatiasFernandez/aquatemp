@@ -429,9 +429,21 @@ def powered_on_with(**values) -> dict:
         pytest.param(
             powered_on_with(Mode="2", Sys1CompState="0"), "idle", id="auto_stopped"
         ),
-        # Nothing tells whether it heats or cools
+        # Recorded auto target R03 27.0 and inlet T02 12.5: the target is above
         pytest.param(
-            powered_on_with(Mode="2", Sys1CompState="1"), None, id="auto_running"
+            powered_on_with(Mode="2", Sys1CompState="1"), "heating", id="auto_heating"
+        ),
+        pytest.param(
+            powered_on_with(
+                Mode="2", Sys1CompState="1", T02="30.0", InletWaterTemp="30.0"
+            ),
+            "cooling",
+            id="auto_cooling",
+        ),
+        pytest.param(
+            powered_on_with(Mode="2", Sys1CompState="1", R03=""),
+            None,
+            id="auto_running_without_the_target",
         ),
         pytest.param(powered_on_with(Sys1CompState=""), None, id="compressor_unknown"),
     ],
