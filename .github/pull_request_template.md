@@ -5,7 +5,12 @@
 ## Manual testing
 
 <!-- What you checked by hand and what you saw: in Home Assistant, the app, or against the cloud.
-     The automated tests are in the diff; no need to describe them. Say what you couldn't test. -->
+     The automated tests are in the diff; no need to describe them.
+     If this changes how a heat pump is read or controlled: how you ran it and what you saw. If you
+     couldn't, say so: someone with a matching heat pump may be asked to try it.
+     Docs, CI and refactors need no device test. -->
+
+**Evidence:** <!-- screenshots, diagnostics, log excerpts: drag files here -->
 
 **Tested on**
 
