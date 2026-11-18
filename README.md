@@ -155,7 +155,7 @@ Attach the following details to issue:
 - Attach screenshots and logs as zip file or link for download
 - Attach diagnostic details from HA integration
 
-Pull requests are welcome too: see [CONTRIBUTING.md](CONTRIBUTING.md). They should come with tests where possible; the suite runs offline against a mocked cloud. A change to how a heat pump is read or controlled is much easier to merge once you have run it on your own heat pump.
+Pull requests are welcome too: see [CONTRIBUTING.md](CONTRIBUTING.md). They should come with tests where possible; the suite runs offline against a mocked cloud. A change to how a heat pump is read or controlled is much easier to merge once you have run it on your own heat pump; [Testing a change in Home Assistant](docs/testing-in-home-assistant.md) shows how to install it, or to try someone else's pull request.
 
 ## Acknowledgements
 

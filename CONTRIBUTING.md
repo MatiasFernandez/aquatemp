@@ -21,7 +21,7 @@ If your change alters how the integration behaves with a heat pump, or what its 
 - **When it isn't needed:** docs, CI, tooling and refactors that don't change behavior need no device test.
 - **If you can't test it:** say so in the PR. It can still be merged, but it may wait for an owner of a matching model to try it, or take longer because the review has to be thorough enough to make sure nothing breaks.
 - **Evidence makes merging easier:** a screenshot of the entities, the diagnostics file, a log excerpt with debug logging on, ideally before and after the change. See [Logs and diagnostics](README.md#logs-and-diagnostics) for how to get them, and check logs for your email and tokens before posting them.
-- **How to test:** delete the `aqua_temp` folder in your Home Assistant configuration's `custom_components/` so no file the change removed or renamed stays behind, then copy your `custom_components/aqua_temp` folder in its place, for example with the Samba share or the Terminal & SSH add-on, then restart Home Assistant. To go back, redownload your version in HACS, which replaces the whole folder, then restart Home Assistant.
+- **How to test:** [Testing a change in Home Assistant](docs/testing-in-home-assistant.md#test-your-own-change) installs your checkout with one pasted line, and explains how to go back to a release.
 
 AI tools are welcome. Say in the PR what they did and what you did yourself; a tool name or a `Co-Authored-By` line alone doesn't tell a reviewer much. Make sure you have run the change and understand it, and answer review questions in your own words.
 
@@ -209,6 +209,10 @@ Limitations of the script as it stands:
 
 - File paths use Windows separators (`\\`), so it only finds the XML files on Windows.
 - Writing `custom_components/aqua_temp/cloud/profiles/entity_description.<device>.json` is commented out. Uncomment it to regenerate the files, or copy the logged output.
+
+### Install a change on Home Assistant
+
+[utils/serve.py](utils/serve.py) serves the working tree's integration on the local network, and [utils/install.sh](utils/install.sh) installs it, or a pull request or branch from GitHub, on Home Assistant. [Testing a change in Home Assistant](docs/testing-in-home-assistant.md) explains how to use them.
 
 ### Call the cloud API by hand
 
