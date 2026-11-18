@@ -7,6 +7,10 @@ predate this fork and keep their original format.
 
 ## [Unreleased]
 
+### Fixed
+
+- Home Assistant 2026.11 no longer logs deprecation warnings about the climate entity's temperatures. Without this change, they would stop working in Home Assistant 2027.11
+
 ## [3.6.0] - 2026-11-16
 
 ### Added

@@ -24,11 +24,6 @@ FAULT = "app/device/getFaultDataByDeviceCode"
 RESPONSES = {DATA: DATA_IDLE}
 
 
-@pytest.fixture(autouse=True)
-def auto_enable_custom_integrations(enable_custom_integrations):
-    return
-
-
 @pytest.fixture
 def cloud_responses() -> dict:
     return RESPONSES

@@ -6,10 +6,6 @@ import logging
 
 from cryptography.fernet import Fernet
 import pytest
-from pytest_homeassistant_custom_component.common import (
-    MockConfigEntry,
-    async_fire_time_changed,
-)
 
 from custom_components.aqua_temp.common.consts import CONF_API_TYPE, DOMAIN
 from homeassistant.config_entries import ConfigEntryState
@@ -18,6 +14,10 @@ from homeassistant.core import CoreState, HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.update_coordinator import REQUEST_REFRESH_DEFAULT_COOLDOWN
 from tests.cloud.mock_cloud import DATA, DATA_IDLE, cloud_with
+from tests.harness import (
+    MockConfigEntry,
+    async_fire_time_changed,
+)
 
 from .conftest import add_entry
 
@@ -27,11 +27,6 @@ CONFIG_STORE = "aqua_temp.config.json"
 LEGACY_KEY_STORE = ".aqua_temp"
 
 RESPONSES = {DATA: DATA_IDLE}
-
-
-@pytest.fixture(autouse=True)
-def auto_enable_custom_integrations(enable_custom_integrations):
-    return
 
 
 @pytest.fixture

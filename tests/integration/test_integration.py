@@ -14,10 +14,6 @@ from pathlib import Path
 from unittest.mock import patch
 
 import pytest
-from pytest_homeassistant_custom_component.common import (
-    MockConfigEntry,
-    async_fire_time_changed,
-)
 
 from custom_components.aqua_temp.cloud.exceptions import OperationFailedException
 from custom_components.aqua_temp.common.consts import CONF_API_TYPE, DOMAIN
@@ -41,6 +37,10 @@ from tests.cloud.mock_cloud import (
     data_untyped,
     data_with,
     load_fixture,
+)
+from tests.harness import (
+    MockConfigEntry,
+    async_fire_time_changed,
 )
 
 CONTROL = "app/device/control"
@@ -84,11 +84,6 @@ RESPONSES = {
 
 # The recorded state, powered on: heat, Manual-mute 0
 POWERED_ON = RESPONSES | {DATA: data_with(Power="1")}
-
-
-@pytest.fixture(autouse=True)
-def auto_enable_custom_integrations(enable_custom_integrations):
-    return
 
 
 @pytest.fixture

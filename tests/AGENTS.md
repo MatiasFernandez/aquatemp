@@ -40,7 +40,8 @@ Running the suite, the mocked cloud and fixtures: see [CONTRIBUTING.md](../CONTR
 ## Home Assistant
 
 - Go through the public surface: `MockConfigEntry`, `hass.services.async_call(..., blocking=True)`, then `hass.states`, the registries or diagnostics. Don't call entity methods or read coordinator attributes.
-- Use `pytest-homeassistant-custom-component` helpers (`async_fire_time_changed`, `freezer`) instead of rebuilding them.
+- An integration test fails when Home Assistant reports deprecated usage by `aqua_temp` while it runs, and the failure lists the reports ([integration/deprecation_reports.py](integration/deprecation_reports.py)). Fix the integration. Only a deprecation that needs more work than the change at hand goes in its `ACCEPTED_DEPRECATIONS`, with the reason; a full run fails on entries that no longer match.
+- Use the harness's `async_fire_time_changed` and the `freezer` fixture instead of rebuilding them. Import `async_fire_time_changed` and `MockConfigEntry` through [harness.py](harness.py), not from the harness package: the latest and floor environments install different ones.
 
 ## What to test
 
