@@ -146,7 +146,9 @@ class IntegrationFlowManager:
 
         return self._flow_handler.async_show_form(
             step_id=self._flow_id,
-            data_schema=schema,
+            # Home Assistant 2026.11 types this as probatio.Schema. A voluptuous
+            # schema works at runtime, and 2025.11 doesn't ship probatio.
+            data_schema=schema,  # ty: ignore[invalid-argument-type]
             errors=form_errors,
             description_placeholders={"invalid_token_url": INVALID_TOKEN_SECTION},
         )

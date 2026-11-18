@@ -27,7 +27,8 @@ async def async_setup_entry(
 class AquaTempSensorEntity(BaseEntity, SensorEntity):
     """Representation of a sensor."""
 
-    entity_description: AquaTempSensorEntityDescription
+    # Narrowing the type is Home Assistant's documented pattern.
+    entity_description: AquaTempSensorEntityDescription  # ty: ignore[invalid-mutable-override]
 
     def __init__(
         self,
