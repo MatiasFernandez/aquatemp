@@ -65,27 +65,28 @@ class AquaTempClimateEntity(BaseEntity, ClimateEntity, ABC):
         self._target_temperature: float | None = None
 
     @property
-    def native_temperature_unit(self) -> str:
+    def native_temperature_unit(self) -> str:  # ty: ignore[invalid-property-type-override]
         """Return the unit the device reports temperatures in."""
         return self._temperature_unit
 
     @property
-    def native_current_temperature(self) -> float | None:
+    def native_current_temperature(self) -> float | None:  # ty: ignore[invalid-property-type-override]
         """Return the current temperature, in the device's unit."""
         return self._current_temperature
 
     @property
-    def native_target_temperature(self) -> float | None:
+    def native_target_temperature(self) -> float | None:  # ty: ignore[invalid-property-type-override]
         """Return the target temperature, in the device's unit."""
         return self._target_temperature
 
     # Home Assistant before 2026.11 has no native_ names and reads these. From
     # 2026.11 it reads the native_ ones and deprecates these, but doesn't report
     # them while the class also provides the native_ ones. Remove once hacs.json's
-    # minimum reaches 2026.11.
-    temperature_unit = native_temperature_unit
-    current_temperature = native_current_temperature
-    target_temperature = native_target_temperature
+    # minimum reaches 2026.11, together with the ty ignores on these aliases and on
+    # the native_ properties above.
+    temperature_unit = native_temperature_unit  # ty: ignore[override-of-final-variable]
+    current_temperature = native_current_temperature  # ty: ignore[override-of-final-variable]
+    target_temperature = native_target_temperature  # ty: ignore[override-of-final-variable]
 
     async def async_set_temperature(self, **kwargs):
         """Set new target temperature."""
