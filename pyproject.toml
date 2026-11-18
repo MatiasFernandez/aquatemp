@@ -21,10 +21,11 @@ dev = [
     "aioresponses @ git+https://github.com/agners/aioresponses@8f40e0db2eed16621607ecfc857168240c795755",
     "mutmut>=3.8.1",
     "pre-commit>=4",
-    # Pins homeassistant, pytest, pytest-asyncio and pytest-cov exactly: the latest
-    # stable Home Assistant, which Dependabot moves. The oldest supported one is
-    # tested from its own project, tests/floor/
-    "pytest-homeassistant-custom-component==0.13.375",
+    "pytest-cov>=7.1.0",
+    # Pins homeassistant, pytest and pytest-asyncio exactly: the latest stable Home
+    # Assistant, which Dependabot moves. The oldest supported one is tested from its
+    # own project, tests/floor/, on the older pytest-homeassistant-custom-component
+    "pytest-homeassistant==2026.11.2",
 ]
 
 [tool.uv]
@@ -63,6 +64,15 @@ max-complexity = 25
 
 [tool.pytest.ini_options]
 asyncio_mode = "auto"
+# As pytest-homeassistant's README asks: each test's fixtures get their own event loop
+asyncio_default_fixture_loop_scope = "function"
+# Temporary, also from that README. Importing homeassistant (2026.11 on) aliases httpx
+# to httpx2 and raises if httpx was already imported, which respx's pytest plugin does
+# when pytest loads it. Whether that happens depends on the order pytest loads plugins
+# in, so the run can fail on one machine and pass on another. Only the plugin is
+# disabled: the harnesses still use respx itself. Remove once pytest-homeassistant's
+# README no longer asks for it.
+addopts = "-p no:respx"
 testpaths = ["tests"]
 
 [tool.coverage.run]

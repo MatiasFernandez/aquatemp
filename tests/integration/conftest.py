@@ -1,12 +1,15 @@
 """Config entries for the integration tests on a real Home Assistant."""
 
 import pytest
-from pytest_homeassistant_custom_component.common import MockConfigEntry
 
 from custom_components.aqua_temp.common.consts import CONF_API_TYPE, DOMAIN
 from custom_components.aqua_temp.managers.password_manager import PasswordManager
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
+from tests.harness import (
+    MockConfigEntry,
+    enable_custom_integrations_if_needed,  # noqa: F401  autouse, see harness.py
+)
 
 
 async def add_entry(

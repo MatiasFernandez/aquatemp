@@ -18,11 +18,6 @@ LOGIN = "app/user/login"
 FLOW_MANAGER = "custom_components.aqua_temp.managers.flow_manager"
 
 
-@pytest.fixture(autouse=True)
-def auto_enable_custom_integrations(enable_custom_integrations):
-    return
-
-
 @pytest.fixture
 def flow_sessions():
     """Spy on the sessions the flow creates through HA's factory.
