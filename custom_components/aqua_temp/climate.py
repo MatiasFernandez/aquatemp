@@ -60,7 +60,32 @@ class AquaTempClimateEntity(BaseEntity, ClimateEntity, ABC):
         self._attr_hvac_mode = HVACMode.OFF
         self._attr_fan_mode = FAN_AUTO
 
-        self._attr_temperature_unit = coordinator.get_temperature_unit(device_code)
+        self._temperature_unit = coordinator.get_temperature_unit(device_code)
+        self._current_temperature: float | None = None
+        self._target_temperature: float | None = None
+
+    @property
+    def native_temperature_unit(self) -> str:
+        """Return the unit the device reports temperatures in."""
+        return self._temperature_unit
+
+    @property
+    def native_current_temperature(self) -> float | None:
+        """Return the current temperature, in the device's unit."""
+        return self._current_temperature
+
+    @property
+    def native_target_temperature(self) -> float | None:
+        """Return the target temperature, in the device's unit."""
+        return self._target_temperature
+
+    # Home Assistant before 2026.11 has no native_ names and reads these. From
+    # 2026.11 it reads the native_ ones and deprecates these, but doesn't report
+    # them while the class also provides the native_ ones. Remove once hacs.json's
+    # minimum reaches 2026.11.
+    temperature_unit = native_temperature_unit
+    current_temperature = native_current_temperature
+    target_temperature = native_target_temperature
 
     async def async_set_temperature(self, **kwargs):
         """Set new target temperature."""
@@ -103,12 +128,12 @@ class AquaTempClimateEntity(BaseEntity, ClimateEntity, ABC):
         self._attr_hvac_mode = hvac_mode
         self._attr_hvac_action = hvac_action
         self._attr_fan_mode = fan_mode
-        self._attr_target_temperature = target_temperature
-        self._attr_current_temperature = current_temperature
+        self._target_temperature = target_temperature
+        self._current_temperature = current_temperature
 
         _LOGGER.debug(f"_attr_hvac_mode: {self._attr_hvac_mode}")
         _LOGGER.debug(f"_attr_hvac_action: {self._attr_hvac_action}")
-        _LOGGER.debug(f"_attr_target_temperature: {self._attr_target_temperature}")
+        _LOGGER.debug(f"target_temperature: {self._target_temperature}")
         _LOGGER.debug(f"_attr_fan_mode: {self._attr_fan_mode}")
         _LOGGER.debug(f"_attr_min_temp: {self._attr_min_temp}")
         _LOGGER.debug(f"_attr_max_temp: {self._attr_max_temp}")
