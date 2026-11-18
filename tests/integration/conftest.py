@@ -11,6 +11,14 @@ from tests.harness import (
     enable_custom_integrations_if_needed,  # noqa: F401  autouse, see harness.py
 )
 
+from .deprecation_reports import (  # noqa: F401  autouse fixture and hooks
+    home_assistant_deprecation_reports,
+    pytest_deselected,
+    pytest_runtest_makereport,
+    pytest_sessionfinish,
+    pytest_terminal_summary,
+)
+
 
 async def add_entry(
     hass: HomeAssistant, api_type: str, options: dict | None = None

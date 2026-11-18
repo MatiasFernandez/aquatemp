@@ -134,6 +134,8 @@ uv run pytest --cov                                       # with a coverage repo
 uv run --project tests/floor --locked pytest
 ```
 
+An integration test fails if Home Assistant reports deprecated usage by `aqua_temp` while it runs, and the failure lists what to fix. Home Assistant only logs this for custom integrations, so the check turns it into a failure before a release removes the deprecated API. It typically shows up on a Dependabot bump of `pytest-homeassistant`. Fix it in that PR, or, if the fix needs more work, accept it in `ACCEPTED_DEPRECATIONS` in [tests/integration/deprecation_reports.py](tests/integration/deprecation_reports.py) with the reason, and track the fix: its reports then show as warnings. A full run of the integration tests fails on entries that no longer match any report.
+
 CI runs both, and both must pass. Both upload coverage and test results to [Codecov](https://codecov.io/gh/MatiasFernandez/aquatemp), flagged `latest` and `floor`. It merges the two, so code only one of them runs (a fallback for older Home Assistant releases) still counts as covered, and comments on pull requests with the coverage of the changed lines and any failing tests.
 
 Fixtures live in [tests/cloud/fixtures/](tests/cloud/fixtures/), one folder per API type, and are catalogued in its [README](tests/cloud/fixtures/README.md). List new fixtures there; a test fails otherwise.
