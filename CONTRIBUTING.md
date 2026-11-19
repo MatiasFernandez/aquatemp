@@ -46,7 +46,7 @@ The dev group's exact `pytest-homeassistant` pin (Home Assistant's own test harn
 There is no build step. Checks run as pre-commit hooks:
 
 - [ruff](https://docs.astral.sh/ruff/) lint and format for Python, configured in [pyproject.toml](pyproject.toml)
-- [ty](https://docs.astral.sh/ty/) type checking for the integration, configured in [pyproject.toml](pyproject.toml). The hook runs it through `uv run`, so it sees the installed Home Assistant; CI runs it in a job of its own
+- [ty](https://docs.astral.sh/ty/) type checking for the integration, configured in [pyproject.toml](pyproject.toml). The hook runs it through `uv run`, so it sees the installed Home Assistant; CI runs it in a job of its own. The errors the code had when ty was added are accepted in [ty-baseline.json](ty-baseline.json), and ty fails only on new ones. Entries record a file, a rule and the error's columns, not its line or code, so an accepted error stays accepted when its line moves or changes: when you change code with an accepted error, fix it rather than rely on the check. After fixing accepted errors, run `uv run ty check --update-baseline` and commit the smaller file; don't use it to accept new errors. `uv run ty check --baseline /dev/null` lists the accepted errors with their lines, after an error that it can't read that file. The file's format may change between ty releases, so a ty upgrade may need it regenerated
 - codespell, yamllint, prettier (Markdown, JSON, YAML) and basic file checks
 - [actionlint](https://github.com/rhysd/actionlint) (workflow correctness) and [zizmor](https://docs.zizmor.sh/) (workflow security) for GitHub Actions. Pin third-party actions to a commit SHA with a `# vX.Y.Z` comment; Dependabot keeps both updated.
 
