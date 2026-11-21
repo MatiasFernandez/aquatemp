@@ -12,6 +12,7 @@ from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers.aiohttp_client import async_create_clientsession
 from tests.cloud.mock_cloud import cloud_with
+from tests.harness import MockConfigEntry
 
 from .conftest import add_entry
 
@@ -65,6 +66,14 @@ def assert_released(calls: list[dict], sessions: list) -> None:
     assert calls[0].get("auto_cleanup", True) is False
     sessions[0].detach.assert_called_once_with()
     assert sessions[0].closed
+
+
+def defaults(result) -> dict:
+    """Each field's default, None for a field without one."""
+    return {
+        str(key): key.default() if callable(key.default) else None
+        for key in result["data_schema"].schema
+    }
 
 
 async def test_valid_credentials_release_the_session(
@@ -175,3 +184,113 @@ async def test_reauth_with_a_rejected_password_asks_again(hass, api_type, cloud)
         {"base": "invalid_credentials"},
     )
     assert entry.data[CONF_PASSWORD] == stored_password
+
+
+# The account's id in the user info the mocked cloud serves
+ACCOUNT_ID = "test-user"
+
+
+async def test_new_entry_is_identified_by_the_cloud_account(hass, api_type, cloud):
+    result = await submit(hass, api_type)
+    await hass.async_block_till_done()
+
+    assert result["result"].unique_id == ACCOUNT_ID
+
+
+async def test_account_already_set_up_is_not_added_again(hass, api_type, cloud):
+    MockConfigEntry(domain=DOMAIN, unique_id=ACCOUNT_ID).add_to_hass(hass)
+
+    result = await submit(hass, api_type)
+
+    assert (result["type"], result["reason"]) == (
+        FlowResultType.ABORT,
+        "already_configured",
+    )
+
+
+async def reconfigure(hass, entry, user_input: dict | None = None) -> dict:
+    """Open the reconfigure step, then submit user_input if given."""
+    result = await entry.start_reconfigure_flow(hass)
+
+    if user_input is None:
+        return result
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input
+    )
+    await hass.async_block_till_done()
+
+    return result
+
+
+def new_credentials(api_type: str) -> dict:
+    return {
+        CONF_USERNAME: "new@example.com",
+        CONF_PASSWORD: "new-password",
+        CONF_API_TYPE: api_type,
+    }
+
+
+async def test_reconfigure_shows_the_credentials_without_the_password(
+    hass, api_type, cloud
+):
+    entry = await add_entry(hass, api_type)
+
+    result = await reconfigure(hass, entry)
+
+    assert (result["step_id"], defaults(result)) == (
+        "reconfigure",
+        {
+            CONF_USERNAME: "test@example.com",
+            CONF_PASSWORD: None,
+            CONF_API_TYPE: api_type,
+        },
+    )
+
+
+async def test_reconfigure_stores_the_new_credentials_encrypted(hass, api_type, cloud):
+    entry = await add_entry(hass, api_type)
+
+    result = await reconfigure(hass, entry, new_credentials(api_type))
+
+    data = dict(entry.data)
+    await PasswordManager.decrypt(hass, data)
+
+    assert (result["type"], result["reason"]) == (
+        FlowResultType.ABORT,
+        "reconfigure_successful",
+    )
+    assert entry.data[CONF_PASSWORD] != "new-password"
+    assert (data, entry.unique_id) == (new_credentials(api_type), ACCOUNT_ID)
+
+
+@cloud_with({LOGIN: "synthetic/login_rejected"})
+async def test_reconfigure_with_rejected_credentials_keeps_the_entry(
+    hass, api_type, cloud
+):
+    entry = await add_entry(hass, api_type)
+    before = dict(entry.data)
+
+    result = await reconfigure(hass, entry, new_credentials(api_type))
+
+    assert (result["type"], result["errors"]) == (
+        FlowResultType.FORM,
+        {"base": "invalid_credentials"},
+    )
+    assert dict(entry.data) == before
+
+
+async def test_reconfigure_to_an_account_another_entry_uses_is_refused(
+    hass, api_type, cloud
+):
+    MockConfigEntry(domain=DOMAIN, unique_id=ACCOUNT_ID).add_to_hass(hass)
+    entry = await add_entry(hass, api_type)
+    before = dict(entry.data)
+
+    result = await reconfigure(hass, entry, new_credentials(api_type))
+
+    assert (result["type"], result["reason"]) == (
+        FlowResultType.ABORT,
+        "already_configured",
+    )
+    assert dict(entry.data) == before

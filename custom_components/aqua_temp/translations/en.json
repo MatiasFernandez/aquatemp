@@ -25,6 +25,20 @@
         "data_description": {
           "password": "If a password longer than 16 characters fails here but works in the app, enter only its first 16 characters: the app may have kept only those when the account was created."
         }
+      },
+      "reconfigure": {
+        "title": "Change the Aqua Temp login",
+        "description": "Enter the account Home Assistant logs in with. It can be another account the heat pump is shared with, as long as no other Aqua Temp entry uses it.\n\nThe cloud allows one login per account: when Home Assistant logs in, the app is logged out.",
+        "data": {
+          "username": "Username",
+          "password": "Password",
+          "api_type": "API type"
+        },
+        "data_description": {
+          "username": "The email address you log in to the app with, exactly as registered.",
+          "password": "If a password longer than 16 characters fails here but works in the app, enter only its first 16 characters: the app may have kept only those when the account was created.",
+          "api_type": "Aqua Temp for the current Aqua Temp app, HiTemp for the HiTemp app. Aqua Temp (<=1.5.8) is the legacy backend of app versions up to 1.5.8; only try it if the others fail."
+        }
       }
     },
     "error": {
@@ -32,36 +46,28 @@
       "corrupted_encryption_key": "Corrupted encryption key, please follow steps in {invalid_token_url}"
     },
     "abort": {
-      "reauth_successful": "The new password works. Aqua Temp is loading again."
+      "reauth_successful": "The new password works. Aqua Temp is loading again.",
+      "already_configured": "This Aqua Temp account is already set up. The cloud allows one login per account, so a second entry would log the first out.",
+      "reconfigure_successful": "The new login works. Aqua Temp is loading again with it."
     }
   },
   "options": {
     "step": {
       "init": {
-        "title": "Set up Aqua Temp integration",
-        "description": "Log in with your Aqua Temp or HiTemp app account.\n\nThe cloud allows one login per account: when Home Assistant logs in, the app is logged out. To keep using the app, share the heat pump with a second account and use that one here.",
+        "title": "Aqua Temp settings",
+        "description": "To change the account Home Assistant logs in with, use Reconfigure on the Aqua Temp entry.",
         "data": {
           "title": "Title",
-          "username": "Username",
-          "password": "Password",
-          "api_type": "API type",
           "update_interval": "Polling interval (seconds)",
           "request_timeout": "Request timeout (seconds)",
           "log_session_token": "Log session token (for debugging)"
         },
         "data_description": {
-          "username": "The email address you log in to the app with, exactly as registered.",
-          "password": "If a password longer than 16 characters fails here but works in the app, enter only its first 16 characters: the app may have kept only those when the account was created.",
-          "api_type": "Aqua Temp for the current Aqua Temp app, HiTemp for the HiTemp app. Aqua Temp (<=1.5.8) is the legacy backend of app versions up to 1.5.8; only try it if the others fail.",
           "update_interval": "How often the cloud is polled for the heat pump's values, from 30 to 3600 seconds. The cloud seems to update them only every 4 to 5 minutes, so a shorter interval rarely shows changes sooner. Each poll makes a few requests per heat pump; a change made from Home Assistant is always followed by a poll.",
           "request_timeout": "How long a request to the cloud may take before it fails, from 5 to 60 seconds. The cloud answers a change to an online heat pump in about 5 seconds. A longer timeout only delays the error when the cloud doesn't respond.",
           "log_session_token": "Writes the API session token to the Home Assistant log once per login, at WARNING. It is a credential: anyone holding it can control your heat pump until the next login. Turn off before sharing logs."
         }
       }
-    },
-    "error": {
-      "invalid_credentials": "Invalid credentials",
-      "corrupted_encryption_key": "Corrupted encryption key, please follow steps in {invalid_token_url}"
     }
   },
   "selector": {
@@ -145,7 +151,7 @@
     },
     "sensor": {
       "water_delta_t": {
-        "name": "Water \u0394T"
+        "name": "Water ΔT"
       },
       "compressor_speed": {
         "name": "Compressor speed"
@@ -376,7 +382,7 @@
         "name": "Comp. Defrost Frequency [H13]"
       },
       "default_h14": {
-        "name": "Frequency Cycle of 0.2\u2103 [H14]"
+        "name": "Frequency Cycle of 0.2℃ [H14]"
       },
       "default_h15": {
         "name": "Comp. Overcurren Protect [H15]"
@@ -883,13 +889,13 @@
         "name": "shutDown [O12]"
       },
       "1245226668902080512_o13": {
-        "name": "DTU&WIFI\u662f\u5426\u4e0a\u7ebf [O13]"
+        "name": "DTU&WIFI是否上线 [O13]"
       },
       "1245226668902080512_o14": {
-        "name": "\u9664\u971cDefrost [O14]"
+        "name": "除霜Defrost [O14]"
       },
       "1245226668902080512_o15": {
-        "name": "\u7cfb\u7edf\u662f\u5426\u8fdb\u5165\u9ad8\u6e29\u70ed\u6c34\u9636\u6bb5 [O15]"
+        "name": "系统是否进入高温热水阶段 [O15]"
       },
       "1245226668902080512_s01": {
         "name": "Remote ON/OFF switch [S01]"
@@ -931,10 +937,10 @@
         "name": "Temperature value shown on APP/display [T10]"
       },
       "1245226668902080512_t11": {
-        "name": "\u8fdb\u5165\u53c2\u6570\u8d85\u8303\u56f4\u4fdd\u62a4\u6b21\u6570 [T11]"
+        "name": "进入参数超范围保护次数 [T11]"
       },
       "1245226668902080512_t12": {
-        "name": "\u8bb0\u5fc6\u82af\u7247EEPROM\u5b58\u50a8\u6b21\u6570 [T12]"
+        "name": "记忆芯片EEPROM存储次数 [T12]"
       },
       "1442284873216843776_set_temp": {
         "name": "Set_Temp"

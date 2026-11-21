@@ -78,6 +78,11 @@ class AquaTempCoordinator(DataUpdateCoordinator):
         return self._api.login_details
 
     @property
+    def user_id(self) -> str | None:
+        """The cloud account's id, known once logged in."""
+        return self._api.user_id
+
+    @property
     def announced_devices(self) -> tuple[str, ...]:
         """Codes of the devices whose entities can be created, in order."""
         return self._api.announced_devices

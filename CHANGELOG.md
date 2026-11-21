@@ -21,6 +21,12 @@ predate this fork and keep their original format.
 - The downloaded diagnostics show the account's API type
 - A Compressor speed sensor: the compressor's output frequency as a percentage of the maximum it is set to reach while heating or while cooling. 0% while stopped; in auto mode it uses the heating or cooling maximum by whether the auto target temperature is above the inlet water temperature, as the official app does. Hitemp units don't get it, and neither does a unit that reads no maximum or whose compressor type reads 0, as in the official app for the latter; in a mode whose maximum is missing or 0 it is unknown while the compressor runs
 - When the cloud rejects the stored login, Home Assistant asks for the password again, checks it, and reloads the integration with it. Polling stops until then, instead of logging in again every interval
+- A **Reconfigure** step for the username, password and API type. Its password field starts empty, instead of the stored password being sent to the browser as the Configure dialog's default
+- Each entry is identified by its cloud account, so the same account can't be added twice, where the two entries would log each other out. Existing entries take their account on the next start, unless another entry already has it, which is logged as a warning
+
+### Changed
+
+- The **Configure** dialog keeps the title, polling interval, request timeout and session token logging; the credentials and API type moved to **Reconfigure**. Saving it no longer logs in to check them
 
 ### Fixed
 

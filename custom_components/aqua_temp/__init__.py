@@ -3,7 +3,7 @@ import logging
 from cryptography.fernet import InvalidToken
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryError
 from homeassistant.helpers import config_validation as cv
 
@@ -51,6 +51,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: AquaTempConfigEntry) -> 
 
     await coordinator.async_config_entry_first_refresh()
 
+    _async_identify_entry(hass, entry, coordinator.user_id)
+
     entry.runtime_data = coordinator
 
     entry.async_on_unload(entry.add_update_listener(async_update_listener))
@@ -62,6 +64,31 @@ async def async_setup_entry(hass: HomeAssistant, entry: AquaTempConfigEntry) -> 
     _LOGGER.info("Finished loading integration")
 
     return True
+
+
+@callback
+def _async_identify_entry(
+    hass: HomeAssistant, entry: AquaTempConfigEntry, user_id: str | None
+) -> None:
+    """Give an entry created before entries were identified by cloud account
+    its account's id, unless another entry already has it.
+
+    Runs before the update listener is added, so it doesn't reload the entry.
+    """
+    if entry.unique_id is not None or user_id is None:
+        return
+
+    for other in hass.config_entries.async_entries(DOMAIN):
+        if other.unique_id == user_id:
+            _LOGGER.warning(
+                f"Entry {entry.title} uses the same Aqua Temp account as "
+                f"{other.title}; the cloud allows one login per account, so "
+                "they log each other out. Remove one of them"
+            )
+
+            return
+
+    hass.config_entries.async_update_entry(entry, unique_id=user_id)
 
 
 async def async_update_listener(hass: HomeAssistant, entry: ConfigEntry) -> None:

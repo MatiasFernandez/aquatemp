@@ -160,6 +160,7 @@ class AquaTempAPI:
         self._request_timeout = request_timeout
 
         self._dispatched_devices = []
+        self._user_id: str | None = None
         self._device_list_request_data = {}
 
     @property
@@ -179,6 +180,12 @@ class AquaTempAPI:
         result = self._devices
 
         return result
+
+    @property
+    def user_id(self) -> str | None:
+        """The logged-in account's id in the cloud, from its user info; the
+        same across logins, unlike the session token."""
+        return self._user_id
 
     @property
     def announced_devices(self) -> tuple[str, ...]:
@@ -846,6 +853,8 @@ class AquaTempAPI:
 
         object_result = user_info_response.get(param_object_result, {})
         user_id = object_result.get(param_user_id)
+
+        self._user_id = None if user_id is None else str(user_id)
 
         for device_list_url in DEVICE_LISTS:
             request_data = {}

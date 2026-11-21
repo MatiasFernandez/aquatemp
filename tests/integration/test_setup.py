@@ -156,6 +156,28 @@ async def test_cloud_error_at_setup_retries_on_the_first_update(
     assert entities(hass, entry) != []
 
 
+async def test_entry_without_an_id_takes_its_cloud_account_on_setup(
+    hass, api_type, cloud
+):
+    # Entries created before entries were identified by account have none
+    entry = await add_entry(hass, api_type)
+
+    await set_up(hass, entry)
+
+    assert entry.unique_id == "test-user"
+
+
+async def test_entry_without_an_id_leaves_the_account_to_the_entry_holding_it(
+    hass, api_type, cloud
+):
+    MockConfigEntry(domain=DOMAIN, unique_id="test-user").add_to_hass(hass)
+    entry = await add_entry(hass, api_type)
+
+    await set_up(hass, entry)
+
+    assert (entry.state, entry.unique_id) == (ConfigEntryState.LOADED, None)
+
+
 async def test_setup_before_start_polls_right_away(hass, api_type, cloud, wire):
     # Setup checks the login and reads the devices itself, so a failure shows
     # as a setup retry or a request to log in again instead of later
