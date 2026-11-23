@@ -180,6 +180,11 @@ class AquaTempAPI:
 
         return result
 
+    @property
+    def announced_devices(self) -> tuple[str, ...]:
+        """Codes of the devices announced through on_new_device so far, in order."""
+        return tuple(self._dispatched_devices)
+
     async def initialize(self, throw_error: bool = False):
         """Log in and discover devices.
 

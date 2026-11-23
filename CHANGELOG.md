@@ -20,10 +20,13 @@ predate this fork and keep their original format.
 - The downloaded diagnostics show each device's profile: its product class and the profile files its mapping and parameter list come from. The log line binding a device to its profile names the same files
 - The downloaded diagnostics show the account's API type
 - A Compressor speed sensor: the compressor's output frequency as a percentage of the maximum it is set to reach while heating or while cooling. 0% while stopped; in auto mode it uses the heating or cooling maximum by whether the auto target temperature is above the inlet water temperature, as the official app does. Hitemp units don't get it, and neither does a unit that reads no maximum or whose compressor type reads 0, as in the official app for the latter; in a mode whose maximum is missing or 0 it is unknown while the compressor runs
+- When the cloud rejects the stored login, Home Assistant asks for the password again, checks it, and reloads the integration with it. Polling stops until then, instead of logging in again every interval
 
 ### Fixed
 
 - Removed the deprecated Home Assistant constant `CONN_CLASS_LOCAL_POLL`
+- Setup logs in and reads the devices before it finishes. A cloud or network failure then retries the setup later instead of loading with nothing behind the entities, and the integration no longer waits for Home Assistant to finish starting before its first poll
+- The entities show the first poll's values as soon as they are created, and a change made from Home Assistant, or a new temperature unit, shows straight away instead of after a 10-second wait
 - A command sent to a device before its first update, as when an earlier device's update fails after a reload, uses the codes of the device's own product instead of the default ones. A Hitemp unit, for one, was sent the default power code
 
 ## [3.5.0] - 2026-11-04

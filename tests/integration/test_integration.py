@@ -355,7 +355,7 @@ async def test_device_entities_are_added_once(hass, entry):
     registry = er.async_get(hass)
     before = len(er.async_entries_for_config_entry(registry, entry.entry_id))
 
-    await hass.data[DOMAIN][entry.entry_id].async_refresh()
+    await entry.runtime_data.async_refresh()
     await hass.async_block_till_done()
 
     assert len(er.async_entries_for_config_entry(registry, entry.entry_id)) == before
@@ -581,8 +581,12 @@ async def test_setting_temperature_writes_the_mode_target(hass, entry, wire):
         {"entity_id": climate_entity_id(hass), "temperature": 26.5},
         blocking=True,
     )
+    await hass.async_block_till_done()
 
-    assert wire == [
+    # The poll a control is followed by runs at once: no refresh from setup is
+    # waiting out the debounce
+    assert [endpoint for endpoint, _ in wire] == [CONTROL, DATA, STATUS]
+    assert wire[:1] == [
         (
             CONTROL,
             {
@@ -674,17 +678,12 @@ async def test_temperature_unit_defaults_to_celsius(hass, entry):
     assert hass.states.get(unit_entity_id(hass)).state == "°C"
 
 
-async def test_selected_temperature_unit_shows_after_the_next_refresh(
-    hass, entry, freezer
-):
+async def test_selected_temperature_unit_shows_at_once(hass, entry):
+    # The refresh selecting requests runs at once: no refresh from setup is
+    # waiting out the debounce
     await select_unit(hass, "°F")
-    shown_at_once = hass.states.get(unit_entity_id(hass)).state
-
-    freezer.tick(timedelta(seconds=REQUEST_REFRESH_DEFAULT_COOLDOWN))
-    async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
-    assert shown_at_once == "°C"
     assert hass.states.get(unit_entity_id(hass)).state == "°F"
 
 
@@ -923,17 +922,28 @@ def list_with_a_hitemp() -> dict:
     return payload
 
 
-@cloud_with(RESPONSES | {DEVICE_LIST: list_with_a_hitemp(), DATA: 500})
+@cloud_with(
+    RESPONSES
+    | {
+        DEVICE_LIST: [device_list(), list_with_a_hitemp(), list_with_a_hitemp()],
+        DATA: [DATA_IDLE, "synthetic/error_token_expired"],
+    }
+)
 async def test_device_diagnostics_show_its_profile_before_its_first_update(
-    hass, config_entry
+    hass, config_entry, freezer
 ):
-    # Registered on an earlier run; the failing first device stops this
-    # update before reaching the Hitemp
+    # Registered on an earlier run. Setup reads the one listed device; on the
+    # next poll the session has expired, logging in again lists the Hitemp
+    # too, and the first device failing stops the update before reaching it
     dr.async_get(hass).async_get_or_create(
         config_entry_id=config_entry.entry_id,
         identifiers={(DOMAIN, OTHER_DEVICE_ID)},
     )
     await set_up(hass, config_entry)
+    with patch("custom_components.aqua_temp.cloud.client.sleep"):
+        freezer.tick(timedelta(seconds=300))
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done()
     device = async_get_ha_device(hass, config_entry.entry_id, OTHER_DEVICE_ID)
 
     diagnostics = await async_get_device_diagnostics(hass, config_entry, device)
@@ -1008,7 +1018,7 @@ async def test_status_sensor_follows_the_online_state(hass, entry, state):
     }
 )
 async def test_status_sensor_recovers_from_an_unknown_state(hass, entry):
-    await hass.data[DOMAIN][entry.entry_id].async_refresh()
+    await entry.runtime_data.async_refresh()
     await hass.async_block_till_done()
 
     assert hass.states.get(status_entity_id(hass)).state == "on"

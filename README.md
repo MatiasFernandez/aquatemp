@@ -113,6 +113,7 @@ The **diagnostics** file (Settings → Devices & Services → Aqua Temp → ⋮ 
 - Use the email address as the username, exactly as registered.
 - Check the API type matches your app.
 - Password longer than 16 characters? Try its first 16 characters: see the [note above](#configuration).
+- If the integration was working and the cloud now rejects its login, as after a password change, Home Assistant asks for the password again on the Aqua Temp entry; enter the current one there.
 
 ### Invalid token
 

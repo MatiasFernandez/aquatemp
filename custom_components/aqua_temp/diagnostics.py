@@ -16,7 +16,6 @@ from .common.consts import (
     DATA_ITEM_CONFIG,
     DATA_ITEM_DEVICES,
     DATA_ITEM_LOGIN_DETAILS,
-    DOMAIN,
     TO_REDACT,
 )
 from .common.device_lookup import async_get_ha_device
@@ -31,7 +30,7 @@ async def async_get_config_entry_diagnostics(
     """Return diagnostics for a config entry."""
     _LOGGER.debug("Starting diagnostic tool")
 
-    coordinator = hass.data[DOMAIN][entry.entry_id]
+    coordinator = entry.runtime_data
 
     return _async_get_diagnostics(hass, coordinator, entry)
 
@@ -40,7 +39,7 @@ async def async_get_device_diagnostics(
     hass: HomeAssistant, entry: ConfigEntry, device: DeviceEntry
 ) -> dict[str, Any]:
     """Return diagnostics for a device entry."""
-    coordinator = hass.data[DOMAIN][entry.entry_id]
+    coordinator = entry.runtime_data
 
     return _async_get_diagnostics(hass, coordinator, entry, device)
 
