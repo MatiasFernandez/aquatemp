@@ -28,7 +28,7 @@ dev = [
     "pytest-homeassistant==2026.11.2",
     # Exact: ty is in beta and its releases change what it reports, so a new
     # version arrives as a Dependabot PR that shows any new errors
-    "ty==0.0.96",
+    "ty==0.0.104",
 ]
 
 [tool.uv]
