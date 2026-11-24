@@ -2,8 +2,8 @@ from collections.abc import Awaitable
 import logging
 
 from homeassistant.components.climate import HVACAction, HVACMode
-from homeassistant.core import Event
-from homeassistant.exceptions import HomeAssistantError
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.exceptions import ConfigEntryAuthFailed, HomeAssistantError
 from homeassistant.helpers.aiohttp_client import async_create_clientsession
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.entity import DeviceInfo
@@ -37,11 +37,13 @@ class AquaTempCoordinator(DataUpdateCoordinator):
         self,
         hass,
         config_manager: AquaTempConfigManager,
+        config_entry: ConfigEntry,
     ):
         """Initialize my coordinator."""
         super().__init__(
             hass,
             _LOGGER,
+            config_entry=config_entry,
             name=config_manager.entry_title,
             update_interval=config_manager.update_interval,
             update_method=self._async_update_data,
@@ -75,42 +77,15 @@ class AquaTempCoordinator(DataUpdateCoordinator):
     def login_details(self):
         return self._api.login_details
 
-    async def on_home_assistant_start(self, _event_data: Event):
-        await self.initialize()
+    @property
+    def user_id(self) -> str | None:
+        """The cloud account's id, known once logged in."""
+        return self._api.user_id
 
-    async def initialize(self):
-        """Initialize the integration.
-
-        LoginError (bad credentials) is allowed to propagate so async_setup_entry
-        can mark the integration as failed and surface a re-auth prompt to the
-        user. Any other exception (DNS timeout, transient network error, AquaTemp
-        cloud blip) is caught and logged so platform setup still proceeds — the
-        coordinator's next regular update will retry the login. Without
-        this, a brief network hiccup at HA boot leaves the integration
-        permanently broken until a manual reload.
-        """
-        _LOGGER.debug("Initializing coordinator")
-
-        entry = self.config_manager.entry
-        platforms = self.config_manager.platforms
-
-        try:
-            await self._api.initialize(throw_error=True)
-
-        except LoginError:
-            raise
-
-        except Exception as ex:
-            _LOGGER.warning(
-                f"Initial API connect failed; coordinator will retry on next "
-                f"update. Error: {ex}"
-            )
-
-        await self.hass.config_entries.async_forward_entry_setups(entry, platforms)
-
-        _LOGGER.info(f"Start loading {DOMAIN} integration, Entry ID: {entry.entry_id}")
-
-        await self.async_request_refresh()
+    @property
+    def announced_devices(self) -> tuple[str, ...]:
+        """Codes of the devices whose entities can be created, in order."""
+        return self._api.announced_devices
 
     def _on_new_device(self, device_code: str):
         async_dispatcher_send(
@@ -179,8 +154,13 @@ class AquaTempCoordinator(DataUpdateCoordinator):
                 DATA_ITEM_CONFIG: config_data,
             }
 
+        except LoginError as err:
+            # The cloud answered the login without a session: the credentials
+            # were rejected. Home Assistant stops polling and asks for them
+            raise ConfigEntryAuthFailed("The cloud rejected the login") from err
+
         except Exception as err:
-            raise UpdateFailed(f"Error communicating with API: {err}")
+            raise UpdateFailed(f"Error communicating with API: {err}") from err
 
     def get_temperature_unit(self, device_code: str):
         return self._config_manager.get_temperature_unit(device_code)

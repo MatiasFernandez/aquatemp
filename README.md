@@ -47,11 +47,11 @@ This fork uses the same integration domain (`aqua_temp`) as upstream and its oth
 | HiTemp              | The HiTemp app. Today it reaches the same backend as Aqua Temp.                                                                                                                    |
 | Aqua Temp (<=1.5.8) | Accounts on the legacy backend used by Aqua Temp app versions up to 1.5.8. The server still responds, but this option hasn't been tested recently; only try it if the others fail. |
 
-You can add several config entries, one per account, and each account can have several heat pumps. To change the credentials or API type later, open the integration's **Configure** dialog.
+You can add several config entries, one per account, and each account can have several heat pumps; an account already set up can't be added again, since the cloud allows one login per account. To change the credentials or API type later, use **Reconfigure** on the entry. It can move the entry to another account the heat pump is shared with.
 
 The integration polls the cloud every 5 minutes by default, and right after each change made from Home Assistant. The cloud doesn't hold live values: from what we've seen, it updates a heat pump's values about every 4 to 5 minutes, and takes as long to notice that the heat pump went offline. A change made from Home Assistant, and a heat pump coming back online, show up within seconds. Polling more often than every 5 minutes rarely shows changes sooner.
 
-The **Configure** dialog also sets:
+The **Configure** dialog sets the entry's title and:
 
 | Option           | Default     | What it does                                                                                                                                                                                                          |
 | ---------------- | ----------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -113,6 +113,7 @@ The **diagnostics** file (Settings → Devices & Services → Aqua Temp → ⋮ 
 - Use the email address as the username, exactly as registered.
 - Check the API type matches your app.
 - Password longer than 16 characters? Try its first 16 characters: see the [note above](#configuration).
+- If the integration was working and the cloud now rejects its login, as after a password change, Home Assistant asks for the password again on the Aqua Temp entry; enter the current one there.
 
 ### Invalid token
 

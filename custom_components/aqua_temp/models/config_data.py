@@ -20,8 +20,6 @@ from ..common.consts import (
     MIN_UPDATE_INTERVAL,
 )
 
-DATA_KEYS = [CONF_USERNAME, CONF_PASSWORD, CONF_API_TYPE]
-
 
 class ConfigData:
     _username: str | None
@@ -76,54 +74,71 @@ class ConfigData:
         return to_string
 
     @staticmethod
-    def default_schema(user_input: dict | None, with_options: bool = False) -> Schema:
+    def _api_type_selector() -> selector.SelectSelector:
+        return selector.SelectSelector(
+            selector.SelectSelectorConfig(
+                options=API_TYPES, translation_key=CONF_API_TYPE
+            )
+        )
+
+    @staticmethod
+    def user_schema(user_input: dict | None) -> Schema:
+        """A new entry's title and credentials."""
         if user_input is None:
             user_input = {}
 
-        new_user_input = {
-            vol.Required(
-                CONF_TITLE, default=user_input.get(CONF_TITLE, DEFAULT_NAME)
-            ): str,
-            vol.Required(CONF_USERNAME, default=user_input.get(CONF_USERNAME)): str,
-            vol.Required(CONF_PASSWORD, default=user_input.get(CONF_PASSWORD)): str,
-            vol.Required(
-                CONF_API_TYPE, default=user_input.get(CONF_API_TYPE)
-            ): selector.SelectSelector(
-                selector.SelectSelectorConfig(
-                    options=API_TYPES,
-                    translation_key=CONF_API_TYPE,
-                )
-            ),
-        }
+        return vol.Schema(
+            {
+                vol.Required(
+                    CONF_TITLE, default=user_input.get(CONF_TITLE, DEFAULT_NAME)
+                ): str,
+                vol.Required(CONF_USERNAME, default=user_input.get(CONF_USERNAME)): str,
+                vol.Required(CONF_PASSWORD, default=user_input.get(CONF_PASSWORD)): str,
+                vol.Required(
+                    CONF_API_TYPE, default=user_input.get(CONF_API_TYPE)
+                ): ConfigData._api_type_selector(),
+            }
+        )
 
-        if with_options:
-            new_user_input[
+    @staticmethod
+    def credentials_schema(username: str | None, api_type: str | None) -> Schema:
+        """An entry's credentials to replace; the password starts empty, so
+        the stored one never reaches the frontend."""
+        return vol.Schema(
+            {
+                vol.Required(CONF_USERNAME, default=username): str,
+                vol.Required(CONF_PASSWORD): str,
+                vol.Required(
+                    CONF_API_TYPE, default=api_type
+                ): ConfigData._api_type_selector(),
+            }
+        )
+
+    @staticmethod
+    def options_schema(values: dict) -> Schema:
+        """An entry's title and settings."""
+        return vol.Schema(
+            {
+                vol.Required(
+                    CONF_TITLE, default=values.get(CONF_TITLE, DEFAULT_NAME)
+                ): str,
                 vol.Optional(
                     CONF_UPDATE_INTERVAL,
-                    default=user_input.get(
-                        CONF_UPDATE_INTERVAL, DEFAULT_UPDATE_INTERVAL
-                    ),
-                )
-            ] = vol.All(
-                vol.Coerce(int),
-                vol.Range(min=MIN_UPDATE_INTERVAL, max=MAX_UPDATE_INTERVAL),
-            )
-            new_user_input[
+                    default=values.get(CONF_UPDATE_INTERVAL, DEFAULT_UPDATE_INTERVAL),
+                ): vol.All(
+                    vol.Coerce(int),
+                    vol.Range(min=MIN_UPDATE_INTERVAL, max=MAX_UPDATE_INTERVAL),
+                ),
                 vol.Optional(
                     CONF_REQUEST_TIMEOUT,
-                    default=user_input.get(CONF_REQUEST_TIMEOUT, API_REQUEST_TIMEOUT),
-                )
-            ] = vol.All(
-                vol.Coerce(int),
-                vol.Range(min=MIN_REQUEST_TIMEOUT, max=MAX_REQUEST_TIMEOUT),
-            )
-            new_user_input[
+                    default=values.get(CONF_REQUEST_TIMEOUT, API_REQUEST_TIMEOUT),
+                ): vol.All(
+                    vol.Coerce(int),
+                    vol.Range(min=MIN_REQUEST_TIMEOUT, max=MAX_REQUEST_TIMEOUT),
+                ),
                 vol.Optional(
                     CONF_LOG_SESSION_TOKEN,
-                    default=user_input.get(CONF_LOG_SESSION_TOKEN, False),
-                )
-            ] = bool
-
-        schema = vol.Schema(new_user_input)
-
-        return schema
+                    default=values.get(CONF_LOG_SESSION_TOKEN, False),
+                ): bool,
+            }
+        )

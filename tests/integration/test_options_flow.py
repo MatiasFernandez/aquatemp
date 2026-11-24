@@ -1,5 +1,6 @@
-"""Options flow on a real Home Assistant: editing an entry's credentials, title,
-polling interval, request timeout and session token logging."""
+"""Options flow on a real Home Assistant: editing an entry's title, polling
+interval, request timeout and session token logging. The credentials are
+changed through the reconfigure step, in test_config_flow.py."""
 
 import pytest
 import voluptuous as vol
@@ -7,7 +8,7 @@ import voluptuous as vol
 from custom_components.aqua_temp.managers.password_manager import PasswordManager
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.data_entry_flow import FlowResultType
-from tests.cloud.mock_cloud import DATA, DATA_IDLE, cloud_with
+from tests.cloud.mock_cloud import DATA, DATA_IDLE
 
 # Literal on purpose: the expected values must not come from the config under test
 LOGIN = "app/user/login"
@@ -24,12 +25,9 @@ def defaults(result) -> dict:
     return {str(key): key.default() for key in result["data_schema"].schema}
 
 
-def new_settings(api_type: str) -> dict:
+def new_settings() -> dict:
     return {
         "title": "Pool",
-        "username": "new@example.com",
-        "password": "new-password",
-        "api_type": api_type,
         "update_interval": 60,
         "request_timeout": 15,
         "log_session_token": True,
@@ -59,13 +57,9 @@ async def test_form_shows_the_entry_settings(hass, api_type, entry):
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "init"
-    # Possible bug: the password is decrypted and sent to the frontend as the
-    # field's default
+    # No credentials: the password is no longer sent to the frontend
     assert defaults(result) == {
         "title": "Aqua Temp",
-        "username": "test@example.com",
-        "password": "test-password",
-        "api_type": api_type,
         "update_interval": 300,
         "request_timeout": 10,
         "log_session_token": False,
@@ -73,7 +67,9 @@ async def test_form_shows_the_entry_settings(hass, api_type, entry):
 
 
 async def test_new_settings_update_the_entry(hass, api_type, entry):
-    result = await submit(hass, entry, new_settings(api_type))
+    data_before = dict(entry.data)
+
+    result = await submit(hass, entry, new_settings())
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert entry.title == "Pool"
@@ -82,48 +78,19 @@ async def test_new_settings_update_the_entry(hass, api_type, entry):
         "request_timeout": 15,
         "log_session_token": True,
     }
-    assert await decrypted(hass, entry) == {
-        "username": "new@example.com",
-        "password": "new-password",
-        "api_type": api_type,
-    }
-    assert entry.data["password"] != "new-password"
+    assert dict(entry.data) == data_before
 
 
-async def test_new_settings_are_checked_then_used_after_a_reload(
+async def test_new_settings_are_used_after_a_reload_without_a_login_check(
     hass, api_type, entry, wire
 ):
     wire.clear()
 
-    await submit(hass, entry, new_settings(api_type))
+    await submit(hass, entry, new_settings())
 
-    logins = [body for endpoint, body in wire if endpoint == LOGIN]
-
-    # One login checks the credentials, one is the reloaded entry's
+    # Only the reloaded entry logs in: there are no credentials to check
     assert entry.state is ConfigEntryState.LOADED
-    assert [login["userName"] for login in logins] == [
-        "new@example.com",
-        "new@example.com",
-    ]
-
-
-@cloud_with(RESPONSES | {LOGIN: ["synthetic/login", "synthetic/login_rejected"]})
-async def test_rejected_credentials_keep_the_entry(hass, api_type, entry):
-    before = (entry.title, dict(entry.data), dict(entry.options))
-
-    result = await submit(hass, entry, new_settings(api_type))
-
-    assert result["type"] is FlowResultType.FORM
-    assert result["errors"] == {"base": "invalid_credentials"}
-    assert (entry.title, dict(entry.data), dict(entry.options)) == before
-
-
-@cloud_with(RESPONSES | {LOGIN: ["synthetic/login", TimeoutError()]})
-async def test_new_settings_are_checked_with_the_new_timeout(hass, api_type, entry):
-    # Possible bug: the form doesn't catch a timeout, so Home Assistant shows
-    # an unknown error instead of saying the cloud can't be reached
-    with pytest.raises(TimeoutError, match=rf"Request to {LOGIN} timed out after 15 s"):
-        await submit(hass, entry, new_settings(api_type))
+    assert [endpoint for endpoint, _ in wire].count(LOGIN) == 1
 
 
 @pytest.mark.parametrize(
@@ -140,5 +107,5 @@ async def test_out_of_range_settings_are_refused(hass, api_type, entry, field, v
 
     with pytest.raises(vol.Invalid, match=f"'{field}'"):
         await hass.config_entries.options.async_configure(
-            result["flow_id"], new_settings(api_type) | {field: value}
+            result["flow_id"], new_settings() | {field: value}
         )
